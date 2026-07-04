@@ -9,6 +9,11 @@ import com.smartmess.backend.dto.response.ApiResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
 @ControllerAdvice
 public class GlobalExceptionHandler {
 	@ExceptionHandler(ResourceNotFoundException.class)
@@ -43,13 +48,38 @@ public class GlobalExceptionHandler {
 	            .body(response);
 	}
 	
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationException(
+	        MethodArgumentNotValidException exception,
+	        HttpServletRequest request) {
+
+	    Map<String, String> errors = new LinkedHashMap<>();
+
+	    exception.getBindingResult()
+	            .getFieldErrors()
+	            .forEach(error ->
+	                    errors.put(error.getField(), error.getDefaultMessage()));
+
+	    ApiResponse<Map<String, String>> response = ApiResponse.failure(
+	            "Validation failed.",
+	            request.getRequestURI(),
+	            errors
+	    );
+
+	    return ResponseEntity
+	            .status(HttpStatus.BAD_REQUEST)
+	            .body(response);
+	}
+	
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<ApiResponse<Void>> handleException(
+	public ResponseEntity<ApiResponse<String>> handleException(
 	        Exception exception,
 	        HttpServletRequest request) {
 
-	    ApiResponse<Void> response = ApiResponse.failure(
-	            "An unexpected error occurred.",
+	    exception.printStackTrace();
+
+	    ApiResponse<String> response = ApiResponse.failure(
+	            exception.getMessage(),
 	            request.getRequestURI(),
 	            null
 	    );
