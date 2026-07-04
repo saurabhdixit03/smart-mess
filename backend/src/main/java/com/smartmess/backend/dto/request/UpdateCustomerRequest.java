@@ -1,10 +1,7 @@
 package com.smartmess.backend.dto.request;
 
-import com.smartmess.backend.enums.CustomerStatus;
-
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -26,10 +23,7 @@ public record UpdateCustomerRequest(
         String email,
 
         @Size(max = 500, message = "Remarks cannot exceed 500 characters")
-        String remarks,
-
-        @NotNull(message = "Status is required")
-        CustomerStatus status
+        String remarks
 
 ) {
 }

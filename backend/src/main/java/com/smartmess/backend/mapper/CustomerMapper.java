@@ -12,6 +12,9 @@ import com.smartmess.backend.entity.Customer;
 @Mapper(componentModel = "spring")
 public interface CustomerMapper {
 
+    /**
+     * Maps CreateCustomerRequest to Customer entity.
+     */
     @Mapping(target = "customerId", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "joiningDate", ignore = true)
@@ -19,13 +22,21 @@ public interface CustomerMapper {
     @Mapping(target = "updatedAt", ignore = true)
     Customer toEntity(CreateCustomerRequest request);
 
+    /**
+     * Maps Customer entity to CustomerResponse DTO.
+     */
     CustomerResponse toResponse(Customer customer);
 
+    /**
+     * Updates an existing Customer entity from UpdateCustomerRequest.
+     */
     @Mapping(target = "customerId", ignore = true)
+    @Mapping(target = "status", ignore = true)
     @Mapping(target = "joiningDate", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    void updateCustomerFromRequest(UpdateCustomerRequest request,
-                                   @MappingTarget Customer customer);
+    void updateCustomerFromRequest(
+            UpdateCustomerRequest request,
+            @MappingTarget Customer customer);
 
 }

@@ -8,6 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.smartmess.backend.dto.request.CreateCustomerRequest;
+import com.smartmess.backend.dto.request.UpdateCustomerRequest;
 import com.smartmess.backend.dto.response.ApiResponse;
 import com.smartmess.backend.dto.response.CustomerResponse;
 import com.smartmess.backend.service.CustomerService;
@@ -70,6 +71,41 @@ public class CustomerController {
                 "Customers retrieved successfully.",
                 request.getRequestURI(),
                 response
+        );
+
+        return ResponseEntity.ok(apiResponse);
+    }
+    
+    @PutMapping("/{customerId}")
+    public ResponseEntity<ApiResponse<CustomerResponse>> updateCustomer(
+            @PathVariable Long customerId,
+            @Valid @RequestBody UpdateCustomerRequest requestBody,
+            HttpServletRequest request) {
+
+        CustomerResponse response =
+                customerService.updateCustomer(customerId, requestBody);
+
+        ApiResponse<CustomerResponse> apiResponse =
+                ApiResponse.success(
+                        "Customer updated successfully.",
+                        request.getRequestURI(),
+                        response
+                );
+
+        return ResponseEntity.ok(apiResponse);
+    }
+    
+    @DeleteMapping("/{customerId}")
+    public ResponseEntity<ApiResponse<Void>> deleteCustomer(
+            @PathVariable Long customerId,
+            HttpServletRequest request) {
+
+        customerService.deleteCustomer(customerId);
+
+        ApiResponse<Void> apiResponse = ApiResponse.success(
+                "Customer deactivated successfully.",
+                request.getRequestURI(),
+                null
         );
 
         return ResponseEntity.ok(apiResponse);

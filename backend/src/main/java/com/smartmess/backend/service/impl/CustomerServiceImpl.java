@@ -13,6 +13,7 @@ import com.smartmess.backend.repository.CustomerRepository;
 import com.smartmess.backend.service.CustomerService;
 
 import com.smartmess.backend.entity.Customer;
+import com.smartmess.backend.enums.CustomerStatus;
 import com.smartmess.backend.exception.ResourceNotFoundException;
 
 @Service
@@ -52,7 +53,10 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public CustomerResponse getCustomerById(Long customerId) {
 
-        Customer customer = customerRepository.findById(customerId)
+        Customer customer = customerRepository.findByCustomerIdAndStatus(
+                customerId,
+                CustomerStatus.ACTIVE
+        )
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Customer not found."));
 
@@ -62,7 +66,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public List<CustomerResponse> getAllCustomers() {
 
-        return customerRepository.findAll()
+        return customerRepository.findAllByStatus(CustomerStatus.ACTIVE)
                 .stream()
                 .map(customerMapper::toResponse)
                 .toList();
@@ -71,12 +75,47 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public CustomerResponse updateCustomer(Long customerId,
                                            UpdateCustomerRequest request) {
-        return null;
+
+        // Find existing customer
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Customer not found."));
+
+        // Check if mobile number has changed
+        if (!customer.getMobileNumber().equals(request.mobileNumber())) {
+
+            // Check if new mobile number already exists
+            if (customerRepository.existsByMobileNumber(request.mobileNumber())) {
+                throw new BusinessException(
+                        "A customer with this mobile number already exists."
+                );
+            }
+        }
+
+        // Update entity using MapStruct
+        customerMapper.updateCustomerFromRequest(request, customer);
+
+        // Save updated entity
+        Customer updatedCustomer = customerRepository.save(customer);
+
+        // Return response DTO
+        return customerMapper.toResponse(updatedCustomer);
     }
 
     
     @Override
     public void deleteCustomer(Long customerId) {
 
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Customer not found."));
+
+        if (customer.getStatus() == CustomerStatus.INACTIVE) {
+            throw new BusinessException("Customer is already inactive.");
+        }
+
+        customer.setStatus(CustomerStatus.INACTIVE);
+
+        customerRepository.save(customer);
     }
 }
