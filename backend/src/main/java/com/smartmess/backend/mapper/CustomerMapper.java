@@ -18,8 +18,6 @@ public interface CustomerMapper {
     @Mapping(target = "customerId", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "joiningDate", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     Customer toEntity(CreateCustomerRequest request);
 
     /**
@@ -33,8 +31,6 @@ public interface CustomerMapper {
     @Mapping(target = "customerId", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "joiningDate", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     void updateCustomerFromRequest(
             UpdateCustomerRequest request,
             @MappingTarget Customer customer);
