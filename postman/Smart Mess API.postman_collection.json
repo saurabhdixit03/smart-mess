@@ -364,6 +364,358 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Menu",
+			"item": [
+				{
+					"name": "MEN-001 PublishLunchMenu",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"menuDate\": \"2026-07-06\",\r\n    \"mealSession\": \"LUNCH\",\r\n    \"sabjiOne\": \"Aloo Matar\",\r\n    \"sabjiTwo\": \"Cabbage\",\r\n    \"dal\": \"Toor Dal\",\r\n    \"rice\": \"Steamed Rice\",\r\n    \"sweet\": \"Gulab Jamun\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/menus",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"menus"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEN-002 DuplicateLunchMenu",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"menuDate\": \"2026-07-06\",\r\n    \"mealSession\": \"LUNCH\",\r\n    \"sabjiOne\": \"Aloo Matar\",\r\n    \"sabjiTwo\": \"Cabbage\",\r\n    \"dal\": \"Toor Dal\",\r\n    \"rice\": \"Steamed Rice\",\r\n    \"sweet\": \"Gulab Jamun\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/menus",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"menus"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEN-003 PublishDinnerMenu",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"menuDate\": \"2026-07-06\",\r\n    \"mealSession\": \"DINNER\",\r\n    \"sabjiOne\": \"Paneer Butter Masala\",\r\n    \"sabjiTwo\": \"Mix Veg\",\r\n    \"dal\": \"Dal Fry\",\r\n    \"rice\": \"Jeera Rice\",\r\n    \"sweet\": \"Sheera\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/menus",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"menus"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEN-004 Validation",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"menuDate\": \"2026-07-06\",\r\n    \"mealSession\": \"LUNCH\",\r\n    \"sabjiOne\": \"\",\r\n    \"sabjiTwo\": \"Mix Veg\",\r\n    \"dal\": \"Dal Fry\",\r\n    \"rice\": \"Rice\",\r\n    \"sweet\": \"Sheera\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/menus",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"menus"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEN-005 Today'sMenus",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"menuDate\": \"2026-07-06\",\r\n    \"mealSession\": \"DINNER\",\r\n    \"sabjiOne\": \"Paneer Butter Masala\",\r\n    \"sabjiTwo\": \"Mix Veg\",\r\n    \"dal\": \"Dal Fry\",\r\n    \"rice\": \"Jeera Rice\",\r\n    \"sweet\": \"Sheera\"\r\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/menus/today",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"menus",
+								"today"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEN-006 GetMenubyID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/menus/2",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"menus",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEN-007 InvalidMenuID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/menus/222",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"menus",
+								"222"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MEN-008 MenuHistory",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/menus/history",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"menus",
+								"history"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Meal Pricing",
+			"item": [
+				{
+					"name": "MPR-001 GetCurrentPricing (First Time)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/meal-pricing",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"meal-pricing"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MPR-002 UpdateMealPricing",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": 80,\r\n    \"extraRotiPrice\": 10\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/meal-pricing",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"meal-pricing"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MPR-003 VerifyUpdate",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": 80,\r\n    \"extraRotiPrice\": 10\r\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/meal-pricing",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"meal-pricing"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MPR-004 Validation",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"halfMealPrice\": 00,\r\n    \"fullMealPrice\": 80,\r\n    \"extraRotiPrice\": 10\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/meal-pricing",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"meal-pricing"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MPR-005 Validation (null)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": null,\r\n    \"extraRotiPrice\": 10\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/meal-pricing",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"meal-pricing"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MPR-006 Validation (Negative)",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": -80,\r\n    \"extraRotiPrice\": 10\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/meal-pricing",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"meal-pricing"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }
