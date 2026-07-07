@@ -4,6 +4,10 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 docs/postman-guide.docx
+docs/~$_Conceptual Data Model.docx
+docs/~$_Logical Data Model.docx
+docs/Conceptual Data Model.docx
+docs/Logical Data Model.docx
 
 ### STS ###
 .apt_generated
