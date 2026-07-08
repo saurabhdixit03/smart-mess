@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Mess Dashboard Monitor</title>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+<style>
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f4f6f9;
+    margin:30px;
+}
+
+h1{
+    color:#2c3e50;
+}
+
+button{
+    padding:10px 20px;
+    margin-right:10px;
+    cursor:pointer;
+}
+
+.card-container{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+    margin-top:20px;
+}
+
+.card{
+    background:white;
+    padding:15px;
+    border-radius:8px;
+    box-shadow:0 2px 6px rgba(0,0,0,.15);
+}
+
+.card h3{
+    margin-top:0;
+}
+
+.status{
+    font-weight:bold;
+    margin-top:15px;
+}
+
+.connected{
+    color:green;
+}
+
+.disconnected{
+    color:red;
+}
+
+.reconnecting{
+    color:orange;
+}
+
+.info{
+    margin-top:10px;
+}
+
+pre{
+    background:#222;
+    color:#00ff90;
+    padding:15px;
+    border-radius:8px;
+    overflow:auto;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Smart Mess Dashboard Monitor</h1>
+
+<button onclick="connect('LUNCH')">Connect Lunch</button>
+
+<button onclick="connect('DINNER')">Connect Dinner</button>
+
+<button onclick="disconnect()">Disconnect</button>
+
+<div class="status" id="connectionStatus">
+🔴 Disconnected
+</div>
+
+<div class="info">
+Current Session :
+<span id="currentSession">-</span>
+</div>
+
+<div class="info">
+Connected At :
+<span id="connectedTime">-</span>
+</div>
+
+<div class="info">
+Last Dashboard Update :
+<span id="lastUpdate">-</span>
+</div>
+
+<div class="info">
+Messages Received :
+<span id="messageCount">0</span>
+</div>
+
+<div class="card-container">
+
+<div class="card">
+<h3>Meal Session</h3>
+<div id="mealSession">-</div>
+</div>
+
+<div class="card">
+<h3>Menu Date</h3>
+<div id="menuDate">-</div>
+</div>
+
+<div class="card">
+<h3>Active Customers</h3>
+<div id="activeCustomers">0</div>
+</div>
+
+<div class="card">
+<h3>Accepted</h3>
+<div id="acceptedResponses">0</div>
+</div>
+
+<div class="card">
+<h3>Declined</h3>
+<div id="declinedResponses">0</div>
+</div>
+
+<div class="card">
+<h3>Pending</h3>
+<div id="pendingResponses">0</div>
+</div>
+
+<div class="card">
+<h3>Full Meals</h3>
+<div id="expectedFullMeals">0</div>
+</div>
+
+<div class="card">
+<h3>Half Meals</h3>
+<div id="expectedHalfMeals">0</div>
+</div>
+
+<div class="card">
+<h3>Extra Rotis</h3>
+<div id="expectedExtraRotis">0</div>
+</div>
+
+<div class="card">
+<h3>Total Rotis</h3>
+<div id="totalRotisRequired">0</div>
+</div>
+
+</div>
+
+<h2>Raw JSON</h2>
+
+<pre id="jsonOutput">
+Waiting for Dashboard...
+</pre>
+
+<script>
+
+let stompClient = null;
+let socket = null;
+
+let reconnectTimer = null;
+let reconnectSession = null;
+
+let connected = false;
+
+let messageCounter = 0;
+
+function connect(session){
+
+    if(connected){
+        alert("Already connected.");
+        return;
+    }
+
+    reconnectSession = session;
+
+    socket = new SockJS("http://localhost:8080/ws-dashboard");
+
+    stompClient = Stomp.over(socket);
+
+    stompClient.debug = null;
+
+    setStatus("🟡 Connecting...", "reconnecting");
+
+    stompClient.connect({},
+
+        function(frame){
+
+            connected = true;
+
+            clearTimeout(reconnectTimer);
+
+            document.getElementById("currentSession").innerHTML=session;
+
+            document.getElementById("connectedTime").innerHTML=
+                new Date().toLocaleTimeString();
+
+            setStatus("🟢 Connected","connected");
+
+            stompClient.subscribe(
+                "/topic/dashboard/"+session,
+
+                function(message){
+
+                    messageCounter++;
+
+                    document.getElementById("messageCount").innerHTML=messageCounter;
+
+                    document.getElementById("lastUpdate").innerHTML=
+                        new Date().toLocaleTimeString();
+
+                    let dashboard=JSON.parse(message.body);
+
+                    updateCards(dashboard);
+
+                    document.getElementById("jsonOutput").textContent=
+                        JSON.stringify(dashboard,null,4);
+
+                });
+
+        },
+
+        function(error){
+
+            connected=false;
+
+            reconnect();
+
+        });
+
+}
+
+function disconnect(){
+
+    if(stompClient!=null){
+
+        stompClient.disconnect();
+
+    }
+
+    connected=false;
+
+    clearTimeout(reconnectTimer);
+
+    setStatus("🔴 Disconnected","disconnected");
+
+}
+
+function reconnect(){
+
+    if(connected)
+        return;
+
+    setStatus("🟡 Reconnecting in 3 seconds...","reconnecting");
+
+    reconnectTimer=setTimeout(function(){
+
+        connect(reconnectSession);
+
+    },3000);
+
+}
+
+function setStatus(message,css){
+
+    let div=document.getElementById("connectionStatus");
+
+    div.className="status "+css;
+
+    div.innerHTML=message;
+
+}
+
+function updateCards(d){
+
+    document.getElementById("mealSession").innerHTML=d.mealSession;
+
+    document.getElementById("menuDate").innerHTML=d.menuDate;
+
+    document.getElementById("activeCustomers").innerHTML=d.activeCustomers;
+
+    document.getElementById("acceptedResponses").innerHTML=d.acceptedResponses;
+
+    document.getElementById("declinedResponses").innerHTML=d.declinedResponses;
+
+    document.getElementById("pendingResponses").innerHTML=d.pendingResponses;
+
+    document.getElementById("expectedFullMeals").innerHTML=d.expectedFullMeals;
+
+    document.getElementById("expectedHalfMeals").innerHTML=d.expectedHalfMeals;
+
+    document.getElementById("expectedExtraRotis").innerHTML=d.expectedExtraRotis;
+
+    document.getElementById("totalRotisRequired").innerHTML=d.totalRotisRequired;
+
+}
+
+</script>
+
+</body>
+</html>

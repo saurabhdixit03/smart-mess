@@ -21,5 +21,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     Optional<Customer> findByCustomerIdAndStatus(
             Long customerId,
             CustomerStatus status);
+    
+    // live dashboard
+    long countByStatus(CustomerStatus status);
 
 }

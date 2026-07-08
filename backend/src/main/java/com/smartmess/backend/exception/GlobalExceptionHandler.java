@@ -1,6 +1,7 @@
 package com.smartmess.backend.exception;
 
 import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,6 +14,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.web.bind.MethodArgumentNotValidException;
+
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import java.util.Arrays;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -86,6 +90,50 @@ public class GlobalExceptionHandler {
 
 	    return ResponseEntity
 	            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+	            .body(response);
+	}
+	
+	// for enum validation LUNCH / DINNER
+	
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	public ResponseEntity<ApiResponse<Void>> handleMethodArgumentTypeMismatchException(
+	        MethodArgumentTypeMismatchException exception,
+	        HttpServletRequest request) {
+
+	    String message;
+
+	    if (exception.getRequiredType() != null
+	            && exception.getRequiredType().isEnum()) {
+
+	        String allowedValues = Arrays.stream(exception.getRequiredType().getEnumConstants())
+	                .map(Object::toString)
+	                .reduce((first, second) -> first + ", " + second)
+	                .orElse("");
+
+	        message = String.format(
+	                "Invalid value '%s' for '%s'. Allowed values are: %s.",
+	                exception.getValue(),
+	                exception.getName(),
+	                allowedValues
+	        );
+
+	    } else {
+
+	        message = String.format(
+	                "Invalid value '%s' for parameter '%s'.",
+	                exception.getValue(),
+	                exception.getName()
+	        );
+	    }
+
+	    ApiResponse<Void> response = ApiResponse.failure(
+	            message,
+	            request.getRequestURI(),
+	            null
+	    );
+
+	    return ResponseEntity
+	            .status(HttpStatus.BAD_REQUEST)
 	            .body(response);
 	}
 }
