@@ -16,6 +16,12 @@ import com.smartmess.backend.repository.MealResponseRepository;
 import com.smartmess.backend.repository.MenuRepository;
 import com.smartmess.backend.service.DashboardService;
 
+import java.util.Comparator;
+import java.util.List;
+
+import com.smartmess.backend.dto.response.DashboardCustomerResponse;
+import com.smartmess.backend.entity.MealResponse;
+
 @Service
 public class DashboardServiceImpl implements DashboardService {
 
@@ -32,6 +38,8 @@ public class DashboardServiceImpl implements DashboardService {
         this.menuRepository = menuRepository;
         this.mealResponseRepository = mealResponseRepository;
     }
+    
+    
 
     @Override
     public DashboardSummaryResponse getDashboardSummary(MealSession mealSession) {
@@ -87,6 +95,8 @@ public class DashboardServiceImpl implements DashboardService {
         long totalRotisRequired =
                 (acceptedMeals * 3)
                 + expectedExtraRotis;
+        
+        List<MealResponse> responses = mealResponseRepository.findByMenu(menu);
 
         DashboardSummaryResponse response =
                 new DashboardSummaryResponse();
@@ -102,15 +112,62 @@ public class DashboardServiceImpl implements DashboardService {
 
         response.setExpectedFullMeals(expectedFullMeals);
         response.setExpectedHalfMeals(expectedHalfMeals);
-        response.setTotalRotisRequired(totalRotisRequired);
-        
+
         response.setExpectedExtraRotis(
                 expectedExtraRotis == null ? 0L : expectedExtraRotis
-                		
-        
         );
 
-        return response;
+        response.setTotalRotisRequired(totalRotisRequired);
+
+        /*
+         * Customer Collection Queue
+         */
+        List<DashboardCustomerResponse> customerQueue = responses.stream()
+
+                .filter(mealResponse ->
+                        mealResponse.getResponseStatus() == MealResponseStatus.ACCEPTED)
+
+                .sorted(Comparator.comparing(
+                        mealResponse -> mealResponse.getCustomer().getFullName()
+                ))
+
+                .map(mealResponse -> {
+
+                    DashboardCustomerResponse customer =
+                            new DashboardCustomerResponse();
+
+                    customer.setMealResponseId(
+                            mealResponse.getMealResponseId());
+
+                    customer.setCustomerId(
+                            mealResponse.getCustomer().getCustomerId());
+
+                    customer.setCustomerName(
+                            mealResponse.getCustomer().getFullName());
+
+                    customer.setResponseStatus(
+                            mealResponse.getResponseStatus());
+
+                    customer.setMealOption(
+                            mealResponse.getMealOption());
+
+                    customer.setExtraRotiCount(
+                            mealResponse.getExtraRotiCount());
+
+                    /*
+                     * Meal Record module is not implemented yet.
+                     */
+                    customer.setCollected(false);
+
+                    return customer;
+
+                })
+
+                .toList();
+
+        response.setCustomers(customerQueue);
+
+        return response;    
     }
 
 }

@@ -3,6 +3,7 @@ package com.smartmess.backend.dto.response;
 import java.time.LocalDate;
 
 import com.smartmess.backend.enums.MealSession;
+import java.util.List;
 
 public class DashboardSummaryResponse {
 	
@@ -25,6 +26,8 @@ public class DashboardSummaryResponse {
     private Long expectedExtraRotis;
     
     private Long totalRotisRequired;
+    
+    private List<DashboardCustomerResponse> collectionQueue;
 
     
     
@@ -109,5 +112,13 @@ public class DashboardSummaryResponse {
 
 	public void setTotalRotisRequired(Long totalRotisRequired) {
 		this.totalRotisRequired = totalRotisRequired;
+	}
+
+	public List<DashboardCustomerResponse> getCollectionQueue() {
+		return collectionQueue;
+	}
+
+	public void setCollectionQueue(List<DashboardCustomerResponse> collectionQueue) {
+		this.collectionQueue = collectionQueue;
 	}
 }
