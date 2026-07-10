@@ -1,11 +1,13 @@
 package com.smartmess.backend.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.smartmess.backend.entity.Bill;
 import com.smartmess.backend.entity.Customer;
 import com.smartmess.backend.entity.MealRecord;
 import com.smartmess.backend.entity.MealResponse;
@@ -32,5 +34,16 @@ public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
      * Manual Collection duplicate prevention
      */
     boolean existsByCustomerAndMenu(Customer customer, Menu menu);
+    
+    // for billing module
+    
+    List<MealRecord> findByCustomerAndCollectedAtBetween(
+            Customer customer,
+            LocalDateTime start,
+            LocalDateTime end
+    );
 
+    List<MealRecord> findByBillOrderByCollectedAtAsc(
+            Bill bill
+    );
 }

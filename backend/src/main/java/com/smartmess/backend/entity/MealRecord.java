@@ -66,6 +66,10 @@ public class MealRecord extends BaseEntity {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bill_id")
+    private Bill bill;
 
     @Column(nullable = false)
     private LocalDateTime collectedAt;
