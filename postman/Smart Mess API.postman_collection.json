@@ -1852,6 +1852,159 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Bill",
+			"item": [
+				{
+					"name": "BILL-001 Generate Bills",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/bills/generate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"bills",
+								"generate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "BILL-002 Generate Again",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/bills/generate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"bills",
+								"generate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "BILL-003 Customer Bills",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/bills/customer/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"bills",
+								"customer",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "BILL-004 Invalid Customer",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/bills/customer/99",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"bills",
+								"customer",
+								"99"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "BILL-005 Bill Details",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/bills/11",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"bills",
+								"11"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "BILL-006 Invalid Bill",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/bills/11",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"bills",
+								"11"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }
