@@ -12,6 +12,7 @@ import com.smartmess.backend.enums.MealResponseStatus;
 import com.smartmess.backend.enums.MealSession;
 import com.smartmess.backend.exception.ResourceNotFoundException;
 import com.smartmess.backend.repository.CustomerRepository;
+import com.smartmess.backend.repository.MealRecordRepository;
 import com.smartmess.backend.repository.MealResponseRepository;
 import com.smartmess.backend.repository.MenuRepository;
 import com.smartmess.backend.service.DashboardService;
@@ -28,15 +29,18 @@ public class DashboardServiceImpl implements DashboardService {
     private final CustomerRepository customerRepository;
     private final MenuRepository menuRepository;
     private final MealResponseRepository mealResponseRepository;
+    private final MealRecordRepository mealRecordRepository;
 
     public DashboardServiceImpl(
             CustomerRepository customerRepository,
             MenuRepository menuRepository,
-            MealResponseRepository mealResponseRepository) {
+            MealResponseRepository mealResponseRepository,
+            MealRecordRepository mealRecordRepository) {
 
         this.customerRepository = customerRepository;
         this.menuRepository = menuRepository;
         this.mealResponseRepository = mealResponseRepository;
+        this.mealRecordRepository = mealRecordRepository;
     }
     
     
@@ -106,6 +110,7 @@ public class DashboardServiceImpl implements DashboardService {
 
         response.setActiveCustomers(activeCustomers);
 
+        response.setMenuId(menu.getMenuId());
         response.setAcceptedResponses(acceptedResponses);
         response.setDeclinedResponses(declinedResponses);
         response.setPendingResponses(pendingResponses);
@@ -154,10 +159,16 @@ public class DashboardServiceImpl implements DashboardService {
                     customer.setExtraRotiCount(
                             mealResponse.getExtraRotiCount());
 
-                    /*
-                     * Meal Record module is not implemented yet.
-                     */
-                    customer.setCollected(false);
+                    customer.setCollected(
+
+                            mealRecordRepository.existsByCustomerAndMenu(
+
+                                    mealResponse.getCustomer(),
+
+                                    menu
+                            )
+
+                    );
 
                     return customer;
 
@@ -165,7 +176,7 @@ public class DashboardServiceImpl implements DashboardService {
 
                 .toList();
 
-        response.setCustomers(customerQueue);
+        response.setCollectionQueue(customerQueue);
 
         return response;    
     }

@@ -21,6 +21,7 @@ public class DashboardSummaryResponse {
     private Long pendingResponses;
 
     // Meal Estimation
+    private Long menuId;
     private Long expectedFullMeals;
     private Long expectedHalfMeals;
     private Long expectedExtraRotis;
@@ -73,6 +74,14 @@ public class DashboardSummaryResponse {
     public void setPendingResponses(Long pendingResponses) {
         this.pendingResponses = pendingResponses;
     }
+    
+	public Long getMenuId() {
+		return menuId;
+	}
+
+	public void setMenuId(Long menuId) {
+		this.menuId = menuId;
+	}
 
     public Long getExpectedFullMeals() {
         return expectedFullMeals;
@@ -121,4 +130,8 @@ public class DashboardSummaryResponse {
 	public void setCollectionQueue(List<DashboardCustomerResponse> collectionQueue) {
 		this.collectionQueue = collectionQueue;
 	}
+
+
+
+	
 }
