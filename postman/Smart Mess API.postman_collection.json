@@ -2270,6 +2270,52 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "PAY-011 Get Pending Payment Requests",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"billId\": 3,\r\n    \"paymentMode\": \"UPI\"\r\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/payments/pending",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"payments",
+								"pending"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PAY-012 Get Pending Payment Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/payments/pending/count",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"payments",
+								"pending",
+								"count"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		}
