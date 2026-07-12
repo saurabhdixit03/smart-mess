@@ -1,7 +1,10 @@
 package com.smartmess.backend.service;
 
+import java.util.List;
+
 import com.smartmess.backend.dto.request.CreatePaymentRequest;
 import com.smartmess.backend.dto.response.PaymentResponse;
+import com.smartmess.backend.dto.response.PendingPaymentResponse;
 
 public interface PaymentService {
 
@@ -27,5 +30,10 @@ public interface PaymentService {
     );
 
     void requestUpiPayment(Long billId);
+    
+    // for payment dashboard
+    List<PendingPaymentResponse> getPendingPayments();
+    
+    long getPendingPaymentCount();
     
 }

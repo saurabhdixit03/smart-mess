@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.smartmess.backend.entity.Bill;
 import com.smartmess.backend.entity.Customer;
+import com.smartmess.backend.enums.BillStatus;
 
 public interface BillRepository
         extends JpaRepository<Bill, Long> {
@@ -37,5 +38,12 @@ public interface BillRepository
     List<Bill> findByCustomerOrderByGeneratedAtDesc(
             Customer customer
     );
+    
+    // for payment dashboard 
+    List<Bill> findByBillStatusOrderByGeneratedAtAsc(
+            BillStatus billStatus
+    );
+    
+    long countByBillStatus(BillStatus billStatus);
 
 }

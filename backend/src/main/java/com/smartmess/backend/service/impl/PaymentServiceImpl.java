@@ -1,11 +1,13 @@
 package com.smartmess.backend.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import com.smartmess.backend.dto.request.CreatePaymentRequest;
 import com.smartmess.backend.dto.response.PaymentResponse;
+import com.smartmess.backend.dto.response.PendingPaymentResponse;
 import com.smartmess.backend.entity.Bill;
 import com.smartmess.backend.entity.Payment;
 import com.smartmess.backend.enums.BillStatus;
@@ -189,6 +191,46 @@ public class PaymentServiceImpl
         bill.setBillStatus(BillStatus.PAYMENT_PENDING);
 
         billRepository.save(bill);
+
+    }
+    
+    // for payment dashboard 
+    @Override
+    public List<PendingPaymentResponse> getPendingPayments() {
+
+        List<Bill> pendingBills =
+                billRepository.findByBillStatusOrderByGeneratedAtAsc(
+                        BillStatus.PAYMENT_PENDING
+                );
+
+        return pendingBills.stream()
+                .map(bill -> new PendingPaymentResponse(
+
+                        bill.getBillId(),
+
+                        bill.getCustomer().getCustomerId(),
+
+                        bill.getCustomer().getFullName(),
+
+                        bill.getBillingMonth(),
+
+                        bill.getBillingYear(),
+
+                        bill.getTotalAmount(),
+
+                        bill.getBillStatus()
+
+                ))
+                .toList();
+
+    }
+    
+    @Override
+    public long getPendingPaymentCount() {
+
+        return billRepository.countByBillStatus(
+                BillStatus.PAYMENT_PENDING
+        );
 
     }
 

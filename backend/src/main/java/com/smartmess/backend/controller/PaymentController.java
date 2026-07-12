@@ -1,5 +1,7 @@
 package com.smartmess.backend.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -7,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import com.smartmess.backend.dto.request.CreatePaymentRequest;
 import com.smartmess.backend.dto.response.ApiResponse;
 import com.smartmess.backend.dto.response.PaymentResponse;
+import com.smartmess.backend.dto.response.PendingPaymentResponse;
 import com.smartmess.backend.service.PaymentService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,6 +52,25 @@ public class PaymentController {
                 .body(response);
 
     }
+    
+    @GetMapping("/pending")
+    public ResponseEntity<ApiResponse<List<PendingPaymentResponse>>> getPendingPayments(
+            HttpServletRequest request) {
+
+        List<PendingPaymentResponse> pendingPayments =
+                paymentService.getPendingPayments();
+
+        ApiResponse<List<PendingPaymentResponse>> response =
+                ApiResponse.success(
+                        "Pending payment requests fetched successfully.",
+                        request.getRequestURI(),
+                        pendingPayments
+                );
+
+        return ResponseEntity.ok(response);
+
+    }
+    
 
     /*
      * Collect Payment
@@ -120,6 +142,24 @@ public class PaymentController {
                         "Payment retrieved successfully.",
                         request.getRequestURI(),
                         payment
+                );
+
+        return ResponseEntity.ok(response);
+
+    }
+    
+    @GetMapping("/pending/count")
+    public ResponseEntity<ApiResponse<Long>> getPendingPaymentCount(
+            HttpServletRequest request) {
+
+        long pendingCount =
+                paymentService.getPendingPaymentCount();
+
+        ApiResponse<Long> response =
+                ApiResponse.success(
+                        "Pending payment count fetched successfully.",
+                        request.getRequestURI(),
+                        pendingCount
                 );
 
         return ResponseEntity.ok(response);
