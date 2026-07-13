@@ -1,5 +1,7 @@
 package com.smartmess.backend.service.impl;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -8,7 +10,9 @@ import org.springframework.stereotype.Service;
 import com.smartmess.backend.dto.request.CreatePaymentRequest;
 import com.smartmess.backend.dto.response.PaymentResponse;
 import com.smartmess.backend.dto.response.PendingPaymentResponse;
+import com.smartmess.backend.dto.response.UpiPaymentResponse;
 import com.smartmess.backend.entity.Bill;
+import com.smartmess.backend.entity.MessSettings;
 import com.smartmess.backend.entity.Payment;
 import com.smartmess.backend.enums.BillStatus;
 import com.smartmess.backend.enums.PaymentMode;
@@ -16,6 +20,7 @@ import com.smartmess.backend.exception.BusinessException;
 import com.smartmess.backend.exception.ResourceNotFoundException;
 import com.smartmess.backend.mapper.PaymentMapper;
 import com.smartmess.backend.repository.BillRepository;
+import com.smartmess.backend.repository.MessSettingsRepository;
 import com.smartmess.backend.repository.PaymentRepository;
 import com.smartmess.backend.service.PaymentService;
 
@@ -28,15 +33,19 @@ public class PaymentServiceImpl
     private final BillRepository billRepository;
 
     private final PaymentMapper paymentMapper;
+    
+    private final MessSettingsRepository messSettingsRepository;
 
     public PaymentServiceImpl(
             PaymentRepository paymentRepository,
             BillRepository billRepository,
-            PaymentMapper paymentMapper) {
+            PaymentMapper paymentMapper,
+            MessSettingsRepository messSettingsRepository) {
 
         this.paymentRepository = paymentRepository;
         this.billRepository = billRepository;
         this.paymentMapper = paymentMapper;
+        this.messSettingsRepository = messSettingsRepository;
 
     }
 
@@ -230,6 +239,68 @@ public class PaymentServiceImpl
 
         return billRepository.countByBillStatus(
                 BillStatus.PAYMENT_PENDING
+        );
+
+    }
+    
+    
+    // UPI QR code generation 
+    @Override
+    public UpiPaymentResponse generateUpiPayment(
+            Long billId) {
+
+        Bill bill =
+                billRepository.findById(billId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Bill not found with ID: " + billId
+                                ));
+
+        if (bill.getBillStatus() != BillStatus.UNPAID) {
+
+            throw new BusinessException(
+                    "UPI payment can only be generated for unpaid bills."
+            );
+
+        }
+
+        MessSettings settings =
+                messSettingsRepository
+                        .findTopByOrderBySettingsIdAsc()
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Mess settings not found."
+                                ));
+
+        String upiUrl =
+                "upi://pay"
+                + "?pa=" + URLEncoder.encode(
+                        settings.getUpiId(),
+                        StandardCharsets.UTF_8
+                )
+                + "&pn=" + URLEncoder.encode(
+                        settings.getReceiverName(),
+                        StandardCharsets.UTF_8
+                )
+                + "&am=" + bill.getTotalAmount()
+                + "&cu=INR"
+                + "&tn=" + URLEncoder.encode(
+                        "Bill-" + bill.getBillId(),
+                        StandardCharsets.UTF_8
+                );
+
+        return new UpiPaymentResponse(
+
+                upiUrl,
+
+                settings.getUpiId(),
+
+                settings.getReceiverName(),
+
+                bill.getTotalAmount(),
+
+                bill.getBillId()
+
         );
 
     }

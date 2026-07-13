@@ -10,6 +10,7 @@ import com.smartmess.backend.dto.request.CreatePaymentRequest;
 import com.smartmess.backend.dto.response.ApiResponse;
 import com.smartmess.backend.dto.response.PaymentResponse;
 import com.smartmess.backend.dto.response.PendingPaymentResponse;
+import com.smartmess.backend.dto.response.UpiPaymentResponse;
 import com.smartmess.backend.service.PaymentService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -163,6 +164,30 @@ public class PaymentController {
                 );
 
         return ResponseEntity.ok(response);
+
+    }
+    
+    // QR Code Generation link 
+    @GetMapping("/upi/{billId}")
+    public ResponseEntity<ApiResponse<UpiPaymentResponse>> generateUpiPayment(
+            @PathVariable Long billId,
+            HttpServletRequest request) {
+
+        UpiPaymentResponse response =
+                paymentService.generateUpiPayment(
+                        billId
+                );
+
+        ApiResponse<UpiPaymentResponse> apiResponse =
+                ApiResponse.success(
+                        "UPI payment link generated successfully.",
+                        request.getRequestURI(),
+                        response
+                );
+
+        return ResponseEntity.ok(
+                apiResponse
+        );
 
     }
 

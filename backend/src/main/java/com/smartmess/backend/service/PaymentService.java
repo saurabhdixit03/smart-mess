@@ -5,6 +5,7 @@ import java.util.List;
 import com.smartmess.backend.dto.request.CreatePaymentRequest;
 import com.smartmess.backend.dto.response.PaymentResponse;
 import com.smartmess.backend.dto.response.PendingPaymentResponse;
+import com.smartmess.backend.dto.response.UpiPaymentResponse;
 
 public interface PaymentService {
 
@@ -35,5 +36,8 @@ public interface PaymentService {
     List<PendingPaymentResponse> getPendingPayments();
     
     long getPendingPaymentCount();
+    
+    // for UPI QR code
+    UpiPaymentResponse generateUpiPayment(Long billId);
     
 }
