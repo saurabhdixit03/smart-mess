@@ -13,6 +13,9 @@ import com.smartmess.backend.entity.MealRecord;
 import com.smartmess.backend.entity.MealResponse;
 import com.smartmess.backend.entity.Menu;
 
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
 
     /*
@@ -45,5 +48,63 @@ public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
 
     List<MealRecord> findByBillOrderByCollectedAtAsc(
             Bill bill
+    );
+    
+    //*********************************************************************************//
+    
+    /*
+     * Monthly meal insights.
+     */
+    @Query(value = """
+
+        SELECT
+
+            COUNT(mr.meal_record_id)                                           AS totalMeals,
+
+            COUNT(
+    CASE
+        WHEN mr.meal_option = 'FULL'
+        THEN 1
+    END
+) AS fullMeals,
+
+            COUNT(
+    CASE
+        WHEN mr.meal_option = 'HALF'
+        THEN 1
+    END
+) AS halfMeals,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN mr.meal_option = 'FULL'
+                        THEN 3 + mr.extra_roti_count
+                        WHEN mr.meal_option = 'HALF'
+                        THEN 3 + mr.extra_roti_count
+                        ELSE 0
+                    END
+                ),
+                0
+            )                                                                  AS totalRotis,
+
+            COALESCE(
+                SUM(mr.extra_roti_count),
+                0
+            )                                                                  AS extraRotis
+
+        FROM meal_records mr
+
+        INNER JOIN bills b
+                ON mr.bill_id = b.bill_id
+
+        WHERE b.billing_month = :billingMonth
+          AND b.billing_year = :billingYear
+
+        """,
+        nativeQuery = true)
+    List<Object[]> getMonthlyMealInsights(
+            @Param("billingMonth") Integer billingMonth,
+            @Param("billingYear") Integer billingYear
     );
 }

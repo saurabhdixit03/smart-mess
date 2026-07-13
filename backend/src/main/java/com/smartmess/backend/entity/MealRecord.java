@@ -21,6 +21,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+
 @Entity
 @Table(name = "meal_records")
 @Getter
@@ -51,6 +54,7 @@ public class MealRecord extends BaseEntity {
     @JoinColumn(name = "meal_response_id")
     private MealResponse mealResponse;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MealOption mealOption;
 
