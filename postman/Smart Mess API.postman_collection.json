@@ -2447,6 +2447,40 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Insights",
+			"item": [
+				{
+					"name": "INS-001 Insights",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/insights/monthly?month=7&year=2026",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"insights",
+								"monthly"
+							],
+							"query": [
+								{
+									"key": "month",
+									"value": "7"
+								},
+								{
+									"key": "year",
+									"value": "2026"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }
