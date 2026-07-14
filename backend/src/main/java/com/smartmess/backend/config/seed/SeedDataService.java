@@ -2,23 +2,30 @@ package com.smartmess.backend.config.seed;
 
 import java.math.BigDecimal;
 
-
 import org.springframework.stereotype.Service;
 
 import com.smartmess.backend.entity.MealPricing;
+import com.smartmess.backend.entity.MealResponse;
+import com.smartmess.backend.entity.Menu;
 import com.smartmess.backend.entity.MessSettings;
 import com.smartmess.backend.repository.MealPricingRepository;
+import com.smartmess.backend.repository.MealResponseRepository;
+import com.smartmess.backend.repository.MenuRepository;
 import com.smartmess.backend.repository.MessSettingsRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.smartmess.backend.repository.CustomerRepository;
 import com.smartmess.backend.entity.Customer;
 import com.smartmess.backend.enums.CustomerStatus;
+import com.smartmess.backend.enums.MealOption;
+import com.smartmess.backend.enums.MealResponseStatus;
+import com.smartmess.backend.enums.MealSession;
 
 @Slf4j
 @Service
@@ -30,6 +37,10 @@ public class SeedDataService {
     private final MessSettingsRepository messSettingsRepository;
     
     private final CustomerRepository customerRepository;
+    
+    private final MenuRepository menuRepository;
+    
+    private final MealResponseRepository mealResponseRepository; 
 
     public void seedDemoData() {
 
@@ -38,6 +49,10 @@ public class SeedDataService {
         seedMessSettings();
         
         seedCustomers();
+        
+        seedMenus();
+        
+        seedMealResponses();
         
         
 
@@ -233,4 +248,181 @@ public class SeedDataService {
 
     }
 
+    //*******************************************************************************************************//
+    
+    private record MenuSeed(
+
+            LocalDate menuDate,
+
+            MealSession mealSession,
+
+            String sabjiOne,
+
+            String sabjiTwo,
+
+            String dal,
+
+            String rice,
+
+            String sweet
+
+    ) {
+    }
+    
+    private void seedMenus() {
+
+        if (menuRepository.count() > 0) {
+        	return;
+        }
+        	
+        List<MenuSeed> menus = List.of(
+
+        	        new MenuSeed(
+        	                LocalDate.now(),
+        	                MealSession.LUNCH,
+        	                "Aloo Matar",
+        	                "Bhindi Fry",
+        	                "Dal Tadka",
+        	                "Jeera Rice",
+        	                "Gulab Jamun"
+        	        ),
+
+        	        new MenuSeed(
+        	                LocalDate.now(),
+        	                MealSession.DINNER,
+        	                "Mix Veg",
+        	                "Paneer Bhurji",
+        	                "Dal Fry",
+        	                "Steamed Rice",
+        	                "Kheer"
+        	        )
+
+        	);
+    
+        	
+        	for (MenuSeed seed : menus) {
+
+        	    Menu menu = new Menu();
+
+        	    menu.setMenuDate(seed.menuDate());
+
+        	    menu.setMealSession(seed.mealSession());
+
+        	    menu.setSabjiOne(seed.sabjiOne());
+
+        	    menu.setSabjiTwo(seed.sabjiTwo());
+
+        	    menu.setDal(seed.dal());
+
+        	    menu.setRice(seed.rice());
+
+        	    menu.setSweet(seed.sweet());
+
+        	    menuRepository.save(menu);
+
+        	}
+
+        	log.info("Demo Menus seeded successfully.");
+        	
+          }
+    
+    //******************************************************************************************//
+    
+    private record MealResponseSeed(
+
+            int customerIndex,
+
+            MealSession mealSession,
+
+            MealResponseStatus responseStatus,
+
+            MealOption mealOption,
+
+            int extraRotiCount
+
+    ) {
+    }
+
+    private void seedMealResponses() {
+
+        if (mealResponseRepository.count() > 0) {
+            return;
+        }
+
+        List<Customer> customers =
+                customerRepository.findByStatus(CustomerStatus.ACTIVE);
+
+        if (customers.isEmpty()) {
+
+            log.warn("Skipping MealResponse seeding because no active customers are available.");
+
+            return;
+        }
+
+        Menu todayLunch = menuRepository
+                .findByMenuDateAndMealSession(
+                        LocalDate.now(),
+                        MealSession.LUNCH
+                )
+                .orElseThrow(() -> new IllegalStateException(
+                        "Today's Lunch menu not found."
+                ));
+
+        Menu todayDinner = menuRepository
+                .findByMenuDateAndMealSession(
+                        LocalDate.now(),
+                        MealSession.DINNER
+                )
+                .orElseThrow(() -> new IllegalStateException(
+                        "Today's Dinner menu not found."
+                ));
+
+        List<MealResponseSeed> responseSeeds = List.of(
+
+                // ---------------- TODAY LUNCH ----------------
+
+                new MealResponseSeed(0, MealSession.LUNCH, MealResponseStatus.ACCEPTED, MealOption.FULL, 1),
+                new MealResponseSeed(1, MealSession.LUNCH, MealResponseStatus.ACCEPTED, MealOption.HALF, 0),
+                new MealResponseSeed(2, MealSession.LUNCH, MealResponseStatus.DECLINED, null, 0),
+                new MealResponseSeed(3, MealSession.LUNCH, MealResponseStatus.ACCEPTED, MealOption.FULL, 2),
+                new MealResponseSeed(4, MealSession.LUNCH, MealResponseStatus.ACCEPTED, MealOption.HALF, 0),
+                new MealResponseSeed(5, MealSession.LUNCH, MealResponseStatus.DECLINED, null, 0),
+                new MealResponseSeed(6, MealSession.LUNCH, MealResponseStatus.ACCEPTED, MealOption.FULL, 1),
+                new MealResponseSeed(7, MealSession.LUNCH, MealResponseStatus.ACCEPTED, MealOption.FULL, 0),
+
+                // ---------------- TODAY DINNER ----------------
+
+                new MealResponseSeed(0, MealSession.DINNER, MealResponseStatus.ACCEPTED, MealOption.FULL, 0),
+                new MealResponseSeed(1, MealSession.DINNER, MealResponseStatus.DECLINED, null, 0),
+                new MealResponseSeed(2, MealSession.DINNER, MealResponseStatus.ACCEPTED, MealOption.HALF, 0),
+                new MealResponseSeed(3, MealSession.DINNER, MealResponseStatus.ACCEPTED, MealOption.FULL, 1),
+                new MealResponseSeed(4, MealSession.DINNER, MealResponseStatus.DECLINED, null, 0),
+                new MealResponseSeed(5, MealSession.DINNER, MealResponseStatus.ACCEPTED, MealOption.HALF, 0),
+                new MealResponseSeed(6, MealSession.DINNER, MealResponseStatus.ACCEPTED, MealOption.FULL, 2),
+                new MealResponseSeed(7, MealSession.DINNER, MealResponseStatus.DECLINED, null, 0)
+
+        );
+        
+        for (MealResponseSeed seed : responseSeeds) {
+
+            Customer customer = customers.get(seed.customerIndex());
+
+            Menu menu = (seed.mealSession() == MealSession.LUNCH)
+                    ? todayLunch
+                    : todayDinner;
+
+            MealResponse response = new MealResponse();
+
+            response.setCustomer(customer);
+            response.setMenu(menu);
+            response.setResponseStatus(seed.responseStatus());
+            response.setMealOption(seed.mealOption());
+            response.setExtraRotiCount(seed.extraRotiCount());
+            response.setRespondedAt(LocalDateTime.now());
+
+            mealResponseRepository.save(response);
+        }
+
+        log.info("Demo Meal Responses seeded successfully.");
+    }
 }
