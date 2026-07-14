@@ -143,7 +143,7 @@ public class MealRecordServiceImpl implements MealRecordService {
             }
         }
 
-     // Calculate Pricing
+        // Calculate Pricing
 
         BigDecimal mealPrice;
 
@@ -164,10 +164,8 @@ public class MealRecordServiceImpl implements MealRecordService {
                                 BigDecimal.valueOf(request.extraRotiCount())));
         
         
-     // Create Meal Record
+        // Create Meal Record
         
-        
-
         MealRecord mealRecord = MealRecord.builder()
 
                 .customer(customer)

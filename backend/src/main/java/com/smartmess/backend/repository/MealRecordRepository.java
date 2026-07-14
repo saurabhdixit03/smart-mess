@@ -62,18 +62,18 @@ public interface MealRecordRepository extends JpaRepository<MealRecord, Long> {
             COUNT(mr.meal_record_id)                                           AS totalMeals,
 
             COUNT(
-    CASE
-        WHEN mr.meal_option = 'FULL'
-        THEN 1
-    END
-) AS fullMeals,
+    			CASE
+    				WHEN mr.meal_option = 'FULL'
+    				THEN 1
+    			END
+    		) 																	AS fullMeals,
 
             COUNT(
-    CASE
-        WHEN mr.meal_option = 'HALF'
-        THEN 1
-    END
-) AS halfMeals,
+    			CASE
+    				WHEN mr.meal_option = 'HALF'
+    				THEN 1
+    			END
+    		) 																	AS halfMeals,
 
             COALESCE(
                 SUM(

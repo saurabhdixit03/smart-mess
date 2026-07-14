@@ -22,7 +22,9 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
             Long customerId,
             CustomerStatus status);
     
+    
     // for live dashboard
+    
     long countByStatus(CustomerStatus status);
     
     // for billing module
