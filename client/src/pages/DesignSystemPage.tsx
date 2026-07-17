@@ -1,12 +1,24 @@
-import { Button } from "@/components/common/ui";
+import { Button, Card } from "@/components/common/ui";
+import SectionTitle from "@/components/common/SectionTitle";
 
 export default function DesignSystemPage() {
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold">Design System</h1>
+    <div className="mx-auto max-w-7xl space-y-10">
+      <div className="space-y-2">
+  <h1 className="text-3xl font-bold tracking-tight">
+    🎨 Smart Mess Design System
+  </h1>
 
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold">Buttons</h2>
+  <p className="max-w-2xl text-[var(--color-text-secondary)]">
+    Reusable UI components that ensure a consistent experience across the Smart Mess application.
+  </p>
+</div>
+
+      <section className="space-y-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
+        <SectionTitle
+  title="Buttons"
+  description="Interactive actions used throughout the application."
+/>
 
         <div className="flex flex-wrap gap-4">
           <Button>Primary</Button>
@@ -39,7 +51,61 @@ export default function DesignSystemPage() {
         <Button disabled>
           Disabled
         </Button>
+
+        
+
       </section>
+
+   <section className="space-y-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
+  <SectionTitle
+    title="Cards"
+    description="Reusable containers for dashboards, menus and analytics."
+  />
+
+  <div className="grid gap-6 lg:grid-cols-2">
+
+    <Card>
+      <Card.Header>
+        <h3 className="text-lg font-semibold">
+          Today's Lunch
+        </h3>
+      </Card.Header>
+
+      <Card.Body>
+        <ul className="space-y-2">
+          <li>🥘 Paneer Masala</li>
+          <li>🍛 Dal Fry</li>
+          <li>🍚 Jeera Rice</li>
+          <li>🫓 3 Rotis</li>
+        </ul>
+      </Card.Body>
+
+      <Card.Footer className="flex justify-end">
+        <Button>Publish Menu</Button>
+      </Card.Footer>
+    </Card>
+
+    <Card>
+      <Card.Header>
+        <h3 className="text-lg font-semibold">
+          Monthly Revenue
+        </h3>
+      </Card.Header>
+
+      <Card.Body>
+        <p className="text-4xl font-bold">
+          ₹48,500
+        </p>
+
+        <p className="mt-2 text-sm text-green-600">
+          ▲ 12% from last month
+        </p>
+      </Card.Body>
+    </Card>
+
+  </div>
+</section>
+
     </div>
   );
 }
