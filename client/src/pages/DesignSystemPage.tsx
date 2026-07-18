@@ -1,22 +1,47 @@
 import { useState } from "react";
 
 import {
-Button,
-Badge,
-Card,
-Input,
-Label,
-Modal,
-Select,
-Textarea,
+  Badge,
+  Button,
+  Card,
+  DataTable,
+  Input,
+  Label,
+  Modal,
+  Select,
+  Textarea,
 } from "@/components/common/ui";
-
 
 import SectionTitle from "@/components/common/SectionTitle";
 
 export default function DesignSystemPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const customerColumns = [
+  { key: "name", header: "Customer" },
+  { key: "plan", header: "Plan" },
+  { key: "status", header: "Status" },
+] as const;
+
+const customerData = [
+  {
+    name: "Rahul Patil",
+    plan: "Full",
+    status: "Active",
+  },
+  {
+    name: "Sneha Kulkarni",
+    plan: "Half",
+    status: "Active",
+  },
+  {
+    name: "Amit Joshi",
+    plan: "Full",
+    status: "Inactive",
+  },
+];
+
   return (
     <div className="mx-auto max-w-7xl space-y-10">
       <div className="space-y-2">
@@ -413,6 +438,22 @@ export default function DesignSystemPage() {
   </Modal>
 
 </section>
+
+
+    <section className="space-y-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
+
+  <SectionTitle
+    title="Data Table"
+    description="Reusable tables for customers, billing and meal records."
+  />
+
+  <DataTable
+    columns={customerColumns}
+    data={customerData}
+  />
+
+</section>
+
 
     </div>
   );

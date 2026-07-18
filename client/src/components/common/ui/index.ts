@@ -6,3 +6,4 @@ export { default as Label } from "./Label";
 export { default as Select } from "./Select";
 export { default as Badge } from "./Badge";
 export { default as Modal } from "./Modal";
+export { default as DataTable } from "./Table";
