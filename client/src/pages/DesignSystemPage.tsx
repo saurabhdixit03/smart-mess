@@ -1,4 +1,13 @@
-import { Button, Card, Input, Label, Textarea } from "@/components/common/ui";
+import {
+  Button,
+  Card,
+  Input,
+  Label,
+  Select,
+  Textarea,
+} from "@/components/common/ui";
+
+
 import SectionTitle from "@/components/common/SectionTitle";
 
 export default function DesignSystemPage() {
@@ -219,6 +228,70 @@ export default function DesignSystemPage() {
       </Label>
 
       <Textarea placeholder="Holiday information..." />
+    </div>
+
+  </div>
+
+</section>
+
+<section className="space-y-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
+
+  <SectionTitle
+    title="Select"
+    description="Reusable dropdowns for forms and menu management."
+  />
+
+  <div className="grid gap-6 md:grid-cols-2">
+
+    <div>
+      <Label required>
+        Meal Type
+      </Label>
+
+      <Select fullWidth defaultValue="">
+        <option value="" disabled>
+          Select meal
+        </option>
+
+        <option>Lunch</option>
+        <option>Dinner</option>
+      </Select>
+    </div>
+
+    <div>
+      <Label>
+        Meal Plan
+      </Label>
+
+      <Select fullWidth defaultValue="Half">
+        <option>Half</option>
+        <option>Full</option>
+      </Select>
+    </div>
+
+    <div>
+      <Label>
+        Disabled
+      </Label>
+
+      <Select fullWidth disabled>
+        <option>Disabled</option>
+      </Select>
+    </div>
+
+    <div>
+      <Label required>
+        Error
+      </Label>
+
+      <Select fullWidth error defaultValue="">
+        <option value="" disabled>
+          Select option
+        </option>
+
+        <option>Option 1</option>
+        <option>Option 2</option>
+      </Select>
     </div>
 
   </div>
