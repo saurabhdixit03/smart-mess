@@ -1,4 +1,4 @@
-import { Button, Card, Input } from "@/components/common/ui";
+import { Button, Card, Input, Textarea } from "@/components/common/ui";
 import SectionTitle from "@/components/common/SectionTitle";
 
 export default function DesignSystemPage() {
@@ -142,6 +142,38 @@ export default function DesignSystemPage() {
     <Input
       placeholder="Full Width"
       fullWidth
+    />
+
+  </div>
+
+</section>
+
+<section className="space-y-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
+
+  <SectionTitle
+    title="Textarea"
+    description="Reusable multiline input for menus and announcements."
+  />
+
+  <div className="grid gap-6">
+
+    <Textarea
+      placeholder="Today's lunch menu..."
+    />
+
+    <Textarea
+      placeholder="Announcement..."
+      rows={6}
+    />
+
+    <Textarea
+      placeholder="Error state"
+      error
+    />
+
+    <Textarea
+      placeholder="Disabled"
+      disabled
     />
 
   </div>
