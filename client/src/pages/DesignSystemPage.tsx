@@ -1,9 +1,12 @@
+import { useState } from "react";
+
 import {
-  Button,
+Button,
 Badge,
 Card,
 Input,
 Label,
+Modal,
 Select,
 Textarea,
 } from "@/components/common/ui";
@@ -12,6 +15,8 @@ Textarea,
 import SectionTitle from "@/components/common/SectionTitle";
 
 export default function DesignSystemPage() {
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
   return (
     <div className="mx-auto max-w-7xl space-y-10">
       <div className="space-y-2">
@@ -329,6 +334,83 @@ export default function DesignSystemPage() {
     </Badge>
 
   </div>
+
+</section>
+
+
+
+    <section className="space-y-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
+
+  <SectionTitle
+    title="Modal"
+    description="Reusable dialogs for menu publishing, editing and confirmations."
+  />
+
+  <Button onClick={() => setIsModalOpen(true)}>
+    Open Modal
+  </Button>
+
+  <Modal
+    open={isModalOpen}
+    title="Publish Today's Menu"
+    onClose={() => setIsModalOpen(false)}
+    footer={
+      <>
+        <Button
+          variant="secondary"
+          onClick={() => setIsModalOpen(false)}
+        >
+          Cancel
+        </Button>
+
+        <Button>
+          Publish
+        </Button>
+      </>
+    }
+  >
+    <div className="space-y-4">
+
+      <div>
+        <Label required>
+          Meal Type
+        </Label>
+
+        <Select fullWidth defaultValue="">
+          <option value="" disabled>
+            Select meal
+          </option>
+
+          <option>Lunch</option>
+          <option>Dinner</option>
+        </Select>
+      </div>
+
+      <div>
+        <Label required>
+          Menu Title
+        </Label>
+
+        <Input
+          fullWidth
+          placeholder="Enter menu title"
+        />
+      </div>
+
+      <div>
+        <Label>
+          Description
+        </Label>
+
+        <Textarea
+          fullWidth
+          rows={4}
+          placeholder="Describe today's menu..."
+        />
+      </div>
+
+    </div>
+  </Modal>
 
 </section>
 
