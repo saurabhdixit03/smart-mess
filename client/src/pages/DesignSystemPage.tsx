@@ -1,4 +1,4 @@
-import { Button, Card } from "@/components/common/ui";
+import { Button, Card, Input } from "@/components/common/ui";
 import SectionTitle from "@/components/common/SectionTitle";
 
 export default function DesignSystemPage() {
@@ -104,6 +104,48 @@ export default function DesignSystemPage() {
     </Card>
 
   </div>
+</section>
+
+<section className="space-y-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
+
+  <SectionTitle
+    title="Inputs"
+    description="Reusable form controls for menu management and customer information."
+  />
+
+  <div className="grid gap-6 lg:grid-cols-2">
+
+    <Input
+      placeholder="Menu Title"
+    />
+
+    <Input
+      placeholder="Customer Name"
+    />
+
+    <Input
+      placeholder="Disabled Input"
+      disabled
+    />
+
+    <Input
+      placeholder="Error State"
+      error
+    />
+
+    <Input inputSize="sm" />
+
+    <Input inputSize="md" />
+
+    <Input inputSize="lg" />
+
+    <Input
+      placeholder="Full Width"
+      fullWidth
+    />
+
+  </div>
+
 </section>
 
     </div>
