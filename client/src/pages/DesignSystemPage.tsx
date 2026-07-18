@@ -1,10 +1,11 @@
 import {
   Button,
-  Card,
-  Input,
-  Label,
-  Select,
-  Textarea,
+Badge,
+Card,
+Input,
+Label,
+Select,
+Textarea,
 } from "@/components/common/ui";
 
 
@@ -293,6 +294,39 @@ export default function DesignSystemPage() {
         <option>Option 2</option>
       </Select>
     </div>
+
+  </div>
+
+</section>
+
+<section className="space-y-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
+
+  <SectionTitle
+    title="Badge"
+    description="Reusable status indicators for menus, billing and customers."
+  />
+
+  <div className="flex flex-wrap gap-3">
+
+    <Badge>
+      Published
+    </Badge>
+
+    <Badge variant="success">
+      Active
+    </Badge>
+
+    <Badge variant="warning">
+      Pending
+    </Badge>
+
+    <Badge variant="danger">
+      Cancelled
+    </Badge>
+
+    <Badge variant="neutral">
+      Draft
+    </Badge>
 
   </div>
 
