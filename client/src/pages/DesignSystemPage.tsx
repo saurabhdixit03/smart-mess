@@ -1,4 +1,4 @@
-import { Button, Card, Input, Textarea } from "@/components/common/ui";
+import { Button, Card, Input, Label, Textarea } from "@/components/common/ui";
 import SectionTitle from "@/components/common/SectionTitle";
 
 export default function DesignSystemPage() {
@@ -175,6 +175,51 @@ export default function DesignSystemPage() {
       placeholder="Disabled"
       disabled
     />
+
+  </div>
+
+</section>
+
+<section className="space-y-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-sm">
+
+  <SectionTitle
+    title="Labels"
+    description="Consistent labels for forms across Smart Mess."
+  />
+
+  <div className="grid gap-6 md:grid-cols-2">
+
+    <div>
+      <Label>
+        Customer Name
+      </Label>
+
+      <Input placeholder="Enter customer name" />
+    </div>
+
+    <div>
+      <Label required>
+        Menu Title
+      </Label>
+
+      <Input placeholder="Today's Lunch" />
+    </div>
+
+    <div>
+      <Label>
+        Announcement
+      </Label>
+
+      <Textarea placeholder="Type announcement..." />
+    </div>
+
+    <div>
+      <Label required>
+        Holiday Notice
+      </Label>
+
+      <Textarea placeholder="Holiday information..." />
+    </div>
 
   </div>
 
