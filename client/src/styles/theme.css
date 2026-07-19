@@ -1,0 +1,57 @@
+:root {
+  /* ==========================
+     Brand
+     ========================== */
+
+  --color-primary: #4C774B;
+--color-primary-hover: #3E6540;
+
+  /* ==========================
+     Background
+     ========================== */
+
+  --color-background: #f8f6f1;
+  --color-surface: #ffffff;
+
+  /* ==========================
+     Text
+     ========================== */
+
+  --color-text: #2d2d2d;
+  --color-text-secondary: #6b7280;
+
+  /* ==========================
+     Border
+     ========================== */
+
+  --color-border: #e8e5dd;
+
+  /* ==========================
+     Status
+     ========================== */
+
+  --color-success: #4f8a5b;
+  --color-warning: #c98a2e;
+  --color-danger: #b85450;
+  --color-info: #4f6f52;
+
+  /* ==========================
+     Radius
+     ========================== */
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* ==========================
+     Shadows
+     ========================== */
+
+     
+
+  --shadow-sm: 0 4px 10px rgba(76, 119, 75, 0.18);
+
+  --shadow-md: 0 8px 24px rgba(76, 119, 75, 0.14);
+
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
+}

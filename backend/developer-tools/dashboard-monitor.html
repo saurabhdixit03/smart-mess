@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Mess Dashboard Monitor</title>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f6f9;margin:24px}
+h1,h2{color:#2c3e50}
+button{padding:10px 16px;margin-right:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:20px 0}
+.card{background:#fff;padding:14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.card b{display:block;font-size:26px;margin-top:8px}
+.status{font-weight:bold;margin:10px 0}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{border:1px solid #ddd;padding:8px;text-align:center}
+th{background:#34495e;color:#fff}
+.accepted{color:#0b8f3b;font-weight:bold}
+.declined{color:#c0392b;font-weight:bold}
+.pending{color:#d68910;font-weight:bold}
+details{margin-top:20px}
+pre{background:#222;color:#9cff9c;padding:12px;border-radius:8px;overflow:auto}
+</style>
+</head>
+<body>
+<h1>Smart Mess Dashboard Monitor</h1>
+
+<button onclick="connect('LUNCH')">Connect Lunch</button>
+<button onclick="connect('DINNER')">Connect Dinner</button>
+<button onclick="disconnect()">Disconnect</button>
+
+<div id="connectionStatus" class="status">🔴 Disconnected</div>
+
+<p>
+Session: <b id="currentSession">-</b> |
+Connected: <b id="connectedTime">-</b> |
+Last Update: <b id="lastUpdate">-</b> |
+Messages: <b id="messageCount">0</b>
+</p>
+
+<div class="grid">
+<div class="card">Meal Session<b id="mealSession">-</b></div>
+<div class="card">Menu Date<b id="menuDate">-</b></div>
+<div class="card">Active Customers<b id="activeCustomers">0</b></div>
+<div class="card">Accepted<b id="acceptedResponses">0</b></div>
+<div class="card">Declined<b id="declinedResponses">0</b></div>
+<div class="card">Pending<b id="pendingResponses">0</b></div>
+<div class="card">Full Meals<b id="expectedFullMeals">0</b></div>
+<div class="card">Half Meals<b id="expectedHalfMeals">0</b></div>
+<div class="card">Extra Rotis<b id="expectedExtraRotis">0</b></div>
+<div class="card">Total Rotis<b id="totalRotisRequired">0</b></div>
+</div>
+
+<h2>Meal Collection Queue</h2>
+<table id="collectionQueueTable">
+<thead>
+<tr>
+<th>Customer</th><th>Response</th><th>Meal</th><th>Extra Rotis</th><th>Collected</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<details open>
+<summary><b>Raw Dashboard JSON</b></summary>
+<pre id="jsonOutput">Waiting for Dashboard...</pre>
+</details>
+
+<script>
+let stompClient=null,socket=null,connected=false,reconnectSession=null,reconnectTimer=null,messageCounter=0;
+
+function connect(session){
+ if(connected) return;
+ reconnectSession=session;
+ socket=new SockJS("http://localhost:8080/ws-dashboard");
+ stompClient=Stomp.over(socket);
+ stompClient.debug=null;
+ setStatus("🟡 Connecting...");
+ stompClient.connect({},()=>{
+   connected=true;
+   document.getElementById("currentSession").textContent=session;
+   document.getElementById("connectedTime").textContent=new Date().toLocaleTimeString();
+   setStatus("🟢 Connected");
+   stompClient.subscribe("/topic/dashboard/"+session,msg=>{
+      messageCounter++;
+      document.getElementById("messageCount").textContent=messageCounter;
+      document.getElementById("lastUpdate").textContent=new Date().toLocaleTimeString();
+      const d=JSON.parse(msg.body);
+      updateCards(d);
+      document.getElementById("jsonOutput").textContent=JSON.stringify(d,null,4);
+   });
+ },()=>reconnect());
+}
+function disconnect(){
+ if(stompClient) stompClient.disconnect();
+ connected=false;
+ clearTimeout(reconnectTimer);
+ setStatus("🔴 Disconnected");
+}
+function reconnect(){
+ if(connected) return;
+ setStatus("🟡 Reconnecting...");
+ reconnectTimer=setTimeout(()=>connect(reconnectSession),3000);
+}
+function setStatus(txt){document.getElementById("connectionStatus").textContent=txt;}
+
+function updateCards(d){
+ ["mealSession","menuDate","activeCustomers","acceptedResponses","declinedResponses",
+ "pendingResponses","expectedFullMeals","expectedHalfMeals",
+ "expectedExtraRotis","totalRotisRequired"].forEach(id=>{
+   document.getElementById(id).textContent=d[id];
+ });
+ const tbody=document.querySelector("#collectionQueueTable tbody");
+ tbody.innerHTML="";
+ (d.collectionQueue||[]).forEach(c=>{
+   const meal=c.responseStatus==="DECLINED"?"-":(c.mealOption||"-");
+   const roti=c.responseStatus==="DECLINED"?"-":c.extraRotiCount;
+   const cls=c.responseStatus.toLowerCase();
+   const tr=document.createElement("tr");
+   tr.innerHTML=`<td>${c.customerName}</td>
+   <td class="${cls}">${c.responseStatus}</td>
+   <td>${meal}</td>
+   <td>${roti}</td>
+   <td>${c.collected?"✅":"❌"}</td>`;
+   tbody.appendChild(tr);
+ });
+}
+</script>
+</body>
+</html>

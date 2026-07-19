@@ -1,0 +1,253 @@
+package com.smartmess.backend.service.impl;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.smartmess.backend.dto.request.GenerateBillRequest;
+import com.smartmess.backend.dto.response.BillDetailResponse;
+import com.smartmess.backend.dto.response.BillResponse;
+import com.smartmess.backend.entity.Bill;
+import com.smartmess.backend.entity.Customer;
+import com.smartmess.backend.entity.MealRecord;
+import com.smartmess.backend.enums.BillStatus;
+import com.smartmess.backend.enums.CustomerStatus;
+import com.smartmess.backend.exception.BusinessException;
+import com.smartmess.backend.exception.ResourceNotFoundException;
+import com.smartmess.backend.mapper.BillMapper;
+import com.smartmess.backend.mapper.MealRecordMapper;
+import com.smartmess.backend.repository.BillRepository;
+import com.smartmess.backend.repository.CustomerRepository;
+import com.smartmess.backend.repository.MealRecordRepository;
+import com.smartmess.backend.service.BillService;
+
+@Service
+public class BillServiceImpl implements BillService {
+
+    private final BillRepository billRepository;
+
+    private final CustomerRepository customerRepository;
+
+    private final MealRecordRepository mealRecordRepository;
+
+    private final BillMapper billMapper;
+
+    private final MealRecordMapper mealRecordMapper;
+
+    public BillServiceImpl(
+            BillRepository billRepository,
+            CustomerRepository customerRepository,
+            MealRecordRepository mealRecordRepository,
+            BillMapper billMapper,
+            MealRecordMapper mealRecordMapper) {
+
+        this.billRepository = billRepository;
+        this.customerRepository = customerRepository;
+        this.mealRecordRepository = mealRecordRepository;
+        this.billMapper = billMapper;
+        this.mealRecordMapper = mealRecordMapper;
+    }
+
+    /*
+     * Generate Bills
+     */
+    @Override
+    public List<BillResponse> generateBills(
+            GenerateBillRequest request) {
+
+        List<Customer> customers =
+                customerRepository.findByStatus(
+                        CustomerStatus.ACTIVE
+                );
+
+        List<BillResponse> generatedBills =
+                new ArrayList<>();
+
+        LocalDate startDate =
+                LocalDate.of(
+                        request.billingYear(),
+                        request.billingMonth(),
+                        1
+                );
+
+        LocalDate endDate =
+                startDate.withDayOfMonth(
+                        startDate.lengthOfMonth()
+                );
+
+        LocalDateTime start =
+                startDate.atStartOfDay();
+
+        LocalDateTime end =
+                endDate.atTime(
+                        LocalTime.MAX
+                );
+
+        for (Customer customer : customers) {
+
+            /*
+             * Skip duplicate Bills.
+             */
+            boolean billExists =
+                    billRepository
+                            .existsByCustomerAndBillingMonthAndBillingYear(
+                                    customer,
+                                    request.billingMonth(),
+                                    request.billingYear()
+                            );
+
+            if (billExists) {
+                continue;
+            }
+
+            List<MealRecord> mealRecords =
+                    mealRecordRepository
+                            .findByCustomerAndCollectedAtBetween(
+                                    customer,
+                                    start,
+                                    end
+                            );
+
+            /*
+             * Skip Customers having no Meal Records.
+             */
+            if (mealRecords.isEmpty()) {
+                continue;
+            }
+
+            BigDecimal totalAmount =
+                    mealRecords.stream()
+
+                            .map(MealRecord::getTotalAmount)
+
+                            .reduce(
+                                    BigDecimal.ZERO,
+                                    BigDecimal::add
+                            );
+
+            Bill bill =
+                    new Bill();
+
+            bill.setCustomer(customer);
+
+            bill.setBillingMonth(
+                    request.billingMonth()
+            );
+
+            bill.setBillingYear(
+                    request.billingYear()
+            );
+
+            bill.setMealRecordCount(
+                    mealRecords.size()
+            );
+
+            bill.setTotalAmount(
+                    totalAmount
+            );
+
+            bill.setBillStatus(
+                    BillStatus.UNPAID
+            );
+
+            Bill savedBill =
+                    billRepository.save(bill);
+
+            /*
+             * Link Meal Records to the generated Bill.
+             */
+            for (MealRecord mealRecord : mealRecords) {
+
+                mealRecord.setBill(savedBill);
+
+            }
+
+            mealRecordRepository.saveAll(mealRecords);
+
+            generatedBills.add(
+                    billMapper.toResponse(savedBill)
+            );
+
+        }
+        
+        if (generatedBills.isEmpty()) {
+
+            throw new BusinessException(
+                    "No bills were generated for the selected billing period."
+            );
+
+        }
+
+        return generatedBills;
+
+    }
+
+    /*
+     * Customer Bill History
+     */
+    @Override
+    public List<BillResponse> getCustomerBills(
+            Long customerId) {
+
+        Customer customer =
+                customerRepository.findById(customerId)
+
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Customer not found with ID: "
+                                                + customerId
+                                ));
+
+        List<Bill> bills =
+                billRepository
+                        .findByCustomerOrderByGeneratedAtDesc(
+                                customer
+                        );
+
+        return billMapper.toResponseList(
+                bills
+        );
+
+    }
+
+    /*
+     * Bill Details
+     */
+    @Override
+    public BillDetailResponse getBillDetails(
+            Long billId) {
+
+        Bill bill =
+                billRepository.findById(billId)
+
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Bill not found with ID: "
+                                                + billId
+                                ));
+
+        List<MealRecord> mealRecords =
+                mealRecordRepository
+                        .findByBillOrderByCollectedAtAsc(
+                                bill
+                        );
+        BillDetailResponse response =
+                billMapper.toDetailResponse(
+                        bill
+                );
+
+        response.setMealRecords(
+                mealRecordMapper.toResponseList(
+                        mealRecords
+                )
+        );
+
+        return response;
+
+    }
+}

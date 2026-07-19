@@ -21,5 +21,16 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     Optional<Customer> findByCustomerIdAndStatus(
             Long customerId,
             CustomerStatus status);
+    
+    
+    // for live dashboard
+    
+    long countByStatus(CustomerStatus status);
+    
+    // for billing module
+    
+    List<Customer> findByStatus(
+            CustomerStatus status
+    );
 
 }
