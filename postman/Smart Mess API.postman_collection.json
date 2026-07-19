@@ -1,369 +1,2505 @@
 {
-	"info": {
-		"_postman_id": "ab6ba7db-400c-49db-a3ba-c1c9260a629c",
-		"name": "Smart Mess API",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "40593794"
-	},
-	"item": [
-		{
-			"name": "Customer",
-			"item": [
-				{
-					"name": "CUS-001 CreateCustomer",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"fullName\": \"Kartik Deshmukh\",\r\n    \"mobileNumber\": \"9912345678\",\r\n    \"email\": \"kartikdeshmukh@gmail.com\",\r\n    \"remarks\": \"Regular customer\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/customers",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "CUS-002 DuplicateMobileNo",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"fullName\": \"Saurabh Patil\",\r\n    \"mobileNumber\": \"9876543210\",\r\n    \"email\": \"saurabh@gmail.com\",\r\n    \"remarks\": \"Regular customer\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/customers",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "CUS-003 Validation",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"fullName\": \"\",\r\n    \"mobileNumber\": \"123\",\r\n    \"email\": \"abc\",\r\n    \"remarks\": \"\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/customers",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "CUS-004 EmailOptional",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"fullName\": \"Ketan Agarwal\",\r\n    \"mobileNumber\": \"9123456145\",\r\n    \"remarks\": \"Hostel Block B\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/customers",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "CUS-005 getCustomerById",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/customers/1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers",
-								"1"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "CUS-006 CustomerNotFound",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/customers/33",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers",
-								"33"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "CUS-007 GetCustomers",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "GET",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/customers",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "CUS-008 UpdateCustomer",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"fullName\": \"Saurabh Patil \",\r\n    \"mobileNumber\": \"9876543210\",\r\n    \"email\": \"saurabh@gmail.com\",\r\n    \"remarks\": \" Regular customer \"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/customers/1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers",
-								"1"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "CUS-009 UpdateCustomerNotFound",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"fullName\": \"Saurabh Patil Updated\",\r\n    \"mobileNumber\": \"9876543210\",\r\n    \"email\": \"saurabh.updated@gmail.com\",\r\n    \"remarks\": \"Updated customer details\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/customers/999",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers",
-								"999"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "CUS-010 UpdateDuplicateMobileNumber",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"fullName\": \"Saurabh Patil Updated\",\r\n    \"mobileNumber\": \"9123456789\",\r\n    \"email\": \"saurabh.updated@gmail.com\",\r\n    \"remarks\": \"Updated customer details\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/customers/1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers",
-								"1"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "CUS-011 UpdateValidation",
-					"request": {
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"fullName\": \"\",\r\n    \"mobileNumber\": \"123\",\r\n    \"email\": \"invalid-email\",\r\n    \"remarks\": \"Testing\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/customers/1",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers",
-								"1"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "CUS-012 DeleteCustomerSoftDelete",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/customers/3",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers",
-								"3"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "CUS-013 DeleteAlreadyInactiveCustomer",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/customers/3",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers",
-								"3"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "CUS-014 DeleteCustomerNotFound",
-					"request": {
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/customers/33",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"customers",
-								"33"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		}
-	]
+  "info": {
+    "_postman_id": "ab6ba7db-400c-49db-a3ba-c1c9260a629c",
+    "name": "Smart Mess API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "40593794"
+  },
+  "item": [
+    {
+      "name": "Customer",
+      "item": [
+        {
+          "name": "CUS-001 Create Customer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"fullName\": \"Kartik Deshmukh\",\r\n    \"mobileNumber\": \"9912345678\",\r\n    \"email\": \"kartikdeshmukh@gmail.com\",\r\n    \"remarks\": \"Regular customer\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CUS-002 Duplicate MobileNo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"fullName\": \"Saurabh Patil\",\r\n    \"mobileNumber\": \"9876543210\",\r\n    \"email\": \"saurabh@gmail.com\",\r\n    \"remarks\": \"Regular customer\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CUS-003 Validation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"fullName\": \"\",\r\n    \"mobileNumber\": \"123\",\r\n    \"email\": \"abc\",\r\n    \"remarks\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CUS-004 Email Optional",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"fullName\": \"Ketan Agarwal\",\r\n    \"mobileNumber\": \"9123456145\",\r\n    \"remarks\": \"Hostel Block B\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CUS-005 getCustomerById",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CUS-006 Customer Not Found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/33",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "33"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CUS-007 Get Customers",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CUS-008 Update Customer",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"fullName\": \"Saurabh Patil \",\r\n    \"mobileNumber\": \"9876543210\",\r\n    \"email\": \"saurabh@gmail.com\",\r\n    \"remarks\": \" Regular customer \"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CUS-009 Update Customer NotFound",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"fullName\": \"Saurabh Patil Updated\",\r\n    \"mobileNumber\": \"9876543210\",\r\n    \"email\": \"saurabh.updated@gmail.com\",\r\n    \"remarks\": \"Updated customer details\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CUS-010 Update Duplicate MobileNo",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"fullName\": \"Saurabh Patil Updated\",\r\n    \"mobileNumber\": \"9123456789\",\r\n    \"email\": \"saurabh.updated@gmail.com\",\r\n    \"remarks\": \"Updated customer details\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CUS-011 Update Validation",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"fullName\": \"\",\r\n    \"mobileNumber\": \"123\",\r\n    \"email\": \"invalid-email\",\r\n    \"remarks\": \"Testing\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CUS-012 Delete Customer SoftDelete",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CUS-013 Delete Already InactiveCustomer",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CUS-014 Delete Customer NotFound",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/33",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "customers",
+                "33"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Menu",
+      "item": [
+        {
+          "name": "MEN-001 Publish Lunch Menu",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"menuDate\": \"2026-07-06\",\r\n    \"mealSession\": \"LUNCH\",\r\n    \"sabjiOne\": \"Aloo Matar\",\r\n    \"sabjiTwo\": \"Cabbage\",\r\n    \"dal\": \"Toor Dal\",\r\n    \"rice\": \"Steamed Rice\",\r\n    \"sweet\": \"Gulab Jamun\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/menus",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "menus"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MEN-002 Duplicate Lunch Menu",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"menuDate\": \"2026-07-06\",\r\n    \"mealSession\": \"LUNCH\",\r\n    \"sabjiOne\": \"Aloo Matar\",\r\n    \"sabjiTwo\": \"Cabbage\",\r\n    \"dal\": \"Toor Dal\",\r\n    \"rice\": \"Steamed Rice\",\r\n    \"sweet\": \"Gulab Jamun\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/menus",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "menus"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MEN-003 Publish Dinner Menu",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"menuDate\": \"2026-07-06\",\r\n    \"mealSession\": \"DINNER\",\r\n    \"sabjiOne\": \"Paneer Butter Masala\",\r\n    \"sabjiTwo\": \"Mix Veg\",\r\n    \"dal\": \"Dal Fry\",\r\n    \"rice\": \"Jeera Rice\",\r\n    \"sweet\": \"Sheera\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/menus",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "menus"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MEN-004 Validation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"menuDate\": \"2026-07-06\",\r\n    \"mealSession\": \"LUNCH\",\r\n    \"sabjiOne\": \"\",\r\n    \"sabjiTwo\": \"Mix Veg\",\r\n    \"dal\": \"Dal Fry\",\r\n    \"rice\": \"Rice\",\r\n    \"sweet\": \"Sheera\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/menus",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "menus"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MEN-005 Today's Menus",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"menuDate\": \"2026-07-06\",\r\n    \"mealSession\": \"DINNER\",\r\n    \"sabjiOne\": \"Paneer Butter Masala\",\r\n    \"sabjiTwo\": \"Mix Veg\",\r\n    \"dal\": \"Dal Fry\",\r\n    \"rice\": \"Jeera Rice\",\r\n    \"sweet\": \"Sheera\"\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/today",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "menus",
+                "today"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MEN-006 GetMenubyID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "menus",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MEN-007 Invalid MenuID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/222",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "menus",
+                "222"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MEN-008 Menu History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "menus",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Meal Pricing",
+      "item": [
+        {
+          "name": "MPR-001 Get Current Pricing (First Time)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-pricing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-pricing"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MPR-002 Update Meal Pricing",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": 80,\r\n    \"extraRotiPrice\": 10\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-pricing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-pricing"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MPR-003 Verify Update",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": 80,\r\n    \"extraRotiPrice\": 10\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-pricing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-pricing"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MPR-004 Validation",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"halfMealPrice\": 00,\r\n    \"fullMealPrice\": 80,\r\n    \"extraRotiPrice\": 10\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-pricing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-pricing"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MPR-005 Validation (null)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": null,\r\n    \"extraRotiPrice\": 10\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-pricing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-pricing"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MPR-006 Validation (Negative)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": -80,\r\n    \"extraRotiPrice\": 10\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-pricing",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-pricing"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Meal Response",
+      "item": [
+        {
+          "name": "MRE-001 Submit First Response (Create)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 4,\r\n  \"menuId\": 7,\r\n  \"responseStatus\": \"ACCEPTED\",\r\n  \"mealOption\": \"FULL\",\r\n  \"extraRotiCount\": \"0\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-responses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MRE-002 Submit Again (Update)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 1,\r\n  \"menuId\": 1,\r\n  \"responseStatus\": \"ACCEPTED\",\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-responses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MRE-003 Decline Meal",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 1,\r\n  \"menuId\": 1,\r\n  \"responseStatus\": \"DECLINED\",\r\n  \"mealOption\": null,\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-responses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MRE-004 Invalid Accepted Response",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 1,\r\n  \"menuId\": 1,\r\n  \"responseStatus\": \"ACCEPTED\",\r\n  \"mealOption\": null,\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-responses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MRE-005 Invalid Declined Response",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 1,\r\n  \"menuId\": 1,\r\n  \"responseStatus\": \"DECLINED\",\r\n  \"mealOption\": \"FULL\",\r\n  \"extraRotiCount\": 0\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-responses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MRE-006 Invalid Extra Roti",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 1,\r\n  \"menuId\": 1,\r\n  \"responseStatus\": \"DECLINED\",\r\n  \"mealOption\": null,\r\n  \"extraRotiCount\": 2\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-responses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MRE-007 Bean Validation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 1,\r\n  \"menuId\": 1,\r\n  \"responseStatus\": \"ACCEPTED\",\r\n  \"mealOption\": \"FULL\",\r\n  \"extraRotiCount\": 6\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-responses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MRE-008 Customer Not Found",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 999,\r\n  \"menuId\": 1,\r\n  \"responseStatus\": \"ACCEPTED\",\r\n  \"mealOption\": \"FULL\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-responses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MRE-009 Menu Not Found",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 1,\r\n  \"menuId\": 999,\r\n  \"responseStatus\": \"ACCEPTED\",\r\n  \"mealOption\": \"FULL\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-responses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MRE-010 Get Responses by Menu",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-responses/menu/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses",
+                "menu",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MRE-011 Inactive Customer Can't Submit Meal Response",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 3,\r\n  \"menuId\": 5,\r\n  \"responseStatus\": \"DECLINED\",\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": \"0\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-responses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Live Dashboard API",
+      "item": [
+        {
+          "name": "DAS-001 Dashboard for Lunch (Happy Path)",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": -80,\r\n    \"extraRotiPrice\": 10\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=LUNCH",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "LUNCH"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DAS-002 Dashboard for Dinner (Happy Path)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=DINNER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "DINNER"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DAS-003 Menu Doesn't Exist",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": -80,\r\n    \"extraRotiPrice\": 10\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=DINNER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "DINNER"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DAS-004 No Meal Responses Yet",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": -80,\r\n    \"extraRotiPrice\": 10\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=DINNER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "DINNER"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DAS-005 All Customers Accepted",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": -80,\r\n    \"extraRotiPrice\": 10\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=DINNER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "DINNER"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DAS-006 All Customers Declined",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=DINNER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "DINNER"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DAS-007 Mixed Responses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=DINNER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "DINNER"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DAS-008 Full/Half Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=DINNER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "DINNER"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DAS-009 Extra Roti Calculation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=DINNER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "DINNER"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DAS-010 Total Roti Calculation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=DINNER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "DINNER"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DAS-011 Invalid Meal Session",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": -80,\r\n    \"extraRotiPrice\": 10\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=BREAKFAST",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "BREAKFAST"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DAS-012 Missing Meal Session",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": -80,\r\n    \"extraRotiPrice\": 10\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DAS-013 Meal Session Isolation (LUNCH)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=LUNCH",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "LUNCH"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DAS-014 Meal Session Isolation (DINNER)",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": -80,\r\n    \"extraRotiPrice\": 10\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=DINNER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "DINNER"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Meal Record",
+      "item": [
+        {
+          "name": "MREC-001 Create Meal Record from Existing Meal Response",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 2,\r\n  \"menuId\": 8,\r\n  \"mealResponseId\": 25,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-002 Manual Collection (No Meal Response)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 1,\r\n  \"menuId\": 6,\r\n  \"mealResponseId\": 19,\r\n  \"mealOption\": \"FULL\",\r\n  \"extraRotiCount\": 2\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-003 Half Meal",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 10,\r\n  \"menuId\": 8,\r\n  \"mealResponseId\": 29,\r\n  \"mealOption\": \"FULL\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-004 Full Meal",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 1,\r\n  \"menuId\": 9,\r\n  \"mealResponseId\": 32,\r\n  \"mealOption\": \"FULL\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-005 Extra Roti Calculation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 4,\r\n  \"menuId\": 9,\r\n  \"mealResponseId\": 34,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-006 Customer Does Not Exist",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 44,\r\n  \"menuId\": 9,\r\n  \"mealResponseId\": 34,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-007 Customer Inactive",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 3,\r\n  \"menuId\": 9,\r\n  \"mealResponseId\": 34,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-008 Menu Does Not Exist",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 12,\r\n  \"menuId\": 99,\r\n  \"mealResponseId\": 34,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-009 Pricing Missing",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 8,\r\n  \"menuId\": 9,\r\n  \"mealResponseId\": 35,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-010 Meal Response Does Not Exist",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 8,\r\n  \"menuId\": 9,\r\n  \"mealResponseId\": 999,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-011 Meal Response Belongs to Another Customer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 8,\r\n  \"menuId\": 9,\r\n  \"mealResponseId\": 31,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-012 Meal Response Belongs to Another Menu",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 10,\r\n  \"menuId\": 9,\r\n  \"mealResponseId\": 10,\r\n  \"mealOption\": \"FULL\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-013 Duplicate Response Collection",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 5,\r\n  \"menuId\": 9,\r\n  \"mealResponseId\": 37,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-014 Duplicate Manual Collection",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 10,\r\n  \"menuId\": 9,\r\n  \"mealResponseId\": null,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-015 Customer Meal History",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-016 Customer Without History",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-017 Today's Meal Records (Lunch)",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-018 Today's Meal Records (Dinner)",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-019 Invalid Meal Session",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "MREC-020 Live Dashboard Refresh",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": 11,\r\n  \"menuId\": 9,\r\n  \"mealResponseId\": 38,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-records",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Bill",
+      "item": [
+        {
+          "name": "BILL-001 Generate Bills",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bills/generate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bills",
+                "generate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BILL-002 Generate Again",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bills/generate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bills",
+                "generate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BILL-003 Customer Bills",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bills/customer/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bills",
+                "customer",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BILL-004 Invalid Customer",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bills/customer/99",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bills",
+                "customer",
+                "99"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BILL-005 Bill Details",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bills/11",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bills",
+                "11"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "BILL-006 Invalid Bill",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bills/11",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bills",
+                "11"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payment",
+      "item": [
+        {
+          "name": "PAY-001 Cash Payment - Successful Payment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"billId\": 1,\r\n    \"paymentMode\": \"CASH\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-002 Cash Payment - Already Paid Bill",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"billId\": 1,\r\n    \"paymentMode\": \"CASH\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-003 UPI Payment Request - Successful",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/request/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "request",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-004 UPI Payment Request - Duplicate Request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/request/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "request",
+                "2"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-005 Approve UPI Payment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"billId\": 2,\r\n    \"paymentMode\": \"UPI\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-006 Approve UPI Without Request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"billId\": 3,\r\n    \"paymentMode\": \"UPI\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-007 Cash Payment On Pending UPI Bill",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"billId\": 4,\r\n    \"paymentMode\": \"CASH\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-008 Bill Not Found",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"billId\": 999,\r\n    \"paymentMode\": \"CASH\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-009 Payment Request - Bill Not Found",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/request/999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "request",
+                "999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-010 Duplicate UPI Payment Approval",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"billId\": 3,\r\n    \"paymentMode\": \"UPI\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-011 Get Pending Payment Requests",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"billId\": 3,\r\n    \"paymentMode\": \"UPI\"\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "pending"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-012 Get Pending Payment Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/pending/count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "pending",
+                "count"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-013 Generate UPI Payment Link",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-014 Link Only Generated For UNPAID Bills",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"upiId\": \"smartmess@okaxis\",\r\n    \"receiverName\": \"Smart Mess\"\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/upi/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "upi",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "SET-001 Create Settings",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"upiId\": \"smartmess@okaxis\",\r\n    \"receiverName\": \"Smart Mess\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SET-002 Get Settings",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        },
+        {
+          "name": "SET-003 Update Settings",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"upiId\": \"smartmess@okhdfc\",\r\n    \"receiverName\": \"Smart Mess\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SET-004 Duplicate Create",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"upiId\": \"smartmess@okaxis\",\r\n    \"receiverName\": \"Smart Mess\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Insights",
+      "item": [
+        {
+          "name": "INS-001 Insights",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/insights/monthly?month=7&year=2026",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "insights",
+                "monthly"
+              ],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "7"
+                },
+                {
+                  "key": "year",
+                  "value": "2026"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
 }
