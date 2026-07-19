@@ -6,7 +6,7 @@ type Column<T> = {
 };
 
 type DataTableProps<T> = {
-  columns: Column<T>[];
+  columns: readonly Column<T>[];
   data: T[];
   className?: string;
 };
