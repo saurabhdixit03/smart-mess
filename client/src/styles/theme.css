@@ -1,41 +1,57 @@
 :root {
-  /* Primary */
+  /* ==========================
+     Brand
+     ========================== */
 
-  --color-primary: #16a34a;
-  --color-primary-hover: #15803d;
+  --color-primary: #4C774B;
+--color-primary-hover: #3E6540;
 
-  /* Background */
+  /* ==========================
+     Background
+     ========================== */
 
-  --color-background: #f8fafc;
+  --color-background: #f8f6f1;
   --color-surface: #ffffff;
 
-  /* Text */
+  /* ==========================
+     Text
+     ========================== */
 
-  --color-text: #0f172a;
-  --color-text-secondary: #64748b;
+  --color-text: #2d2d2d;
+  --color-text-secondary: #6b7280;
 
-  /* Border */
+  /* ==========================
+     Border
+     ========================== */
 
-  --color-border: #e2e8f0;
+  --color-border: #e8e5dd;
 
-  /* Status */
+  /* ==========================
+     Status
+     ========================== */
 
-  --color-success: #16a34a;
-  --color-warning: #f59e0b;
-  --color-danger: #dc2626;
-  --color-info: #2563eb;
+  --color-success: #4f8a5b;
+  --color-warning: #c98a2e;
+  --color-danger: #b85450;
+  --color-info: #4f6f52;
 
-  /* Radius */
+  /* ==========================
+     Radius
+     ========================== */
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 
-  /* Shadow */
+  /* ==========================
+     Shadows
+     ========================== */
 
-  --shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+     
 
-  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+  --shadow-sm: 0 4px 10px rgba(76, 119, 75, 0.18);
 
-  --shadow-lg: 0 8px 24px rgba(0,0,0,.12);
+  --shadow-md: 0 8px 24px rgba(76, 119, 75, 0.14);
+
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
 }

@@ -1,38 +1,37 @@
 import { forwardRef } from "react";
 import clsx from "clsx";
 
-type InputProps = Omit<
-  React.InputHTMLAttributes<HTMLInputElement>,
+type TextareaProps = Omit<
+  React.TextareaHTMLAttributes<HTMLTextAreaElement>,
   "size"
 > & {
-  inputSize?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg";
   fullWidth?: boolean;
   error?: boolean;
 };
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
+const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   (
     {
-      inputSize = "md",
+      size = "md",
       fullWidth = false,
       error = false,
       className,
+      rows = 4,
       ...props
     },
     ref
   ) => {
     return (
-      <input
+      <textarea
         ref={ref}
+        rows={rows}
         className={clsx(
-          "rounded-xl border transition-all duration-200 outline-none",
+          "rounded-xl border transition-all duration-200 outline-none resize-y",
 
           "bg-[var(--color-surface)]",
-
           "border-[var(--color-border)]",
-
           "text-[var(--color-text)]",
-
           "placeholder:text-[var(--color-text-muted)]",
 
           "focus:border-[var(--color-primary)]",
@@ -40,11 +39,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           "focus:ring-[var(--color-primary)]/20",
 
           {
-            "h-9 px-3 text-sm": inputSize === "sm",
-
-            "h-11 px-4 text-base": inputSize === "md",
-
-            "h-13 px-5 text-lg": inputSize === "lg",
+            "px-3 py-2 text-sm": size === "sm",
+            "px-4 py-3 text-base": size === "md",
+            "px-5 py-4 text-lg": size === "lg",
 
             "w-full": fullWidth,
 
@@ -63,6 +60,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
   }
 );
 
-Input.displayName = "Input";
+Textarea.displayName = "Textarea";
 
-export default Input;
+export default Textarea;

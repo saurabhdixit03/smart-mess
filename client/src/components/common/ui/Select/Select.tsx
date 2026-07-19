@@ -1,8 +1,8 @@
 import { forwardRef } from "react";
 import clsx from "clsx";
 
-type InputProps = Omit<
-  React.InputHTMLAttributes<HTMLInputElement>,
+type SelectProps = Omit<
+  React.SelectHTMLAttributes<HTMLSelectElement>,
   "size"
 > & {
   inputSize?: "sm" | "md" | "lg";
@@ -10,30 +10,27 @@ type InputProps = Omit<
   error?: boolean;
 };
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
+const Select = forwardRef<HTMLSelectElement, SelectProps>(
   (
     {
       inputSize = "md",
       fullWidth = false,
       error = false,
       className,
+      children,
       ...props
     },
     ref
   ) => {
     return (
-      <input
+      <select
         ref={ref}
         className={clsx(
           "rounded-xl border transition-all duration-200 outline-none",
 
           "bg-[var(--color-surface)]",
-
           "border-[var(--color-border)]",
-
           "text-[var(--color-text)]",
-
-          "placeholder:text-[var(--color-text-muted)]",
 
           "focus:border-[var(--color-primary)]",
           "focus:ring-2",
@@ -41,9 +38,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
           {
             "h-9 px-3 text-sm": inputSize === "sm",
-
             "h-11 px-4 text-base": inputSize === "md",
-
             "h-13 px-5 text-lg": inputSize === "lg",
 
             "w-full": fullWidth,
@@ -51,18 +46,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             "border-red-500 focus:border-red-500 focus:ring-red-200":
               error,
 
-            "opacity-60 cursor-not-allowed":
-              props.disabled,
+            "opacity-60 cursor-not-allowed": props.disabled,
           },
 
           className
         )}
         {...props}
-      />
+      >
+        {children}
+      </select>
     );
   }
 );
 
-Input.displayName = "Input";
+Select.displayName = "Select";
 
-export default Input;
+export default Select;

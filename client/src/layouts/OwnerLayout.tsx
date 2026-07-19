@@ -22,6 +22,7 @@ export default function OwnerLayout() {
             padding: "24px",
           }}
         >
+
           <Outlet />
         </main>
       </div>
