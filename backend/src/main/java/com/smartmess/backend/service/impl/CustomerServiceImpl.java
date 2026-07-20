@@ -66,7 +66,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public List<CustomerResponse> getAllCustomers() {
 
-        return customerRepository.findAllByStatus(CustomerStatus.ACTIVE)
+        return customerRepository.findAll()
                 .stream()
                 .map(customerMapper::toResponse)
                 .toList();
