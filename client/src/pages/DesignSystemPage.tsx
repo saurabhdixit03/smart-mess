@@ -14,7 +14,8 @@ import {
   
 } from "@/components/common/ui";
 
-
+import { Users } from "lucide-react";
+import StatsCard from "@/components/common/ui/StatsCard";
 
 export default function DesignSystemPage() {
 
@@ -450,11 +451,21 @@ const customerData = [
   />
 
   <DataTable
-    columns={customerColumns}
-    data={customerData}
-  />
+  columns={customerColumns}
+  data={customerData}
+  rowKey={(row) => row.name}
+/>
 
 </section>
+
+
+
+<StatsCard
+  title="Total Customers"
+  value={14}
+  description="Registered customers"
+  icon={<Users size={22} />}
+/>
 
 
     </div>

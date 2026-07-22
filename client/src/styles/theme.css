@@ -49,9 +49,24 @@
 
      
 
-  --shadow-sm: 0 4px 10px rgba(76, 119, 75, 0.18);
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06);
 
-  --shadow-md: 0 8px 24px rgba(76, 119, 75, 0.14);
+--shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
 
-  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
+--shadow-lg: 0 16px 40px rgba(15, 23, 42, 0.10);
+}
+
+/* ==========================
+   Interactive Surface
+   ========================== */
+
+.interactive-surface {
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.interactive-surface:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }

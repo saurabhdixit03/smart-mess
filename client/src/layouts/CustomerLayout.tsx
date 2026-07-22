@@ -2,10 +2,10 @@ import { Outlet } from "react-router-dom";
 
 export default function CustomerLayout() {
   return (
-    <div>
-      <h1>Customer Layout</h1>
-
-      <Outlet />
-    </div>
+    <main className="min-h-screen bg-[var(--color-background)]">
+      <div className="mx-auto max-w-7xl p-8">
+        <Outlet />
+      </div>
+    </main>
   );
 }
