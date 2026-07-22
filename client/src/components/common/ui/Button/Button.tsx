@@ -71,7 +71,7 @@ export default function Button({
   return (
     <button
       className={clsx(
-        "inline-flex items-center justify-center",
+        "inline-flex items-center justify-center gap-2",
         "font-semibold",
         "rounded-[var(--radius-md)]",
         "transition-all duration-200 ease-out",
