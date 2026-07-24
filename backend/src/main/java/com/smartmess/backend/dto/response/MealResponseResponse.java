@@ -10,6 +10,10 @@ public class MealResponseResponse {
     private Long mealResponseId;
 
     private Long customerId;
+    
+    private String customerName;
+
+    private String mobileNumber;
 
     private Long menuId;
 
@@ -39,6 +43,22 @@ public class MealResponseResponse {
     public void setCustomerId(Long customerId) {
         this.customerId = customerId;
     }
+    
+    public String getCustomerName() {
+		return customerName;
+	}
+
+	public void setCustomerName(String customerName) {
+		this.customerName = customerName;
+	}
+
+	public String getMobileNumber() {
+		return mobileNumber;
+	}
+
+	public void setMobileNumber(String mobileNumber) {
+		this.mobileNumber = mobileNumber;
+	}
 
     public Long getMenuId() {
         return menuId;
@@ -79,4 +99,6 @@ public class MealResponseResponse {
     public void setRespondedAt(LocalDateTime respondedAt) {
         this.respondedAt = respondedAt;
     }
+
+	
 }
