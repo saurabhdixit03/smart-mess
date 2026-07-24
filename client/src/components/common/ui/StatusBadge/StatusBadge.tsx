@@ -4,7 +4,9 @@ type StatusVariant =
   | "success"
   | "danger"
   | "warning"
-  | "info";
+  | "info"
+  | "lunch"
+  | "dinner";
 
 type StatusBadgeProps = {
   label: string;
@@ -12,13 +14,25 @@ type StatusBadgeProps = {
 };
 
 const variantClasses: Record<StatusVariant, string> = {
-  success: "bg-green-100 text-green-700",
 
-  danger: "bg-red-100 text-red-700",
+  success:
+    "bg-green-100 text-green-700",
 
-  warning: "bg-yellow-100 text-yellow-700",
+  danger:
+    "bg-red-100 text-red-700",
 
-  info: "bg-blue-100 text-blue-700",
+  warning:
+    "bg-yellow-100 text-yellow-700",
+
+  info:
+    "bg-blue-100 text-blue-700",
+
+  lunch:
+    "bg-orange-100 text-orange-700",
+
+  dinner:
+    "bg-indigo-100 text-indigo-700",
+
 };
 
 export default function StatusBadge({
