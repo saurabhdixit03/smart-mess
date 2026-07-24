@@ -14,6 +14,8 @@ import com.smartmess.backend.entity.MealResponse;
 public interface MealResponseMapper {
 
     @Mapping(target = "customerId", source = "customer.customerId")
+    @Mapping(target = "customerName", source = "customer.fullName")
+    @Mapping(target = "mobileNumber", source = "customer.mobileNumber")
     @Mapping(target = "menuId", source = "menu.menuId")
     MealResponseResponse toResponse(MealResponse mealResponse);
 
