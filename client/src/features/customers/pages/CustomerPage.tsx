@@ -256,8 +256,8 @@ const CustomerPage = () => {
       <div className="space-y-6">
 
     <PageHeader
-        title="Customer Management"
-        description="Manage customer records, registrations and status."
+        title="Customers"
+        description="View, add and track your customers."
         action={
           <Button onClick={handleAddCustomer}>
             <Plus size={18} />

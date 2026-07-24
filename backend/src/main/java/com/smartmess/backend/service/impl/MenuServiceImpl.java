@@ -46,7 +46,7 @@ public class MenuServiceImpl implements MenuService {
         Menu menu = menuMapper.toEntity(request);
 
         Menu savedMenu = menuRepository.save(menu);
-
+        
         return menuMapper.toResponse(savedMenu);
     }
 
