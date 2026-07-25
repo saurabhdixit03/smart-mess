@@ -29,6 +29,8 @@ public class DashboardSummaryResponse {
     private Long totalRotisRequired;
     
     private List<DashboardCustomerResponse> collectionQueue;
+    
+    private List<DashboardCustomerResponse> recentActivities;
 
     
     
@@ -129,6 +131,14 @@ public class DashboardSummaryResponse {
 
 	public void setCollectionQueue(List<DashboardCustomerResponse> collectionQueue) {
 		this.collectionQueue = collectionQueue;
+	}
+
+	public List<DashboardCustomerResponse> getRecentActivities() {
+		return recentActivities;
+	}
+
+	public void setRecentActivities(List<DashboardCustomerResponse> recentActivities) {
+		this.recentActivities = recentActivities;
 	}
 
 
