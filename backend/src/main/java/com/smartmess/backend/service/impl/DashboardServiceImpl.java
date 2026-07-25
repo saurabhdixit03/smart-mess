@@ -177,6 +177,63 @@ public class DashboardServiceImpl implements DashboardService {
                 .toList();
 
         response.setCollectionQueue(customerQueue);
+        
+        List<DashboardCustomerResponse> recentActivities = responses.stream()
+
+                .sorted(
+                        Comparator.comparing(
+                                MealResponse::getRespondedAt
+                        ).reversed()
+                )
+
+                .limit(3)
+
+                .map(mealResponse -> {
+
+                    DashboardCustomerResponse customer =
+                            new DashboardCustomerResponse();
+
+                    customer.setMealResponseId(
+                            mealResponse.getMealResponseId());
+
+                    customer.setCustomerId(
+                            mealResponse.getCustomer().getCustomerId());
+
+                    customer.setCustomerName(
+                            mealResponse.getCustomer().getFullName());
+
+                    customer.setResponseStatus(
+                            mealResponse.getResponseStatus());
+
+                    customer.setMealOption(
+                            mealResponse.getMealOption());
+
+                    customer.setExtraRotiCount(
+                            mealResponse.getExtraRotiCount());
+
+                    customer.setRespondedAt(
+                            mealResponse.getRespondedAt());
+
+                    customer.setCollected(
+
+                            mealRecordRepository.existsByCustomerAndMenu(
+
+                                    mealResponse.getCustomer(),
+
+                                    menu
+                            )
+
+                    );
+
+                    return customer;
+
+                })
+
+                .toList();
+
+        response.setRecentActivities(
+                recentActivities
+        );
 
         return response;    
     }

@@ -1,6 +1,7 @@
 package com.smartmess.backend.dto.response;
 
 import com.smartmess.backend.enums.MealOption;
+import java.time.LocalDateTime;
 import com.smartmess.backend.enums.MealResponseStatus;
 
 public class DashboardCustomerResponse {
@@ -16,6 +17,8 @@ public class DashboardCustomerResponse {
     private MealOption mealOption;
 
     private Integer extraRotiCount;
+    
+    private LocalDateTime respondedAt;
 
     private Boolean collected;
 
@@ -69,6 +72,14 @@ public class DashboardCustomerResponse {
     public void setExtraRotiCount(Integer extraRotiCount) {
         this.extraRotiCount = extraRotiCount;
     }
+    
+	public LocalDateTime getRespondedAt() {
+		return respondedAt;
+	}
+
+	public void setRespondedAt(LocalDateTime respondedAt) {
+		this.respondedAt = respondedAt;
+	}
 
     public Boolean getCollected() {
         return collected;
@@ -77,4 +88,6 @@ public class DashboardCustomerResponse {
     public void setCollected(Boolean collected) {
         this.collected = collected;
     }
+
+
 }
