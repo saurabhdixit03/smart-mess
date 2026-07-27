@@ -4,6 +4,8 @@ import clsx from "clsx";
 type CardProps = {
   children: ReactNode;
   className?: string;
+
+  onClick?: () => void;
 };
 
 type SectionProps = {
@@ -53,14 +55,16 @@ function Footer({ children, className }: SectionProps) {
 export default function Card({
   children,
   className,
+  onClick,
 }: CardProps) {
   return (
     <div
-      className={clsx(
-        "rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm",
-        className
-      )}
-    >
+  onClick={onClick}
+  className={clsx(
+    "rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm",
+    className
+  )}
+>
       {children}
     </div>
   );

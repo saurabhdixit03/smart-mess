@@ -39,6 +39,7 @@ export const ownerNavigation: NavigationItem[] = [
     path: ROUTES.MENU,
     icon: UtensilsCrossed,
   },
+
   {
     label: "Meals",
     title: "Meal Records",

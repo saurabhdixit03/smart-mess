@@ -6,6 +6,7 @@ export const ROUTES = {
 
   CUSTOMERS: "customers",
   MENU: "menu",
+  MEAL_RESPONSES: "meal-responses",
   MEALS: "meals",
   BILLING: "billing",
   REPORTS: "reports",
