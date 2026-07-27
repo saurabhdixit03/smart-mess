@@ -95,10 +95,13 @@ public class DashboardServiceImpl implements DashboardService {
         
         long acceptedMeals =
                 expectedFullMeals + expectedHalfMeals;
+        
+        long baseRotisRequired =
+                acceptedMeals * 3;
 
         long totalRotisRequired =
-                (acceptedMeals * 3)
-                + expectedExtraRotis;
+                baseRotisRequired
+                + (expectedExtraRotis == null ? 0L : expectedExtraRotis);
         
         List<MealResponse> responses = mealResponseRepository.findByMenu(menu);
 
@@ -117,6 +120,8 @@ public class DashboardServiceImpl implements DashboardService {
 
         response.setExpectedFullMeals(expectedFullMeals);
         response.setExpectedHalfMeals(expectedHalfMeals);
+        
+        response.setBaseRotisRequired(baseRotisRequired);
 
         response.setExpectedExtraRotis(
                 expectedExtraRotis == null ? 0L : expectedExtraRotis

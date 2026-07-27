@@ -24,6 +24,8 @@ public class DashboardSummaryResponse {
     private Long menuId;
     private Long expectedFullMeals;
     private Long expectedHalfMeals;
+    
+    private Long baseRotisRequired;
     private Long expectedExtraRotis;
     
     private Long totalRotisRequired;
@@ -117,6 +119,14 @@ public class DashboardSummaryResponse {
 		this.menuDate = menuDate;
 	}
 
+	public Long getBaseRotisRequired() {
+		return baseRotisRequired;
+	}
+
+	public void setBaseRotisRequired(Long baseRotisRequired) {
+		this.baseRotisRequired = baseRotisRequired;
+	}
+	
 	public Long getTotalRotisRequired() {
 		return totalRotisRequired;
 	}
@@ -141,6 +151,9 @@ public class DashboardSummaryResponse {
 		this.recentActivities = recentActivities;
 	}
 
+
+
+	
 
 
 	
