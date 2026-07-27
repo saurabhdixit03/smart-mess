@@ -1,6 +1,7 @@
 package com.smartmess.backend.service.impl;
 
 import java.math.BigDecimal;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +20,7 @@ import com.smartmess.backend.enums.MealOption;
 import com.smartmess.backend.enums.MealSession;
 import com.smartmess.backend.exception.BusinessException;
 import com.smartmess.backend.exception.ResourceNotFoundException;
+import com.smartmess.backend.mapper.MealCollectionMapper;
 import com.smartmess.backend.mapper.MealRecordMapper;
 import com.smartmess.backend.repository.CustomerRepository;
 import com.smartmess.backend.repository.MealPricingRepository;
@@ -27,6 +29,9 @@ import com.smartmess.backend.repository.MealResponseRepository;
 import com.smartmess.backend.repository.MenuRepository;
 import com.smartmess.backend.service.DashboardWebSocketService;
 import com.smartmess.backend.service.MealRecordService;
+
+import com.smartmess.backend.dto.response.CollectionQueueResponse;
+import com.smartmess.backend.mapper.MealCollectionMapper;
 
 @Service
 public class MealRecordServiceImpl implements MealRecordService {
@@ -38,6 +43,8 @@ public class MealRecordServiceImpl implements MealRecordService {
     private final MealPricingRepository mealPricingRepository;
     private final MealRecordMapper mealRecordMapper;
     private final DashboardWebSocketService dashboardWebSocketService;
+    // for meal record collection queue 
+    private final MealCollectionMapper mealCollectionMapper;
 
     public MealRecordServiceImpl(
             MealRecordRepository mealRecordRepository,
@@ -46,7 +53,8 @@ public class MealRecordServiceImpl implements MealRecordService {
             MealResponseRepository mealResponseRepository,
             MealPricingRepository mealPricingRepository,
             MealRecordMapper mealRecordMapper,
-            DashboardWebSocketService dashboardWebSocketService) {
+            DashboardWebSocketService dashboardWebSocketService,
+            MealCollectionMapper mealCollectionMapper) {
 
         this.mealRecordRepository = mealRecordRepository;
         this.customerRepository = customerRepository;
@@ -55,6 +63,7 @@ public class MealRecordServiceImpl implements MealRecordService {
         this.mealPricingRepository = mealPricingRepository;
         this.mealRecordMapper = mealRecordMapper;
         this.dashboardWebSocketService = dashboardWebSocketService;
+        this.mealCollectionMapper = mealCollectionMapper;
     }
 
     @Override
@@ -233,5 +242,25 @@ public class MealRecordServiceImpl implements MealRecordService {
                 mealRecordRepository.findByMenu(menu);
 
         return mealRecordMapper.toResponseList(mealRecords);
+    }
+
+    // for prefilling meal responses to meal record.. Final call will be of owner  
+    
+    @Override
+    public List<CollectionQueueResponse> getCollectionQueue(
+            MealSession mealSession) {
+
+        Menu menu = menuRepository
+                .findByMenuDateAndMealSession(
+                        LocalDate.now(),
+                        mealSession)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Menu not found for today and session: "
+                                + mealSession));
+
+        List<MealResponse> mealResponses =
+                mealResponseRepository.findCollectionQueue(menu);
+
+        return mealCollectionMapper.toResponseList(mealResponses);
     }
 }

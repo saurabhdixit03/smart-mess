@@ -1,7 +1,6 @@
 package com.smartmess.backend.controller;
 
 import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +14,8 @@ import com.smartmess.backend.service.MealRecordService;
 import jakarta.validation.Valid;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import com.smartmess.backend.dto.response.CollectionQueueResponse;
 
 @RestController
 @RequestMapping("/api/meal-records")
@@ -40,6 +41,23 @@ public class MealRecordController {
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(
                         "Meal record created successfully.",
+                        httpRequest.getRequestURI(),
+                        response));
+    }
+    
+    // for meal records  
+   
+    @GetMapping("/collection-queue")
+    public ResponseEntity<ApiResponse<List<CollectionQueueResponse>>> getCollectionQueue(
+            @RequestParam MealSession mealSession,
+            HttpServletRequest httpRequest) {
+
+        List<CollectionQueueResponse> response =
+                mealRecordService.getCollectionQueue(mealSession);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Collection queue retrieved successfully.",
                         httpRequest.getRequestURI(),
                         response));
     }

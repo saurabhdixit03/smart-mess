@@ -37,5 +37,21 @@ public interface MealResponseRepository extends JpaRepository<MealResponse, Long
     		AND m.responseStatus = com.smartmess.backend.enums.MealResponseStatus.ACCEPTED
            """)
     Long getTotalExtraRotis(Menu menu);
+    
+    // collection queue for meal record module  
+    
+    @Query("""
+    	    SELECT mr
+    	    FROM MealResponse mr
+    	    WHERE mr.menu = :menu
+    	      AND mr.responseStatus = com.smartmess.backend.enums.MealResponseStatus.ACCEPTED
+    	      AND NOT EXISTS (
+    	            SELECT 1
+    	            FROM MealRecord rec
+    	            WHERE rec.mealResponse = mr
+    	      )
+    	    ORDER BY mr.customer.fullName
+    	    """)
+    	List<MealResponse> findCollectionQueue(Menu menu);
 
 }
