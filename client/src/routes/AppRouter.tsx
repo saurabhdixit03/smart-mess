@@ -12,6 +12,8 @@ import { DashboardPage } from "@/features/dashboard/pages";
 
 import { MenuPage } from "@/features/menu";
 
+
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -30,6 +32,11 @@ export default function AppRouter() {
   <Route
     path="menu"
     element={<MenuPage />}
+/>
+
+    <Route
+  path="dashboard"
+  element={<DashboardPage />}
 />
 
   <Route

@@ -6,7 +6,9 @@ type StatusVariant =
   | "warning"
   | "info"
   | "lunch"
-  | "dinner";
+  | "dinner"
+  | "full"
+  | "half";
 
 type StatusBadgeProps = {
   label: string;
@@ -32,6 +34,12 @@ const variantClasses: Record<StatusVariant, string> = {
 
   dinner:
     "bg-indigo-100 text-indigo-700",
+
+  full:
+    "bg-emerald-100 text-emerald-700",
+
+  half:
+    "bg-amber-100 text-amber-700",
 
 };
 
