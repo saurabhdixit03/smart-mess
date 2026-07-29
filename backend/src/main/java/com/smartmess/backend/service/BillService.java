@@ -5,6 +5,7 @@ import java.util.List;
 import com.smartmess.backend.dto.request.GenerateBillRequest;
 import com.smartmess.backend.dto.response.BillDetailResponse;
 import com.smartmess.backend.dto.response.BillResponse;
+import com.smartmess.backend.dto.response.BillingOverviewResponse;
 
 public interface BillService {
 
@@ -27,6 +28,14 @@ public interface BillService {
      */
     BillDetailResponse getBillDetails(
             Long billId
+    );
+    
+    /*
+     * View all bills for a billing period.
+     */
+    BillingOverviewResponse getBillingOverview(
+            Integer billingMonth,
+            Integer billingYear
     );
 
 }

@@ -10,6 +10,7 @@ import com.smartmess.backend.dto.request.GenerateBillRequest;
 import com.smartmess.backend.dto.response.ApiResponse;
 import com.smartmess.backend.dto.response.BillDetailResponse;
 import com.smartmess.backend.dto.response.BillResponse;
+import com.smartmess.backend.dto.response.BillingOverviewResponse;
 import com.smartmess.backend.service.BillService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -104,4 +105,35 @@ public class BillController {
 
     }
 
+    
+    /*
+     * Billing Overview
+     */
+    @GetMapping("/overview")
+    public ResponseEntity<ApiResponse<BillingOverviewResponse>> getBillingOverview(
+
+            @RequestParam Integer billingMonth,
+
+            @RequestParam Integer billingYear,
+
+            HttpServletRequest request) {
+
+        BillingOverviewResponse overview =
+                billService.getBillingOverview(
+                        billingMonth,
+                        billingYear
+                );
+
+        ApiResponse<BillingOverviewResponse> response =
+                ApiResponse.success(
+                        "Billing overview retrieved successfully.",
+                        request.getRequestURI(),
+                        overview
+                );
+
+        return ResponseEntity.ok(
+                response
+        );
+
+    }
 }

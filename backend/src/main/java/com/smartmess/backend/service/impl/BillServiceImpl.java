@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.smartmess.backend.dto.request.GenerateBillRequest;
 import com.smartmess.backend.dto.response.BillDetailResponse;
 import com.smartmess.backend.dto.response.BillResponse;
+import com.smartmess.backend.dto.response.BillingOverviewResponse;
 import com.smartmess.backend.entity.Bill;
 import com.smartmess.backend.entity.Customer;
 import com.smartmess.backend.entity.MealRecord;
@@ -25,6 +26,9 @@ import com.smartmess.backend.repository.BillRepository;
 import com.smartmess.backend.repository.CustomerRepository;
 import com.smartmess.backend.repository.MealRecordRepository;
 import com.smartmess.backend.service.BillService;
+
+import com.smartmess.backend.dto.response.BillingOverviewResponse;
+import com.smartmess.backend.dto.response.BillingSummaryResponse;
 
 @Service
 public class BillServiceImpl implements BillService {
@@ -245,6 +249,81 @@ public class BillServiceImpl implements BillService {
                 mealRecordMapper.toResponseList(
                         mealRecords
                 )
+        );
+
+        return response;
+
+    }
+
+    @Override
+    public BillingOverviewResponse getBillingOverview(
+            Integer billingMonth,
+            Integer billingYear) {
+
+        List<Bill> bills =
+                billRepository
+                        .findByBillingMonthAndBillingYearOrderByGeneratedAtDesc(
+                                billingMonth,
+                                billingYear
+                        );
+
+        if (bills.isEmpty()) {
+
+            throw new BusinessException(
+                    "No bills found for the selected billing period."
+            );
+
+        }
+        
+        List<Object[]> summaryResult =
+                billRepository.getMonthlyFinancialInsights(
+                        billingMonth,
+                        billingYear
+                );
+        
+        BillingSummaryResponse summary =
+                new BillingSummaryResponse();
+        
+        Object[] row = summaryResult.get(0);
+
+        summary.setTotalBills(
+                ((Number) row[1]).longValue()
+        );
+
+        summary.setPaidBills(
+                ((Number) row[2]).longValue()
+        );
+
+        summary.setUnpaidBills(
+                ((Number) row[3]).longValue()
+        );
+
+        summary.setTotalRevenue(
+                (BigDecimal) row[4]
+        );
+
+        summary.setCollectedRevenue(
+                (BigDecimal) row[5]
+        );
+
+        summary.setPendingRevenue(
+                (BigDecimal) row[6]
+        );
+        
+        List<BillResponse> billResponses =
+                billMapper.toResponseList(
+                        bills
+                );
+        
+        BillingOverviewResponse response =
+                new BillingOverviewResponse();
+        
+        response.setSummary(
+                summary
+        );
+
+        response.setBills(
+                billResponses
         );
 
         return response;
