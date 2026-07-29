@@ -3,6 +3,7 @@ import {
   Users,
   UtensilsCrossed,
   ClipboardList,
+  HandPlatter,
   Receipt,
   BarChart3,
   Settings,
@@ -41,10 +42,16 @@ export const ownerNavigation: NavigationItem[] = [
   },
 
   {
-    label: "Meals",
-    title: "Meal Records",
+    label: "Live Dashboard",
+    title: "Live Dashboard",
     path: ROUTES.MEALS,
     icon: ClipboardList,
+  },
+  {
+    label: "Meal Collection",
+    title: "Meal Records",
+    path: ROUTES.MEAL_RECORDS,
+    icon: HandPlatter,
   },
   {
     label: "Billing",

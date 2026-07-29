@@ -8,9 +8,12 @@ import NotFoundPage from "@/pages/NotFoundPage";
 
 import { CustomerPage } from "@/features/customers/pages";
 
+import { MenuPage } from "@/features/menu";
+
 import { DashboardPage } from "@/features/dashboard/pages";
 
-import { MenuPage } from "@/features/menu";
+import { MealRecordPage } from "@/features/meal-records/pages";
+
 
 
 
@@ -43,6 +46,11 @@ export default function AppRouter() {
     path="meals"
     element={<DashboardPage />}
   />
+
+  <Route
+  path="meal-records"
+  element={<MealRecordPage />}
+/>
 
   <Route
     path="billing"

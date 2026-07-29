@@ -9,12 +9,17 @@ type MealSessionSelectorProps = {
   onSelect: (
     session: "LUNCH" | "DINNER"
   ) => void;
+
+  title?: string;
+  variant?: "cards" | "toggle";
 };
 
 export default function MealSessionSelector({
   menus,
   selectedSession,
   onSelect,
+  title = "Live Dashboard",
+  variant = "cards",
 }: MealSessionSelectorProps) {
 
   const orderedMenus = [...menus].sort((a, b) => {
@@ -27,14 +32,63 @@ export default function MealSessionSelector({
       : 1;
   });
 
+  if (variant === "toggle") {
+
+    return (
+
+      <div className="flex items-center justify-between">
+
+        <h2 className="text-lg font-semibold">
+          {title}
+        </h2>
+
+        <div className="inline-flex rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-1">
+
+          {orderedMenus.map((menu) => {
+
+            const selected =
+              menu.mealSession === selectedSession;
+
+            return (
+
+              <button
+                key={menu.menuId}
+                type="button"
+                onClick={() =>
+                  onSelect(menu.mealSession)
+                }
+                className={`
+                  rounded-md px-5 py-2 text-sm font-medium transition-all duration-200
+                  ${
+                    selected
+                      ? "bg-[var(--color-primary)] text-white shadow-sm"
+                      : "text-[var(--color-text-secondary)] hover:bg-[var(--color-background)]"
+                  }
+                `}
+              >
+                {menu.mealSession === "LUNCH"
+                  ? "Lunch"
+                  : "Dinner"}
+              </button>
+
+            );
+
+          })}
+
+        </div>
+
+      </div>
+
+    );
+
+  }
+
   return (
 
     <div className="space-y-3">
 
-      {/* Section Title */}
-
       <h2 className="text-lg font-semibold">
-        Live Dashboard 
+        {title}
       </h2>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -52,18 +106,17 @@ export default function MealSessionSelector({
                 onSelect(menu.mealSession)
               }
               className={`
-cursor-pointer
-    border
-    transition-all
-    duration-300
-    ease-out
-    hover:-translate-y-1
-    hover:shadow-xl
-    hover:border-[var(--color-primary)]
-    hover:scale-[1.01]
-    active:translate-y-0
-    active:scale-100
-
+                cursor-pointer
+                border
+                transition-all
+                duration-300
+                ease-out
+                hover:-translate-y-1
+                hover:shadow-xl
+                hover:border-[var(--color-primary)]
+                hover:scale-[1.01]
+                active:translate-y-0
+                active:scale-100
                 ${
                   selected
                     ? "border-[var(--color-primary)]"

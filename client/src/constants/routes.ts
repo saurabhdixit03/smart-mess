@@ -6,12 +6,19 @@ export const ROUTES = {
 
   CUSTOMERS: "customers",
   MENU: "menu",
+
+  // Customer Responses
   MEAL_RESPONSES: "meal-responses",
-  MEALS: "meals",
+
+  // Owner Modules
+  MEALS: "meals",                 // Live Dashboard
+  MEAL_RECORDS: "meal-records",   // Meal Collection
+
   BILLING: "billing",
   REPORTS: "reports",
   SETTINGS: "settings",
 
+  // Customer Portal
   HOME: "",
   MY_MEALS: "my-meals",
   MY_BILLS: "my-bills",
