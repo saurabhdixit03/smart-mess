@@ -13,6 +13,7 @@ public interface MealCollectionMapper {
 
     @Mapping(target = "customerId", source = "customer.customerId")
     @Mapping(target = "customerName", source = "customer.fullName")
+    @Mapping(target = "menuId", source = "menu.menuId")
     @Mapping(target = "mealResponseId", source = "mealResponseId")
     CollectionQueueResponse toResponse(
             MealResponse mealResponse);

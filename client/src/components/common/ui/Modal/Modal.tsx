@@ -6,6 +6,8 @@ type ModalProps = {
   children: React.ReactNode;
   footer?: React.ReactNode;
   onClose: () => void;
+
+  size?: "sm" | "md" | "lg";
 };
 
 export default function Modal({
@@ -14,6 +16,7 @@ export default function Modal({
   children,
   footer,
   onClose,
+  size = "md",
 }: ModalProps) {
   if (!open) return null;
 
@@ -22,11 +25,16 @@ export default function Modal({
 
       <div
         className={clsx(
-          "w-full max-w-lg rounded-2xl",
-          "border border-[var(--color-border)]",
-          "bg-[var(--color-surface)]",
-          "shadow-xl"
-        )}
+  "w-full rounded-2xl",
+  {
+    "max-w-sm": size === "sm",
+    "max-w-md": size === "md",
+    "max-w-lg": size === "lg",
+  },
+  "border border-[var(--color-border)]",
+  "bg-[var(--color-surface)]",
+  "shadow-xl"
+)}
       >
 
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">

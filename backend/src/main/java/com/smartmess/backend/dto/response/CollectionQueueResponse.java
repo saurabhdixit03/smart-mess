@@ -8,6 +8,8 @@ public record CollectionQueueResponse(
 
         String customerName,
 
+        Long menuId,
+
         Long mealResponseId,
 
         MealOption mealOption,
