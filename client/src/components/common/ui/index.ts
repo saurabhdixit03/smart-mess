@@ -8,3 +8,4 @@ export { default as Badge } from "./Badge";
 export { default as Modal } from "./Modal";
 export { default as SectionTitle } from "./SectionTitle";
 export { default as DataTable } from "./DataTable";
+export { default as StatusBadge } from "./StatusBadge";

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.smartmess.backend.enums.MealOption;
+import com.smartmess.backend.enums.MealSession;
 
 public record MealRecordResponse(
 
@@ -16,9 +17,11 @@ public record MealRecordResponse(
         Long menuId,
 
         Long mealResponseId,
-
+        
+        MealSession mealSession,
+     
         MealOption mealOption,
-
+              
         BigDecimal mealPrice,
 
         Integer extraRotiCount,

@@ -14,8 +14,7 @@ import { DashboardPage } from "@/features/dashboard/pages";
 
 import { MealRecordPage } from "@/features/meal-records/pages";
 
-
-
+import { BillingPage } from "@/features/billing/pages";
 
 export default function AppRouter() {
   return (
@@ -53,9 +52,9 @@ export default function AppRouter() {
 />
 
   <Route
-    path="billing"
-    element={<DashboardPage />}
-  />
+  path="billing"
+  element={<BillingPage />}
+/>
 
   <Route
     path="reports"

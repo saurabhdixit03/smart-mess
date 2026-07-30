@@ -18,6 +18,12 @@ public interface MealRecordMapper {
             target = "mealResponseId",
             source = "mealResponse.mealResponseId"
     )
+    
+    @Mapping(
+            target = "mealSession",
+            source = "menu.mealSession"
+    )
+    
     MealRecordResponse toResponse(MealRecord mealRecord);
 
     List<MealRecordResponse> toResponseList(
