@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import { CUSTOMER_API_ENDPOINT } from "../constants/customer.constants";
+import { CUSTOMER_API_ENDPOINT } from "../constants";
 
 import type {
   ApiResponse,

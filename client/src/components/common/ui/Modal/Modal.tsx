@@ -7,7 +7,7 @@ type ModalProps = {
   footer?: React.ReactNode;
   onClose: () => void;
 
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
 };
 
 export default function Modal({
@@ -27,10 +27,11 @@ export default function Modal({
         className={clsx(
   "w-full rounded-2xl",
   {
-    "max-w-sm": size === "sm",
-    "max-w-md": size === "md",
-    "max-w-lg": size === "lg",
-  },
+  "max-w-sm": size === "sm",
+  "max-w-md": size === "md",
+  "max-w-lg": size === "lg",
+  "max-w-xl": size === "xl",
+},
   "border border-[var(--color-border)]",
   "bg-[var(--color-surface)]",
   "shadow-xl"

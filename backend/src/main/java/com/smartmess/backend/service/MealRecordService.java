@@ -21,4 +21,5 @@ public interface MealRecordService {
 	
 	List<CollectionQueueResponse> getCollectionQueue(
 	        MealSession mealSession);
+	
 }

@@ -110,4 +110,14 @@ public interface BillRepository
             @Param("billingYear") Integer billingYear
     );
 
+    
+    /*
+     * View all bills for a billing period.
+     */
+    List<Bill> findByBillingMonthAndBillingYearOrderByGeneratedAtDesc(
+            Integer billingMonth,
+            Integer billingYear
+    );
+    
+    
 }
