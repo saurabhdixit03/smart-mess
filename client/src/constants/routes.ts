@@ -17,7 +17,7 @@ export const ROUTES = {
   BILLING: "billing",
   PAYMENTS: "payments",
 
-  INSIGHTS: "Insights",
+  INSIGHTS: "insights",
   SETTINGS: "settings",
 
   // Customer Portal

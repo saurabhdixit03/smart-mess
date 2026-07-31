@@ -20,6 +20,8 @@ import { PaymentPage } from "@/features/payments/pages";
 
 import { SettingsPage } from "@/features/settings/pages";
 
+import { InsightsPage } from "@/features/insights/pages";
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -67,6 +69,12 @@ export default function AppRouter() {
     path="settings"
     element={<SettingsPage />}
   />
+
+    <Route
+  path="insights"
+  element={<InsightsPage />}
+/>
+
 
 </Route>
 
