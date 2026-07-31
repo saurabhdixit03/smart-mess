@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.smartmess.backend.dto.request.CreatePaymentRequest;
 import com.smartmess.backend.dto.response.ApiResponse;
+import com.smartmess.backend.dto.response.PaymentOverviewResponse;
 import com.smartmess.backend.dto.response.PaymentResponse;
 import com.smartmess.backend.dto.response.PendingPaymentResponse;
 import com.smartmess.backend.dto.response.UpiPaymentResponse;
@@ -190,5 +191,25 @@ public class PaymentController {
         );
 
     }
+    
+    // payment overview
+    
+    @GetMapping("/overview")
+    public ResponseEntity<ApiResponse<PaymentOverviewResponse>> getPaymentOverview(
+            HttpServletRequest request) {
+
+        PaymentOverviewResponse overview =
+                paymentService.getPaymentOverview();
+
+        ApiResponse<PaymentOverviewResponse> response =
+                ApiResponse.success(
+                        "Payment overview fetched successfully.",
+                        request.getRequestURI(),
+                        overview
+                );
+
+        return ResponseEntity.ok(response);
+    }
+    
 
 }

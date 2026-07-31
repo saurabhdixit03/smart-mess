@@ -5,6 +5,7 @@ import {
   ClipboardList,
   HandPlatter,
   Receipt,
+  Wallet,
   BarChart3,
   Settings,
   User,
@@ -59,6 +60,12 @@ export const ownerNavigation: NavigationItem[] = [
     path: ROUTES.BILLING,
     icon: Receipt,
   },
+  {
+  label: "Payments",
+  title: "Payment Management",
+  path: ROUTES.PAYMENTS,
+  icon: Wallet,
+},
   {
     label: "Reports",
     title: "Reports",

@@ -11,10 +11,12 @@ export const ROUTES = {
   MEAL_RESPONSES: "meal-responses",
 
   // Owner Modules
-  MEALS: "meals",                 // Live Dashboard
-  MEAL_RECORDS: "meal-records",   // Meal Collection
+  MEALS: "meals",
+  MEAL_RECORDS: "meal-records",
 
   BILLING: "billing",
+  PAYMENTS: "payments",
+
   REPORTS: "reports",
   SETTINGS: "settings",
 

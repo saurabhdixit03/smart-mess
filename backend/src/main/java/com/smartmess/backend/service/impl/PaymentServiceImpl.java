@@ -1,5 +1,6 @@
 package com.smartmess.backend.service.impl;
 
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -23,7 +24,8 @@ import com.smartmess.backend.repository.BillRepository;
 import com.smartmess.backend.repository.MessSettingsRepository;
 import com.smartmess.backend.repository.PaymentRepository;
 import com.smartmess.backend.service.PaymentService;
-
+import com.smartmess.backend.dto.response.PaymentOverviewResponse;
+import com.smartmess.backend.mapper.BillMapper;
 @Service
 public class PaymentServiceImpl
         implements PaymentService {
@@ -35,17 +37,21 @@ public class PaymentServiceImpl
     private final PaymentMapper paymentMapper;
     
     private final MessSettingsRepository messSettingsRepository;
+    
+    private final BillMapper billMapper;
 
     public PaymentServiceImpl(
             PaymentRepository paymentRepository,
             BillRepository billRepository,
             PaymentMapper paymentMapper,
-            MessSettingsRepository messSettingsRepository) {
+            MessSettingsRepository messSettingsRepository,
+            BillMapper billMapper) {
 
         this.paymentRepository = paymentRepository;
         this.billRepository = billRepository;
         this.paymentMapper = paymentMapper;
         this.messSettingsRepository = messSettingsRepository;
+        this.billMapper = billMapper;
 
     }
 
@@ -303,6 +309,70 @@ public class PaymentServiceImpl
 
         );
 
+    }
+    
+    @Override
+    public PaymentOverviewResponse getPaymentOverview() {
+
+        PaymentOverviewResponse response =
+                new PaymentOverviewResponse();
+
+        // Dashboard Counts
+
+        response.setUnpaidBillCount(
+                billRepository.countByBillStatus(
+                        BillStatus.UNPAID
+                )
+        );
+
+        response.setPendingRequestCount(
+                billRepository.countByBillStatus(
+                        BillStatus.PAYMENT_PENDING
+                )
+        );
+
+        response.setPaidBillCount(
+                billRepository.countByBillStatus(
+                        BillStatus.PAID
+                )
+        );
+
+        // Unpaid Bills Table
+
+        List<Bill> unpaidBills =
+                billRepository.findByBillStatusOrderByGeneratedAtAsc(
+                        BillStatus.UNPAID
+                );
+
+        response.setUnpaidBills(
+                billMapper.toResponseList(
+                        unpaidBills
+                )
+        );
+
+        // Pending Payment Requests Table
+
+        response.setPendingPayments(
+                getPendingPayments()
+        );
+
+        // Total Collected Revenue
+
+        List<Bill> paidBills =
+                billRepository.findByBillStatusOrderByGeneratedAtAsc(
+                        BillStatus.PAID
+                );
+
+        response.setTotalCollectedAmount(
+                paidBills.stream()
+                        .map(Bill::getTotalAmount)
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        )
+        );
+
+        return response;
     }
 
 }
