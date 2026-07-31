@@ -248,7 +248,7 @@ export default function BillDetailsDialog({
               <tbody>
 
                 {groupedMeals.map(
-                  ([date, meals]) =>
+                  ([, meals]) =>
 
                     meals.map(
                       (meal, index) => (
