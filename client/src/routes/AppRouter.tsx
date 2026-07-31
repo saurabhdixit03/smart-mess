@@ -18,30 +18,30 @@ import { BillingPage } from "@/features/billing/pages";
 
 import { PaymentPage } from "@/features/payments/pages";
 
+import { SettingsPage } from "@/features/settings/pages";
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
 
         <Route path="/owner" element={<OwnerLayout />}>
-  <Route index element={<DashboardPage />} />
+        <Route index element={<DashboardPage />} />
 
   <Route
     path="customers"
     element={<CustomerPage />}
   />
 
-  {/* Next modules */}
-
   <Route
     path="menu"
     element={<MenuPage />}
-/>
+  />
 
     <Route
   path="dashboard"
   element={<DashboardPage />}
-/>
+  />
 
   <Route
     path="meals"
@@ -51,23 +51,26 @@ export default function AppRouter() {
   <Route
   path="meal-records"
   element={<MealRecordPage />}
-/>
+  />
 
   <Route
   path="billing"
   element={<BillingPage />}
-/>
+  />
 
   <Route
   path="payments"
   element={<PaymentPage />}
-/>
+  />
 
   <Route
     path="settings"
-    element={<DashboardPage />}
+    element={<SettingsPage />}
   />
+
 </Route>
+
+/***************************************************************************/
 
         <Route path="/customer" element={<CustomerLayout />}>
           <Route index element={<CustomerPage />} />
