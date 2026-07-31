@@ -67,11 +67,11 @@ export const ownerNavigation: NavigationItem[] = [
   icon: Wallet,
 },
   {
-    label: "Insights",
-    title: "Insigths",
-    path: ROUTES.INSIGHTS,
-    icon: BarChart3,
-  },
+  label: "Insights",
+  title: "Business Insights",
+  path: ROUTES.INSIGHTS,
+  icon: BarChart3,
+},
   {
     label: "Settings",
     title: "Settings",
