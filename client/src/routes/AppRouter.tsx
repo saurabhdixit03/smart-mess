@@ -16,6 +16,8 @@ import { MealRecordPage } from "@/features/meal-records/pages";
 
 import { BillingPage } from "@/features/billing/pages";
 
+import { PaymentPage } from "@/features/payments/pages";
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -57,9 +59,9 @@ export default function AppRouter() {
 />
 
   <Route
-    path="reports"
-    element={<DashboardPage />}
-  />
+  path="payments"
+  element={<PaymentPage />}
+/>
 
   <Route
     path="settings"
