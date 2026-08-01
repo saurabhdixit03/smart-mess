@@ -7,7 +7,7 @@ import Button from "@/components/common/ui/Button/Button";
 
 import type { MenuResponse } from "../../types/menu.types";
 
-import MenuSummary from "../MenuSummary/MenuSummary";
+import MenuSummary from "@/components/common/business/MenuSummary";
 
 import StatusBadge from "@/components/common/ui/StatusBadge";
 

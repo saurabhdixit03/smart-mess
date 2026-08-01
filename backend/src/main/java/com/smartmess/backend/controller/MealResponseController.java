@@ -57,4 +57,22 @@ public class MealResponseController {
         );
     }
 
+    
+    @GetMapping("/customer/{customerId}/menu/{menuId}")
+    public ApiResponse<MealResponseResponse> getCustomerResponse(
+            @PathVariable Long customerId,
+            @PathVariable Long menuId,
+            HttpServletRequest httpRequest) {
+
+        MealResponseResponse response =
+                mealResponseService.getCustomerResponse(
+                        customerId,
+                        menuId);
+
+        return ApiResponse.success(
+                "Meal response retrieved successfully.",
+                httpRequest.getRequestURI(),
+                response
+        );
+    }
 }

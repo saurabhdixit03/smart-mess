@@ -13,4 +13,7 @@ public interface MealResponseService {
     List<MealResponseResponse> getResponsesByMenu(
             Long menuId);
 
+    MealResponseResponse getCustomerResponse(
+            Long customerId,
+            Long menuId);
 }

@@ -22,6 +22,10 @@ import { SettingsPage } from "@/features/settings/pages";
 
 import { InsightsPage } from "@/features/insights/pages";
 
+// Customer Portal import 
+
+import { MenuPage as CustomerMenuPage } from "@/features/customer/menu";
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -81,8 +85,8 @@ export default function AppRouter() {
 /***************************************************************************/
 
         <Route path="/customer" element={<CustomerLayout />}>
-          <Route index element={<CustomerPage />} />
-        </Route>
+    <Route index element={<CustomerMenuPage />} />
+</Route>
 
         <Route path="*" element={<NotFoundPage />} />
 

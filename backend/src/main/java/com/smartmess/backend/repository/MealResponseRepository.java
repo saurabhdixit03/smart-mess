@@ -15,6 +15,10 @@ import com.smartmess.backend.enums.MealResponseStatus;
 public interface MealResponseRepository extends JpaRepository<MealResponse, Long> {
 
     Optional<MealResponse> findByCustomerAndMenu(Customer customer, Menu menu);
+    
+    Optional<MealResponse> findByCustomerCustomerIdAndMenuMenuId(
+            Long customerId,
+            Long menuId);
 
     List<MealResponse> findByMenu(Menu menu);
 
