@@ -82,11 +82,11 @@ export const ownerNavigation: NavigationItem[] = [
 
 export const customerNavigation: NavigationItem[] = [
   {
-    label: "Home",
-    title: "Home",
-    path: ROUTES.HOME,
-    icon: Home,
-  },
+    label: "Today's Menu",
+    title: "Today's Menu",
+    path: ROUTES.MENU,
+    icon: UtensilsCrossed,
+},
   {
     label: "Today's Menu",
     title: "Today's Menu",

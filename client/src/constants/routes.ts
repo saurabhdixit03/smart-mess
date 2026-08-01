@@ -21,7 +21,7 @@ export const ROUTES = {
   SETTINGS: "settings",
 
   // Customer Portal
-  HOME: "",
+  HOME: "menu",
   MY_MEALS: "my-meals",
   MY_BILLS: "my-bills",
   PROFILE: "profile",

@@ -8,8 +8,6 @@ type BillingTableProps = {
   onViewBill: (billId: number) => void;
 };
 
-
-
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString("en-IN", {
     day: "2-digit",

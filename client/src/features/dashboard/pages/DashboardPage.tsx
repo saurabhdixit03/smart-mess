@@ -5,7 +5,6 @@ import { useDashboard } from "../hooks/useDashboard";
 
 import MealResponseSummary from "../components/MealResponseSummary/MealResponseSummary";
 
-
 import MealSessionSelector from "@/components/common/business/MealSessionSelector/MealSessionSelector";
 
 export default function DashboardPage() {

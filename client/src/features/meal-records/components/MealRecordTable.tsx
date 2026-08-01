@@ -96,6 +96,8 @@ export default function MealRecordTable({
 
     </section>
 
+    
+
   );
 
 }

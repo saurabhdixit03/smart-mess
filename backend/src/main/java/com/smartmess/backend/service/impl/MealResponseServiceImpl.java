@@ -120,5 +120,17 @@ public class MealResponseServiceImpl implements MealResponseService {
 
         return mealResponseMapper.toResponseList(mealResponses);
     }
+    
+    @Override
+    public MealResponseResponse getCustomerResponse(
+            Long customerId,
+            Long menuId) {
 
+        return mealResponseRepository
+                .findByCustomerCustomerIdAndMenuMenuId(
+                        customerId,
+                        menuId)
+                .map(mealResponseMapper::toResponse)
+                .orElse(null);
+    }
 }
