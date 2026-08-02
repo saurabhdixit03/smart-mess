@@ -2,8 +2,7 @@
   "info": {
     "_postman_id": "ab6ba7db-400c-49db-a3ba-c1c9260a629c",
     "name": "Smart Mess API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "40593794"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
@@ -11,6 +10,7 @@
       "item": [
         {
           "name": "CUS-001 Create Customer",
+          "id": "1aa7700f-f816-4040-aea5-845cee355498",
           "request": {
             "method": "POST",
             "header": [],
@@ -38,6 +38,7 @@
         },
         {
           "name": "CUS-002 Duplicate MobileNo",
+          "id": "b4f5e305-5a59-460d-9d40-d77a7210c667",
           "request": {
             "method": "POST",
             "header": [],
@@ -65,6 +66,7 @@
         },
         {
           "name": "CUS-003 Validation",
+          "id": "71f4ad90-9615-46fa-af68-d74bda720796",
           "request": {
             "method": "POST",
             "header": [],
@@ -92,6 +94,7 @@
         },
         {
           "name": "CUS-004 Email Optional",
+          "id": "9811fd60-a751-4867-901c-5cce9f123d9a",
           "request": {
             "method": "POST",
             "header": [],
@@ -119,6 +122,7 @@
         },
         {
           "name": "CUS-005 getCustomerById",
+          "id": "c926e805-0da1-433d-a227-9dd440409f24",
           "request": {
             "method": "GET",
             "header": [],
@@ -138,6 +142,7 @@
         },
         {
           "name": "CUS-006 Customer Not Found",
+          "id": "15566a17-e666-4db4-8c51-989bedfb4e91",
           "request": {
             "method": "GET",
             "header": [],
@@ -157,6 +162,7 @@
         },
         {
           "name": "CUS-007 Get Customers",
+          "id": "bc15c86a-0c9e-4b8c-bcce-049ca7df3873",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -187,6 +193,7 @@
         },
         {
           "name": "CUS-008 Update Customer",
+          "id": "8243400f-55be-4a92-a984-36ddb0951473",
           "request": {
             "method": "PUT",
             "header": [],
@@ -215,6 +222,7 @@
         },
         {
           "name": "CUS-009 Update Customer NotFound",
+          "id": "37618584-2df7-4621-b50f-86cbdd151db0",
           "request": {
             "method": "PUT",
             "header": [],
@@ -243,6 +251,7 @@
         },
         {
           "name": "CUS-010 Update Duplicate MobileNo",
+          "id": "47e23604-5e0e-4f08-92f9-eb923eb82f6b",
           "request": {
             "method": "PUT",
             "header": [],
@@ -271,6 +280,7 @@
         },
         {
           "name": "CUS-011 Update Validation",
+          "id": "7efe64e3-bd1f-40ee-bc69-dfbf63fbd684",
           "request": {
             "method": "PUT",
             "header": [],
@@ -299,6 +309,7 @@
         },
         {
           "name": "CUS-012 Delete Customer SoftDelete",
+          "id": "676f1ab9-39bf-4aa8-b751-b252ab2a013f",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -327,6 +338,7 @@
         },
         {
           "name": "CUS-013 Delete Already InactiveCustomer",
+          "id": "1b278273-67af-497b-b533-56ba90828939",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -346,6 +358,7 @@
         },
         {
           "name": "CUS-014 Delete Customer NotFound",
+          "id": "b706d213-9e9f-4c3e-a7ed-3a67b52f44d8",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -363,13 +376,15 @@
           },
           "response": []
         }
-      ]
+      ],
+      "id": "a0dd37cc-4dc7-4527-b846-e45bd1883007"
     },
     {
       "name": "Menu",
       "item": [
         {
           "name": "MEN-001 Publish Lunch Menu",
+          "id": "ee146374-2f05-48d0-b44f-4e04a489633a",
           "request": {
             "method": "POST",
             "header": [],
@@ -397,6 +412,7 @@
         },
         {
           "name": "MEN-002 Duplicate Lunch Menu",
+          "id": "3e00e711-3797-445b-b5f8-77e69ec89534",
           "request": {
             "method": "POST",
             "header": [],
@@ -424,6 +440,7 @@
         },
         {
           "name": "MEN-003 Publish Dinner Menu",
+          "id": "05e32ca6-a42e-44ed-a3c4-8bbbb7cff4f3",
           "request": {
             "method": "POST",
             "header": [],
@@ -451,6 +468,7 @@
         },
         {
           "name": "MEN-004 Validation",
+          "id": "4caeaf94-6d25-45f5-bac7-5b06f1bd5251",
           "request": {
             "method": "POST",
             "header": [],
@@ -478,6 +496,7 @@
         },
         {
           "name": "MEN-005 Today's Menus",
+          "id": "d70189f3-87c0-496b-9cc6-f3ae5425feb5",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -504,6 +523,7 @@
         },
         {
           "name": "MEN-006 GetMenubyID",
+          "id": "100daeb3-c1eb-4f35-8901-92b29d6575d2",
           "request": {
             "method": "GET",
             "header": [],
@@ -523,6 +543,7 @@
         },
         {
           "name": "MEN-007 Invalid MenuID",
+          "id": "bbe8ac64-f31b-45a7-854a-cdc5e0549ac1",
           "request": {
             "method": "GET",
             "header": [],
@@ -542,6 +563,7 @@
         },
         {
           "name": "MEN-008 Menu History",
+          "id": "9983c0f9-bf1f-4534-9db1-07ab9741e4a5",
           "request": {
             "method": "GET",
             "header": [],
@@ -559,13 +581,15 @@
           },
           "response": []
         }
-      ]
+      ],
+      "id": "072a964c-18aa-4169-9713-9ec92de357f5"
     },
     {
       "name": "Meal Pricing",
       "item": [
         {
           "name": "MPR-001 Get Current Pricing (First Time)",
+          "id": "457cccd8-f0c4-4eba-b242-0102db40e2a2",
           "request": {
             "method": "GET",
             "header": [],
@@ -584,6 +608,7 @@
         },
         {
           "name": "MPR-002 Update Meal Pricing",
+          "id": "206d928f-32fe-427c-b6e7-b9b50572fe5f",
           "request": {
             "method": "PUT",
             "header": [],
@@ -611,6 +636,7 @@
         },
         {
           "name": "MPR-003 Verify Update",
+          "id": "0ff71b29-4c94-43ba-a76c-ac6575b63b90",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -636,6 +662,7 @@
         },
         {
           "name": "MPR-004 Validation",
+          "id": "bccd9254-6ddc-4d3b-9e26-58238e1e8ef8",
           "request": {
             "method": "PUT",
             "header": [],
@@ -663,6 +690,7 @@
         },
         {
           "name": "MPR-005 Validation (null)",
+          "id": "25d09391-084d-44cf-b061-76564afa6990",
           "request": {
             "method": "PUT",
             "header": [],
@@ -690,6 +718,7 @@
         },
         {
           "name": "MPR-006 Validation (Negative)",
+          "id": "d68e244b-e2f8-481b-8476-92584fb1dc1d",
           "request": {
             "method": "PUT",
             "header": [],
@@ -715,13 +744,15 @@
           },
           "response": []
         }
-      ]
+      ],
+      "id": "208a2117-8bb6-4916-8322-469f7d044f44"
     },
     {
       "name": "Meal Response",
       "item": [
         {
           "name": "MRE-001 Submit First Response (Create)",
+          "id": "5c3b5c1e-6bda-4320-abc5-a12d041db58a",
           "request": {
             "method": "POST",
             "header": [],
@@ -749,6 +780,7 @@
         },
         {
           "name": "MRE-002 Submit Again (Update)",
+          "id": "ebb72f2d-a62d-468f-bfa7-d33d94aee9ef",
           "request": {
             "method": "POST",
             "header": [],
@@ -776,6 +808,7 @@
         },
         {
           "name": "MRE-003 Decline Meal",
+          "id": "19948730-896e-430c-aaaf-d0a996b47962",
           "request": {
             "method": "POST",
             "header": [],
@@ -803,6 +836,7 @@
         },
         {
           "name": "MRE-004 Invalid Accepted Response",
+          "id": "2ef79209-da49-46df-b279-fe82f1edb12b",
           "request": {
             "method": "POST",
             "header": [],
@@ -830,6 +864,7 @@
         },
         {
           "name": "MRE-005 Invalid Declined Response",
+          "id": "5df39c2c-b63d-44fa-a179-561404420ea9",
           "request": {
             "method": "POST",
             "header": [],
@@ -857,6 +892,7 @@
         },
         {
           "name": "MRE-006 Invalid Extra Roti",
+          "id": "a82f43b1-0096-4bd8-bfc5-9a9be6204506",
           "request": {
             "method": "POST",
             "header": [],
@@ -884,6 +920,7 @@
         },
         {
           "name": "MRE-007 Bean Validation",
+          "id": "812eb7b4-6fc2-4c5e-a7cb-71bde1947756",
           "request": {
             "method": "POST",
             "header": [],
@@ -911,6 +948,7 @@
         },
         {
           "name": "MRE-008 Customer Not Found",
+          "id": "b6a9e4cb-772c-42c7-957c-594acba86d2f",
           "request": {
             "method": "POST",
             "header": [],
@@ -938,6 +976,7 @@
         },
         {
           "name": "MRE-009 Menu Not Found",
+          "id": "c95a74c9-628e-4106-bdee-76b9f659128d",
           "request": {
             "method": "POST",
             "header": [],
@@ -965,6 +1004,7 @@
         },
         {
           "name": "MRE-010 Get Responses by Menu",
+          "id": "9b689ef3-b69b-4718-8e6a-ed78ec1ffca8",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -997,6 +1037,7 @@
         },
         {
           "name": "MRE-011 Inactive Customer Can't Submit Meal Response",
+          "id": "4fa56133-63d7-423b-9e76-3edb4e781ba3",
           "request": {
             "method": "POST",
             "header": [],
@@ -1024,19 +1065,22 @@
         },
         {
           "name": "MRE-012 Get Meal-Response By Menu ID and Customer ID",
+          "id": "150f4a1e-4fcc-4eb4-9614-0e83a00cc9bd",
           "request": {
             "method": "GET",
             "header": []
           },
           "response": []
         }
-      ]
+      ],
+      "id": "7c53ae7d-da0b-48e5-96f2-192544f50a00"
     },
     {
       "name": "Live Dashboard API",
       "item": [
         {
           "name": "DAS-001 Dashboard for Lunch (Happy Path)",
+          "id": "d224ff12-829d-4a06-937c-f9225a1ff527",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -1069,6 +1113,7 @@
         },
         {
           "name": "DAS-002 Dashboard for Dinner (Happy Path)",
+          "id": "e6c114de-3be4-41a8-98f5-edf8a63bc18a",
           "request": {
             "method": "GET",
             "header": [],
@@ -1094,6 +1139,7 @@
         },
         {
           "name": "DAS-003 Menu Doesn't Exist",
+          "id": "7dbe76de-8615-4e0f-badd-e9520eb1d148",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -1126,6 +1172,7 @@
         },
         {
           "name": "DAS-004 No Meal Responses Yet",
+          "id": "99a8e1b1-a3e3-43bd-bd1a-c78516739a26",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -1158,6 +1205,7 @@
         },
         {
           "name": "DAS-005 All Customers Accepted",
+          "id": "593b3f90-629f-473f-913c-04bfa29cad07",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -1190,6 +1238,7 @@
         },
         {
           "name": "DAS-006 All Customers Declined",
+          "id": "0af294c8-2d59-4fdf-93f3-0fa2ab6b76d2",
           "request": {
             "method": "GET",
             "header": [],
@@ -1215,6 +1264,7 @@
         },
         {
           "name": "DAS-007 Mixed Responses",
+          "id": "8879ceed-c6f0-4569-b823-dc11ee04c922",
           "request": {
             "method": "GET",
             "header": [],
@@ -1240,6 +1290,7 @@
         },
         {
           "name": "DAS-008 Full/Half Count",
+          "id": "319e296a-ad6f-41b1-8b60-307d69a9b973",
           "request": {
             "method": "GET",
             "header": [],
@@ -1265,6 +1316,7 @@
         },
         {
           "name": "DAS-009 Extra Roti Calculation",
+          "id": "d4a9380c-9df5-4436-9a7a-6fa5eadb543b",
           "request": {
             "method": "GET",
             "header": [],
@@ -1290,6 +1342,7 @@
         },
         {
           "name": "DAS-010 Total Roti Calculation",
+          "id": "a73dc303-be59-4eb8-98b5-a610f6eee832",
           "request": {
             "method": "GET",
             "header": [],
@@ -1315,6 +1368,7 @@
         },
         {
           "name": "DAS-011 Invalid Meal Session",
+          "id": "66987523-2445-4437-a524-9281e68f993a",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -1347,6 +1401,7 @@
         },
         {
           "name": "DAS-012 Missing Meal Session",
+          "id": "1e47cff8-7345-4083-a2d8-73aa7dbccae7",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -1373,6 +1428,7 @@
         },
         {
           "name": "DAS-013 Meal Session Isolation (LUNCH)",
+          "id": "830e0681-b1c5-4ece-9a31-cf6f4c8e63fd",
           "request": {
             "method": "GET",
             "header": [],
@@ -1398,6 +1454,7 @@
         },
         {
           "name": "DAS-014 Meal Session Isolation (DINNER)",
+          "id": "baf061ec-c594-4210-b65f-757935de90c0",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -1428,13 +1485,15 @@
           },
           "response": []
         }
-      ]
+      ],
+      "id": "3c2d9eb9-579e-46bc-bba3-234429d3a595"
     },
     {
       "name": "Meal Record",
       "item": [
         {
           "name": "MREC-001 Create Meal Record from Existing Meal Response",
+          "id": "980dc471-12f0-4f27-b999-1faf7f0dc6f5",
           "request": {
             "method": "POST",
             "header": [],
@@ -1462,6 +1521,7 @@
         },
         {
           "name": "MREC-002 Manual Collection (No Meal Response)",
+          "id": "c7387042-729d-4506-ab67-517f2662af79",
           "request": {
             "method": "POST",
             "header": [],
@@ -1489,6 +1549,7 @@
         },
         {
           "name": "MREC-003 Half Meal",
+          "id": "4fdcd160-d553-4d56-8700-03f25c6fb121",
           "request": {
             "method": "POST",
             "header": [],
@@ -1516,6 +1577,7 @@
         },
         {
           "name": "MREC-004 Full Meal",
+          "id": "a2e73cc5-ae9a-48dc-9fbe-e16e35aabe43",
           "request": {
             "method": "POST",
             "header": [],
@@ -1543,6 +1605,7 @@
         },
         {
           "name": "MREC-005 Extra Roti Calculation",
+          "id": "ec19787f-caa2-4374-95c7-991f87842650",
           "request": {
             "method": "POST",
             "header": [],
@@ -1570,6 +1633,7 @@
         },
         {
           "name": "MREC-006 Customer Does Not Exist",
+          "id": "49c2fd40-dcae-400b-a3a9-9c2974fca27c",
           "request": {
             "method": "POST",
             "header": [],
@@ -1597,6 +1661,7 @@
         },
         {
           "name": "MREC-007 Customer Inactive",
+          "id": "6ede5ffa-4221-4842-b5c2-629782fb697f",
           "request": {
             "method": "POST",
             "header": [],
@@ -1624,6 +1689,7 @@
         },
         {
           "name": "MREC-008 Menu Does Not Exist",
+          "id": "6707f686-38c2-4add-ae9a-e6db2d37f2cd",
           "request": {
             "method": "POST",
             "header": [],
@@ -1651,6 +1717,7 @@
         },
         {
           "name": "MREC-009 Pricing Missing",
+          "id": "1812354f-a275-4ec9-829e-834294e9eb09",
           "request": {
             "method": "POST",
             "header": [],
@@ -1678,6 +1745,7 @@
         },
         {
           "name": "MREC-010 Meal Response Does Not Exist",
+          "id": "1a620f22-ac08-4be5-9d25-963f910fcdc8",
           "request": {
             "method": "POST",
             "header": [],
@@ -1705,6 +1773,7 @@
         },
         {
           "name": "MREC-011 Meal Response Belongs to Another Customer",
+          "id": "9a7e29dd-48a0-4670-b661-aa1a4ff0edff",
           "request": {
             "method": "POST",
             "header": [],
@@ -1732,6 +1801,7 @@
         },
         {
           "name": "MREC-012 Meal Response Belongs to Another Menu",
+          "id": "25538334-31c7-4943-a513-27a48a6a61e4",
           "request": {
             "method": "POST",
             "header": [],
@@ -1759,6 +1829,7 @@
         },
         {
           "name": "MREC-013 Duplicate Response Collection",
+          "id": "a518fe58-abe1-4330-b59a-b5fa21d53a65",
           "request": {
             "method": "POST",
             "header": [],
@@ -1786,6 +1857,7 @@
         },
         {
           "name": "MREC-014 Duplicate Manual Collection",
+          "id": "c0e92575-233a-4b97-83f0-4aaa34218299",
           "request": {
             "method": "POST",
             "header": [],
@@ -1813,6 +1885,7 @@
         },
         {
           "name": "MREC-015 Customer Meal History",
+          "id": "394a00a0-664e-44f6-8ad3-9023e58f7455",
           "request": {
             "method": "GET",
             "header": []
@@ -1821,6 +1894,7 @@
         },
         {
           "name": "MREC-016 Customer Without History",
+          "id": "e824ec21-fce5-4296-ad65-f7c2d241b095",
           "request": {
             "method": "GET",
             "header": []
@@ -1829,6 +1903,7 @@
         },
         {
           "name": "MREC-017 Today's Meal Records (Lunch)",
+          "id": "cdb30633-e20f-4db0-a3a6-c5a86240789b",
           "request": {
             "method": "GET",
             "header": []
@@ -1837,6 +1912,7 @@
         },
         {
           "name": "MREC-018 Today's Meal Records (Dinner)",
+          "id": "47c9e169-7e59-432d-9447-e11ba4fec14f",
           "request": {
             "method": "GET",
             "header": []
@@ -1845,6 +1921,7 @@
         },
         {
           "name": "MREC-019 Invalid Meal Session",
+          "id": "62ee585e-1185-49cb-a1a2-87ddf51b67da",
           "request": {
             "method": "GET",
             "header": []
@@ -1853,6 +1930,7 @@
         },
         {
           "name": "MREC-020 Live Dashboard Refresh",
+          "id": "9f6697df-1f51-4839-ae89-d2f9d2ada808",
           "request": {
             "method": "POST",
             "header": [],
@@ -1880,6 +1958,7 @@
         },
         {
           "name": "MREC-021 Collection Queue",
+          "id": "9c98fd05-953e-4a8b-9b42-3636e5d50643",
           "request": {
             "method": "GET",
             "header": [],
@@ -1903,13 +1982,15 @@
           },
           "response": []
         }
-      ]
+      ],
+      "id": "838f0889-cf9c-48d4-838e-6cdc0418ec38"
     },
     {
       "name": "Bill",
       "item": [
         {
           "name": "BILL-001 Generate Bills",
+          "id": "c76345e2-87d7-426f-aef9-9e9c335fa233",
           "request": {
             "method": "POST",
             "header": [],
@@ -1938,6 +2019,7 @@
         },
         {
           "name": "BILL-002 Generate Again",
+          "id": "0b774f5d-c407-46d4-b973-66ee4d06b431",
           "request": {
             "method": "POST",
             "header": [],
@@ -1966,6 +2048,7 @@
         },
         {
           "name": "BILL-003 Customer Bills",
+          "id": "d825934c-349e-4592-8696-eee63320fcfb",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -1993,6 +2076,7 @@
         },
         {
           "name": "BILL-004 Invalid Customer",
+          "id": "13aef27a-9554-47ac-91db-62a6ca1f4010",
           "request": {
             "method": "GET",
             "header": [],
@@ -2013,6 +2097,7 @@
         },
         {
           "name": "BILL-005 Bill Details",
+          "id": "b0b27ca6-faec-4953-a9f8-1b550f5556f7",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -2039,6 +2124,7 @@
         },
         {
           "name": "BILL-006 Invalid Bill",
+          "id": "c2da09e4-f571-49eb-9ecf-9100c9c46079",
           "request": {
             "method": "GET",
             "header": [],
@@ -2058,6 +2144,7 @@
         },
         {
           "name": "BILL-007 Retrieve Billing Overview",
+          "id": "633a8b9c-7dfd-4ee3-a28a-7e7dc5dc67de",
           "request": {
             "method": "GET",
             "header": []
@@ -2066,6 +2153,7 @@
         },
         {
           "name": "BILL-008 Retrieve Billing Overview (No Bills)",
+          "id": "9769982d-9077-4d24-aba8-841d895abdfe",
           "request": {
             "method": "GET",
             "header": []
@@ -2074,19 +2162,22 @@
         },
         {
           "name": "BILL-009 Retrieve Billing Overview (Invalid Month)",
+          "id": "5e23b234-5986-4e9a-8e3a-d1b76d198862",
           "request": {
             "method": "GET",
             "header": []
           },
           "response": []
         }
-      ]
+      ],
+      "id": "fbab1d32-0470-40b9-8f41-c8e2aeda1af1"
     },
     {
       "name": "Payment",
       "item": [
         {
           "name": "PAY-001 Cash Payment - Successful Payment",
+          "id": "abb6c769-cf46-475c-84e6-071eb5de85f9",
           "request": {
             "method": "POST",
             "header": [],
@@ -2114,6 +2205,7 @@
         },
         {
           "name": "PAY-002 Cash Payment - Already Paid Bill",
+          "id": "7048b259-786f-4d00-bc43-8eaf99ffd678",
           "request": {
             "method": "POST",
             "header": [],
@@ -2141,6 +2233,7 @@
         },
         {
           "name": "PAY-003 UPI Payment Request - Successful",
+          "id": "21823755-5fc1-4428-ab54-700e7ea819f8",
           "request": {
             "method": "POST",
             "header": [],
@@ -2170,6 +2263,7 @@
         },
         {
           "name": "PAY-004 UPI Payment Request - Duplicate Request",
+          "id": "e065700c-a5c6-42ea-881c-9bfe4e327f8d",
           "request": {
             "method": "POST",
             "header": [],
@@ -2190,6 +2284,7 @@
         },
         {
           "name": "PAY-005 Approve UPI Payment",
+          "id": "73037fbf-bc13-443a-a522-d3910b582abf",
           "request": {
             "method": "POST",
             "header": [],
@@ -2217,6 +2312,7 @@
         },
         {
           "name": "PAY-006 Approve UPI Without Request",
+          "id": "aa541907-8d7e-4bfa-b5ba-7dd93dda1875",
           "request": {
             "method": "POST",
             "header": [],
@@ -2244,6 +2340,7 @@
         },
         {
           "name": "PAY-007 Cash Payment On Pending UPI Bill",
+          "id": "684332ee-8263-4338-b246-d489a623e499",
           "request": {
             "method": "POST",
             "header": [],
@@ -2271,6 +2368,7 @@
         },
         {
           "name": "PAY-008 Bill Not Found",
+          "id": "b3b7ce18-0686-4647-b252-bf2b7e3387a6",
           "request": {
             "method": "POST",
             "header": [],
@@ -2298,6 +2396,7 @@
         },
         {
           "name": "PAY-009 Payment Request - Bill Not Found",
+          "id": "831bcf14-b249-4397-9038-b2cda364c94f",
           "request": {
             "method": "POST",
             "header": [],
@@ -2322,6 +2421,7 @@
         },
         {
           "name": "PAY-010 Duplicate UPI Payment Approval",
+          "id": "8b29ecff-324f-470b-bbd7-47efb4656798",
           "request": {
             "method": "POST",
             "header": [],
@@ -2349,6 +2449,7 @@
         },
         {
           "name": "PAY-011 Get Pending Payment Requests",
+          "id": "818a2e6a-6a8d-4ee7-9ac0-9b59681bad0c",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -2375,6 +2476,7 @@
         },
         {
           "name": "PAY-012 Get Pending Payment Count",
+          "id": "cfed4edb-7d15-4efd-88e7-00bc21df15e7",
           "request": {
             "method": "GET",
             "header": [],
@@ -2395,6 +2497,7 @@
         },
         {
           "name": "PAY-013 Generate UPI Payment Link",
+          "id": "0bb18bb5-30fb-4b2c-8d89-e5b95b8474f8",
           "request": {
             "method": "GET",
             "header": []
@@ -2403,6 +2506,7 @@
         },
         {
           "name": "PAY-014 Link Only Generated For UNPAID Bills",
+          "id": "51274d42-dbc2-4c7b-a7a6-4a3f25eec2ae",
           "protocolProfileBehavior": {
             "disableBodyPruning": true
           },
@@ -2430,19 +2534,22 @@
         },
         {
           "name": "PAY-015 Payment Overview",
+          "id": "23c13730-e8b7-4c8b-bf26-041bb1e1c15e",
           "request": {
             "method": "GET",
             "header": []
           },
           "response": []
         }
-      ]
+      ],
+      "id": "550ae8a1-b4b4-4660-88fc-e1925920a9a4"
     },
     {
       "name": "Settings",
       "item": [
         {
           "name": "SET-001 Create Settings",
+          "id": "3273d4d7-0e15-4aea-8702-31be0d328c9d",
           "request": {
             "method": "POST",
             "header": [],
@@ -2470,6 +2577,7 @@
         },
         {
           "name": "SET-002 Get Settings",
+          "id": "a85e9178-e253-443a-bc71-226b293c289a",
           "request": {
             "method": "GET",
             "header": []
@@ -2478,6 +2586,7 @@
         },
         {
           "name": "SET-003 Update Settings",
+          "id": "d2323f8d-878d-478d-a662-d5cf7947ee6f",
           "request": {
             "method": "PUT",
             "header": [],
@@ -2505,6 +2614,7 @@
         },
         {
           "name": "SET-004 Duplicate Create",
+          "id": "6b7cac1a-fa64-4d70-b036-f2ac3a38ca5c",
           "request": {
             "method": "POST",
             "header": [],
@@ -2530,13 +2640,15 @@
           },
           "response": []
         }
-      ]
+      ],
+      "id": "a42a60ab-342d-4339-b6f6-88d864c07f6b"
     },
     {
       "name": "Insights",
       "item": [
         {
           "name": "INS-001 Insights",
+          "id": "08a25e2f-df96-469f-829e-4ed4666c2969",
           "request": {
             "method": "GET",
             "header": [],
@@ -2564,7 +2676,8 @@
           },
           "response": []
         }
-      ]
+      ],
+      "id": "cf4985c8-ea53-4e0a-b34e-9a6bff7d8f5c"
     }
   ]
 }

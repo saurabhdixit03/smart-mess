@@ -28,6 +28,8 @@ import { MenuPage as CustomerMenuPage } from "@/features/customer/menu";
 
 import { MyMealsPage } from "@/features/customer/my-meals";
 
+import { BillingPage as CustomerBillingPage } from "@/features/customer/billing";
+
 
 export default function AppRouter() {
   return (
@@ -87,7 +89,8 @@ export default function AppRouter() {
 
 /***************************************************************************/
 
-        <Route path="/customer" element={<CustomerLayout />}>
+
+<Route path="/customer" element={<CustomerLayout />}>
 
   <Route
     index
@@ -104,11 +107,16 @@ export default function AppRouter() {
     element={<MyMealsPage />}
   />
 
+  <Route
+    path="my-bills"
+    element={<CustomerBillingPage />}
+  />
+
 </Route>
 
 
-
-        <Route path="*" element={<NotFoundPage />} />
+      
+      <Route path="*" element={<NotFoundPage />} />
 
       </Routes>
     </BrowserRouter>

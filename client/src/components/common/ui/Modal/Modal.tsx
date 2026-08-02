@@ -53,9 +53,15 @@ export default function Modal({
 
         </div>
 
-        <div className="p-6">
-          {children}
-        </div>
+        <div
+  className="
+    max-h-[80vh]
+    overflow-hidden
+    p-6
+  "
+>
+  {children}
+</div>
 
         {footer && (
           <div className="flex justify-end gap-3 border-t border-[var(--color-border)] px-6 py-4">
