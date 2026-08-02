@@ -12,7 +12,7 @@ import {
 import { useMealRecords } from "../hooks";
 
 export default function MyMealsPage() {
-  const customerId = 1; // Temporary until authentication
+  const customerId = 3; // Temporary until authentication
 
   const {
     mealRecords,
