@@ -84,13 +84,7 @@ export const customerNavigation: NavigationItem[] = [
   {
     label: "Today's Menu",
     title: "Today's Menu",
-    path: ROUTES.MENU,
-    icon: UtensilsCrossed,
-},
-  {
-    label: "Today's Menu",
-    title: "Today's Menu",
-    path: ROUTES.MENU,
+    path: ROUTES.HOME,
     icon: UtensilsCrossed,
   },
   {
