@@ -1,0 +1,1 @@
+export { default as MyMealsPage } from "./MyMealsPage"

@@ -26,6 +26,9 @@ import { InsightsPage } from "@/features/insights/pages";
 
 import { MenuPage as CustomerMenuPage } from "@/features/customer/menu";
 
+import { MyMealsPage } from "@/features/customer/my-meals";
+
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -85,8 +88,25 @@ export default function AppRouter() {
 /***************************************************************************/
 
         <Route path="/customer" element={<CustomerLayout />}>
-    <Route index element={<CustomerMenuPage />} />
+
+  <Route
+    index
+    element={<CustomerMenuPage />}
+  />
+
+  <Route
+    path="menu"
+    element={<CustomerMenuPage />}
+  />
+
+  <Route
+    path="my-meals"
+    element={<MyMealsPage />}
+  />
+
 </Route>
+
+
 
         <Route path="*" element={<NotFoundPage />} />
 
