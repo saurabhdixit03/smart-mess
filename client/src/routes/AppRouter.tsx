@@ -30,6 +30,7 @@ import { MyMealsPage } from "@/features/customer/my-meals";
 
 import { BillingPage as CustomerBillingPage } from "@/features/customer/billing";
 
+import { ProfilePage } from "@/features/customer/profile";
 
 export default function AppRouter() {
   return (
@@ -110,6 +111,11 @@ export default function AppRouter() {
   <Route
     path="my-bills"
     element={<CustomerBillingPage />}
+  />
+
+  <Route
+    path="profile"
+    element={<ProfilePage />}
   />
 
 </Route>
