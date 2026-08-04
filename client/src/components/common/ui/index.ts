@@ -1,6 +1,7 @@
 export { default as PageHeader } from "./PageHeader";
 export { default as Button } from "./Button";
 export { default as Card } from "./Card";
+export { default as CopyButton } from "./CopyButton/CopyButton";
 export { default as Input } from "./Input";
 export { default as Textarea } from "./Textarea";
 export { default as Label } from "./Label";

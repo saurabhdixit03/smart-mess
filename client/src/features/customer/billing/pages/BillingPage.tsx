@@ -13,7 +13,7 @@ import { useBills } from "../hooks";
 export default function BillingPage() {
 
   // Temporary until authentication is added
-  const customerId = 3;
+  const customerId = 11;
 
   const {
     bills,

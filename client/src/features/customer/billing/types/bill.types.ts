@@ -1,6 +1,7 @@
 export type BillStatus =
-  | "PAID"
-  | "UNPAID";
+  | "UNPAID"
+  | "PAYMENT_PENDING"
+  | "PAID";
 
 export type MealSession =
   | "LUNCH"
@@ -60,6 +61,22 @@ export interface BillDetail extends Bill {
   mealRecords: MealRecord[];
 }
 
+/* ---------- UPI Payment ---------- */
+
+export interface UpiPayment {
+  upiUrl: string;
+
+  upiId: string;
+
+  receiverName: string;
+
+  amount: number;
+
+  billId: number;
+}
+
+/* ---------- Common API ---------- */
+
 export interface ApiResponse<T> {
   success: boolean;
 
@@ -75,3 +92,6 @@ export type BillsResponse =
 
 export type BillDetailResponse =
   ApiResponse<BillDetail>;
+
+export type UpiPaymentResponse =
+  ApiResponse<UpiPayment>;
