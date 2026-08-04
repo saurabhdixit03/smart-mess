@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import BillCard from "./BillCard";
 import BillDetailsModal from "./BillDetailsModal";
+import PaymentModal from "./PaymentModal";
 
 import type { Bill } from "../types";
 
@@ -15,19 +16,37 @@ export default function BillsList({
   const [selectedBillId, setSelectedBillId] =
     useState<number | null>(null);
 
-  const [modalOpen, setModalOpen] =
+  const [detailsModalOpen, setDetailsModalOpen] =
     useState(false);
 
-  function handleOpen(
+  const [selectedPaymentBillId, setSelectedPaymentBillId] =
+    useState<number | null>(null);
+
+  const [paymentModalOpen, setPaymentModalOpen] =
+    useState(false);
+
+  function handleView(
     billId: number
   ) {
     setSelectedBillId(billId);
-    setModalOpen(true);
+    setDetailsModalOpen(true);
   }
 
-  function handleClose() {
-    setModalOpen(false);
+  function handleCloseDetails() {
+    setDetailsModalOpen(false);
     setSelectedBillId(null);
+  }
+
+  function handlePay(
+    billId: number
+  ) {
+    setSelectedPaymentBillId(billId);
+    setPaymentModalOpen(true);
+  }
+
+  function handleClosePayment() {
+    setPaymentModalOpen(false);
+    setSelectedPaymentBillId(null);
   }
 
   return (
@@ -36,24 +55,30 @@ export default function BillsList({
         className="
           grid
           gap-5
-
           sm:grid-cols-2
           xl:grid-cols-3
         "
       >
         {bills.map((bill) => (
           <BillCard
-  key={bill.billId}
-  bill={bill}
-  onView={handleOpen}
-/>
+            key={bill.billId}
+            bill={bill}
+            onView={handleView}
+            onPay={handlePay}
+          />
         ))}
       </div>
 
       <BillDetailsModal
         billId={selectedBillId}
-        open={modalOpen}
-        onClose={handleClose}
+        open={detailsModalOpen}
+        onClose={handleCloseDetails}
+      />
+
+      <PaymentModal
+        billId={selectedPaymentBillId}
+        open={paymentModalOpen}
+        onClose={handleClosePayment}
       />
     </>
   );

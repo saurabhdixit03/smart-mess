@@ -15,7 +15,7 @@ export default function ProfilePage() {
   /*
    * Temporary until authentication is implemented.
    */
-  const customerId = 3;
+  const customerId = 11;
 
   const {
     profile,

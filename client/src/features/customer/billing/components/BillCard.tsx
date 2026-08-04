@@ -14,6 +14,10 @@ interface BillCardProps {
   onView: (
     billId: number
   ) => void;
+
+  onPay: (
+    billId: number
+  ) => void;
 }
 
 const MONTHS = [
@@ -34,6 +38,7 @@ const MONTHS = [
 export default function BillCard({
   bill,
   onView,
+  onPay,
 }: BillCardProps) {
   return (
     <Card className="flex h-full flex-col">
@@ -56,11 +61,7 @@ export default function BillCard({
             <div>
 
               <h2 className="text-lg font-semibold">
-                {
-                  MONTHS[
-                    bill.billingMonth - 1
-                  ]
-                }{" "}
+                {MONTHS[bill.billingMonth - 1]}{" "}
                 {bill.billingYear}
               </h2>
 
@@ -115,16 +116,37 @@ export default function BillCard({
 
       </Card.Body>
 
-      <Card.Footer>
+      <Card.Footer className="space-y-3">
 
         <Button
           fullWidth
+          variant="secondary"
           onClick={() =>
             onView(bill.billId)
           }
         >
           View Bill
         </Button>
+
+        {bill.billStatus === "UNPAID" && (
+          <Button
+            fullWidth
+            onClick={() =>
+              onPay(bill.billId)
+            }
+          >
+            Pay Now
+          </Button>
+        )}
+
+        {bill.billStatus === "PAYMENT_PENDING" && (
+          <Button
+            fullWidth
+            disabled
+          >
+            Waiting for Approval
+          </Button>
+        )}
 
       </Card.Footer>
 

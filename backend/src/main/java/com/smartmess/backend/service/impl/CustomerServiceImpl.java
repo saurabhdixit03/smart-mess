@@ -32,7 +32,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public CustomerResponse createCustomer(CreateCustomerRequest request) {
 
-        // Business Rule: Mobile number must be unique
+        // Business Rule: Mobile number must be unique	
         if (customerRepository.existsByMobileNumber(request.mobileNumber())) {
             throw new BusinessException(
                     "A customer with this mobile number already exists."
