@@ -23,3 +23,23 @@ export interface ApiResponse<T> {
   data: T;
   timestamp: string;
 }
+
+export interface MealPricingResponse {
+  mealPricingId: number;
+
+  halfMealPrice: number;
+
+  fullMealPrice: number;
+
+  extraRotiPrice: number;
+
+  updatedAt: string;
+}
+
+export interface UpdateMealPricingRequest {
+  halfMealPrice: number;
+
+  fullMealPrice: number;
+
+  extraRotiPrice: number;
+}

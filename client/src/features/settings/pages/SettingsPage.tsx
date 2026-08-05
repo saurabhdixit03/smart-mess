@@ -1,8 +1,13 @@
 import PageHeader from "@/components/common/ui/PageHeader";
 
-import { SettingsForm } from "../components";
+import {
+  MealPricingForm,
+  SettingsForm,
+} from "../components";
 
 import { useSettings } from "../hooks";
+
+
 
 export default function SettingsPage() {
 
@@ -32,6 +37,31 @@ export default function SettingsPage() {
       />
 
       <div
+  className="
+    rounded-2xl
+    border
+    border-[var(--color-border)]
+    bg-white
+    p-6
+  "
+>
+  <div className="mb-6">
+
+    <h2 className="text-lg font-semibold">
+      Meal Pricing
+    </h2>
+
+    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+      Configure the pricing used while generating monthly bills.
+    </p>
+
+  </div>
+
+  <MealPricingForm />
+
+</div>
+
+      <div
         className="
           rounded-2xl
           border
@@ -58,12 +88,16 @@ export default function SettingsPage() {
 
         </div>
 
+        
+
         <SettingsForm
           settings={settings}
           onSuccess={refreshSettings}
         />
 
       </div>
+
+      
 
     </div>
 
