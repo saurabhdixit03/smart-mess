@@ -1068,7 +1068,10 @@
           "id": "150f4a1e-4fcc-4eb4-9614-0e83a00cc9bd",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": ""
+            }
           },
           "response": []
         }
@@ -1888,7 +1891,10 @@
           "id": "394a00a0-664e-44f6-8ad3-9023e58f7455",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": ""
+            }
           },
           "response": []
         },
@@ -1897,7 +1903,10 @@
           "id": "e824ec21-fce5-4296-ad65-f7c2d241b095",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": ""
+            }
           },
           "response": []
         },
@@ -1906,7 +1915,10 @@
           "id": "cdb30633-e20f-4db0-a3a6-c5a86240789b",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": ""
+            }
           },
           "response": []
         },
@@ -1915,7 +1927,10 @@
           "id": "47c9e169-7e59-432d-9447-e11ba4fec14f",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": ""
+            }
           },
           "response": []
         },
@@ -1924,7 +1939,10 @@
           "id": "62ee585e-1185-49cb-a1a2-87ddf51b67da",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": ""
+            }
           },
           "response": []
         },
@@ -2147,7 +2165,10 @@
           "id": "633a8b9c-7dfd-4ee3-a28a-7e7dc5dc67de",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": ""
+            }
           },
           "response": []
         },
@@ -2156,7 +2177,10 @@
           "id": "9769982d-9077-4d24-aba8-841d895abdfe",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": ""
+            }
           },
           "response": []
         },
@@ -2165,7 +2189,10 @@
           "id": "5e23b234-5986-4e9a-8e3a-d1b76d198862",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": ""
+            }
           },
           "response": []
         }
@@ -2500,7 +2527,10 @@
           "id": "0bb18bb5-30fb-4b2c-8d89-e5b95b8474f8",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": ""
+            }
           },
           "response": []
         },
@@ -2537,7 +2567,10 @@
           "id": "23c13730-e8b7-4c8b-bf26-041bb1e1c15e",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": ""
+            }
           },
           "response": []
         }
@@ -2580,7 +2613,10 @@
           "id": "a85e9178-e253-443a-bc71-226b293c289a",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [],
+            "url": {
+              "raw": ""
+            }
           },
           "response": []
         },
@@ -2678,6 +2714,184 @@
         }
       ],
       "id": "cf4985c8-ea53-4e0a-b34e-9a6bff7d8f5c"
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "AUTH-001 Owner Registration",
+          "id": "fc97c6dd-0d01-415a-9271-595236eca467",
+          "request": {
+            "auth": {
+              "type": "jwt",
+              "jwt": [
+                {
+                  "key": "algorithm",
+                  "value": "HS256",
+                  "type": "string"
+                },
+                {
+                  "key": "isSecretBase64Encoded",
+                  "value": false,
+                  "type": "boolean"
+                },
+                {
+                  "key": "payload",
+                  "value": "{}",
+                  "type": "string"
+                },
+                {
+                  "key": "addTokenTo",
+                  "value": "header",
+                  "type": "string"
+                },
+                {
+                  "key": "headerPrefix",
+                  "value": "Bearer",
+                  "type": "string"
+                },
+                {
+                  "key": "queryParamKey",
+                  "value": "token",
+                  "type": "string"
+                },
+                {
+                  "key": "header",
+                  "value": "{}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fullName\": \"Radha Joshi\",\r\n  \"messName\": \"Smart Mess\",\r\n  \"mobileNumber\": \"9876543210\",\r\n  \"email\": \"radhajoshi@test.com\",\r\n  \"password\": \"Password@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/owner/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "owner",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-002 Duplicate Mobile",
+          "id": "9b9c5c08-54f9-4d66-814c-29484c23c72f",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fullName\": \"Radha Joshi\",\r\n  \"messName\": \"Smart Mess\",\r\n  \"mobileNumber\": \"9876543210\",\r\n  \"email\": \"radhajoshi@test.com\",\r\n  \"password\": \"Password@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/owner/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "owner",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-003 Duplicate Email",
+          "id": "e515dc92-2f88-4d59-953c-52c26dccd7ba",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fullName\": \"Radha Joshi\",\r\n  \"messName\": \"Smart Mess\",\r\n  \"mobileNumber\": \"9876543211\",\r\n  \"email\": \"radhajoshi@test.com\",\r\n  \"password\": \"Password@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/owner/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "owner",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-004 Login",
+          "id": "887a06bc-61ab-454e-b08b-d44ba9aa8239",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"mobileNumber\":\"9876543210\",\r\n  \"password\":\"Password@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/owner/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "owner",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-005 Wrong Password",
+          "id": "5c9701cc-564f-4e5e-840a-b76f6cf8f961",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": ""
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "2e348286-2ac1-4578-b6ed-49d5f95d710a"
     }
   ]
 }
