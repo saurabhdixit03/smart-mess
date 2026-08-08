@@ -2849,7 +2849,44 @@
           "response": []
         },
         {
-          "name": "AUTH-004 Login",
+          "name": "AUTH-004 Owner Login",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "4e85b681-e737-4dc8-b995-f74c0c1c6f99",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "47dc3f76-995c-4d1e-9021-d9e4926a2f5c",
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "if (response.success && response.data?.accessToken) {\r",
+                  "    pm.environment.set(\r",
+                  "        \"jwtToken\",\r",
+                  "        response.data.accessToken\r",
+                  "    );\r",
+                  "\r",
+                  "    console.log(\"JWT token saved successfully.\");\r",
+                  "} else {\r",
+                  "    console.log(\"Login failed. JWT token was not saved.\");\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
           "id": "887a06bc-61ab-454e-b08b-d44ba9aa8239",
           "request": {
             "method": "POST",
@@ -2893,5 +2930,15 @@
       ],
       "id": "2e348286-2ac1-4578-b6ed-49d5f95d710a"
     }
-  ]
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiT1dORVIiLCJzdWIiOiI5ODc2NTQzMjEwIiwiaWF0IjoxNzg2MDE2MDk1LCJleHAiOjE3ODYxMDI0OTV9.TmVaj1yr6F9kHmX-z0j74SwvVRFhSmHgbrTrTaPIJP0",
+        "type": "string"
+      }
+    ]
+  }
 }

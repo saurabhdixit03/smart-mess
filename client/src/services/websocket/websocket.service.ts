@@ -9,7 +9,7 @@ const WS_URL = "http://localhost:8080/ws-dashboard";
 export const websocketClient = new Client({
   webSocketFactory: () => new SockJS(WS_URL),
 
-  reconnectDelay: 5000,
+  reconnectDelay: 10000,
 
   debug: () => {},
 });

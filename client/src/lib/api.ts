@@ -1,3 +1,5 @@
+import { getAccessToken } from "@/features/auth/utils/auth.utils";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
@@ -7,11 +9,19 @@ async function request<T>(
   method: HttpMethod,
   body?: unknown
 ): Promise<T> {
+  const token = getAccessToken();
+
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method,
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     body: body ? JSON.stringify(body) : undefined,
   });
 

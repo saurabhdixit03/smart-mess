@@ -109,4 +109,12 @@ public class JwtService {
 
         return !isTokenExpired(token);
     }
+    
+    public boolean isTokenValid(
+            String token,
+            String mobileNumber) {
+
+        return extractMobileNumber(token).equals(mobileNumber)
+                && !isTokenExpired(token);
+    }
 }
