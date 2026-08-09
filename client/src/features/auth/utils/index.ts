@@ -1,5 +1,6 @@
 export {
-  saveAuthSession,
+  saveOwnerAuthSession,
+  saveCustomerAuthSession,
   getAccessToken,
   getOwner,
   clearAuthSession,

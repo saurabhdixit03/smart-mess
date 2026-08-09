@@ -49,6 +49,8 @@ public class Customer extends BaseEntity {
     @Column(name = "status", nullable = false, length = 20)
     private CustomerStatus status;
 
+    @Column(name = "password", nullable = false, length = 255)
+    private String password;
     
     @PrePersist
     private void initializeDefaults() {

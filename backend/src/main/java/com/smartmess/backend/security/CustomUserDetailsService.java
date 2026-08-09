@@ -5,25 +5,31 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.smartmess.backend.entity.Customer;
 import com.smartmess.backend.entity.MessOwner;
 import com.smartmess.backend.enums.UserRole;
+import com.smartmess.backend.repository.CustomerRepository;
 import com.smartmess.backend.repository.MessOwnerRepository;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final MessOwnerRepository messOwnerRepository;
+    private final CustomerRepository customerRepository;
 
     public CustomUserDetailsService(
-            MessOwnerRepository messOwnerRepository) {
+            MessOwnerRepository messOwnerRepository,
+            CustomerRepository customerRepository) {
 
         this.messOwnerRepository = messOwnerRepository;
+        this.customerRepository = customerRepository;
     }
 
     /**
      * Required by Spring Security.
-     * We don't use this method directly because our JWT contains
-     * both mobile number and role.
+     *
+     * Authentication is handled through JWT, so this method
+     * is not used directly by our JWT authentication flow.
      */
     @Override
     public UserDetails loadUserByUsername(String username)
@@ -35,7 +41,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     /**
-     * Used by JwtAuthenticationFilter.
+     * Loads the authenticated user using the mobile number
+     * and role extracted from the JWT.
      */
     public UserDetails loadUserByMobileNumber(
             String mobileNumber,
@@ -44,6 +51,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         switch (role) {
 
             case OWNER:
+
                 MessOwner owner = messOwnerRepository
                         .findByMobileNumber(mobileNumber)
                         .orElseThrow(() ->
@@ -59,11 +67,23 @@ public class CustomUserDetailsService implements UserDetailsService {
                 );
 
             case CUSTOMER:
-                throw new UnsupportedOperationException(
-                        "Customer authentication not implemented yet."
+
+                Customer customer = customerRepository
+                        .findByMobileNumber(mobileNumber)
+                        .orElseThrow(() ->
+                                new UsernameNotFoundException(
+                                        "Customer not found."
+                                ));
+
+                return new CustomUserDetails(
+                        customer.getCustomerId(),
+                        customer.getMobileNumber(),
+                        customer.getPassword(),
+                        UserRole.CUSTOMER
                 );
 
             default:
+
                 throw new UsernameNotFoundException(
                         "Unsupported user role."
                 );

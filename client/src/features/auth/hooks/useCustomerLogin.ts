@@ -1,34 +1,32 @@
 import { useState } from "react";
 
 import { authApi } from "../api/auth.api";
-import { saveOwnerAuthSession } from "../utils/auth.utils";
-
-import type { OwnerLoginRequest } from "../types/auth.types";
+import { saveCustomerAuthSession } from "../utils/auth.utils";
 
 import { toast } from "sonner";
 
-export function useOwnerLogin() {
-  const [loading, setLoading] = useState(false);
+import type {
+  CustomerLoginRequest,
+} from "../types/auth.types";
 
-  const [error, setError] =
-    useState<string | null>(null);
+export function useCustomerLogin() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const login = async (
-    payload: OwnerLoginRequest
+    payload: CustomerLoginRequest
   ) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response =
-        await authApi.login(payload);
+      const response = await authApi.customerLogin(payload);
 
-      saveOwnerAuthSession(response.data);
+      saveCustomerAuthSession(response.data);
 
       toast.success("Login successful.");
 
       return response.data;
-
     } catch (error) {
       const message =
         error instanceof Error
@@ -38,7 +36,6 @@ export function useOwnerLogin() {
       setError(message);
 
       throw error;
-
     } finally {
       setLoading(false);
     }

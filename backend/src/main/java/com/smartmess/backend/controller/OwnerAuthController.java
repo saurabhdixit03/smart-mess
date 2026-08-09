@@ -17,11 +17,11 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/auth/owner")
 @Validated
-public class AuthController {
+public class OwnerAuthController {
 
     private final AuthService authService;
 
-    public AuthController(AuthService authService) {
+    public OwnerAuthController(AuthService authService) {
         this.authService = authService;
     }
 
@@ -62,4 +62,6 @@ public class AuthController {
 
         return ResponseEntity.ok(apiResponse);
     }
+    
+   
 }

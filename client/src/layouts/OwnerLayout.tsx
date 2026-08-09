@@ -10,10 +10,10 @@ import { useOwnerLogout } from "@/features/auth/hooks";
 
 import { ownerNavigation } from "@/config/navigation";
 
-const owner = getOwner();
-
 export default function OwnerLayout() {
   const { logout } = useOwnerLogout();
+
+  const owner = getOwner();
 
   return (
     <AppShell
@@ -26,7 +26,7 @@ export default function OwnerLayout() {
       }
       topbar={
         <Topbar
-  title={owner?.messName ?? "Smart Mess"}
+          title={owner?.messName ?? "Smart Mess"}
           actions={
             <Button
               variant="outline"

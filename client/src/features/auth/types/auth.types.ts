@@ -26,3 +26,25 @@ export interface OwnerRegistrationRequest {
   email: string;
   password: string;
 }
+
+// customer login 
+
+export interface CustomerLoginRequest {
+  mobileNumber: string;
+  password: string;
+}
+
+export interface CustomerLoginResponse {
+  accessToken: string;
+  tokenType: string;
+  customerId: number;
+  fullName: string;
+  mobileNumber: string;
+}
+
+export interface CustomerRegistrationRequest {
+  fullName: string;
+  mobileNumber: string;
+  email?: string;
+  password: string;
+}

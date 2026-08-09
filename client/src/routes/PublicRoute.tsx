@@ -1,10 +1,29 @@
 import { Navigate, Outlet } from "react-router-dom";
 
-import { isAuthenticated } from "@/features/auth/utils/auth.utils";
+import {
+  getAuthRole,
+  isAuthenticated,
+  type AuthRole,
+} from "@/features/auth/utils/auth.utils";
 
-export default function PublicRoute() {
+type PublicRouteProps = {
+  role: AuthRole;
+  redirectPath: string;
+};
+
+export default function PublicRoute({
+  role,
+  redirectPath,
+}: PublicRouteProps) {
   if (isAuthenticated()) {
-    return <Navigate to="/owner" replace />;
+    if (getAuthRole() === role) {
+      return (
+        <Navigate
+          to={redirectPath}
+          replace
+        />
+      );
+    }
   }
 
   return <Outlet />;
