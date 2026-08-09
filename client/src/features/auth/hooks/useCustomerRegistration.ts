@@ -1,27 +1,26 @@
 import { useState } from "react";
 
 import { authApi } from "../api/auth.api";
-import { saveOwnerAuthSession } from "../utils/auth.utils";
+import { saveCustomerAuthSession } from "../utils/auth.utils";
 
 import type {
-  OwnerRegistrationRequest,
+  CustomerRegistrationRequest,
 } from "../types/auth.types";
 
-export function useOwnerRegistration() {
+export function useCustomerRegistration() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] =
-    useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const register = async (
-    payload: OwnerRegistrationRequest
+    payload: CustomerRegistrationRequest
   ) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await authApi.register(payload);
+      const response = await authApi.customerRegister(payload);
 
-      saveOwnerAuthSession(response.data);
+      saveCustomerAuthSession(response.data); 
 
       return response.data;
     } catch (error) {

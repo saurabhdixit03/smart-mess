@@ -2716,10 +2716,47 @@
       "id": "cf4985c8-ea53-4e0a-b34e-9a6bff7d8f5c"
     },
     {
-      "name": "Authentication",
+      "name": "Owner Auth",
       "item": [
         {
           "name": "AUTH-001 Owner Registration",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "eb9b0a54-b030-48b8-b639-cc5e9b5118f8",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "f805c589-121e-4778-af61-8a63f2257eb2",
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "if (response.success && response.data?.accessToken) {\r",
+                  "    pm.environment.set(\r",
+                  "        \"ownerJwtToken\",\r",
+                  "        response.data.accessToken\r",
+                  "    );\r",
+                  "\r",
+                  "    console.log(\"Owner JWT token saved after registration.\");\r",
+                  "} else {\r",
+                  "    console.log(\"Owner registration failed. JWT token was not saved.\");\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
           "id": "fc97c6dd-0d01-415a-9271-595236eca467",
           "request": {
             "auth": {
@@ -2759,6 +2796,11 @@
                   "key": "header",
                   "value": "{}",
                   "type": "string"
+                },
+                {
+                  "key": "secret",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiT1dORVIiLCJzdWIiOiI5ODc2NTQzMjEwIiwiaWF0IjoxNzg2MDE1NzMwLCJleHAiOjE3ODYxMDIxMzB9.yGXlRsMvAH0rAFVKJpgf3L4Rr0DYjPhOoR_K_JyAvD0",
+                  "type": "string"
                 }
               ]
             },
@@ -2789,7 +2831,84 @@
           "response": []
         },
         {
-          "name": "AUTH-002 Duplicate Mobile",
+          "name": "AUTH-002 Owner Login",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "4e85b681-e737-4dc8-b995-f74c0c1c6f99",
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "if (response.success && response.data?.accessToken) {\r",
+                  "    pm.environment.set(\r",
+                  "        \"ownerJwtToken\",\r",
+                  "        response.data.accessToken\r",
+                  "    );\r",
+                  "\r",
+                  "    console.log(\"Owner JWT token saved successfully.\");\r",
+                  "} else {\r",
+                  "    console.log(\"Owner login failed. JWT token was not saved.\");\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "47dc3f76-995c-4d1e-9021-d9e4926a2f5c",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "887a06bc-61ab-454e-b08b-d44ba9aa8239",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiT1dORVIiLCJzdWIiOiI5ODc2NTQzMjEwIiwiaWF0IjoxNzg2MDEyMzc4LCJleHAiOjE3ODYwOTg3Nzh9.CO0z4fClUoYuEht9x--NTNi_lQRBCOAFpZRo3J6QLQ4",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"mobileNumber\":\"9876543210\",\r\n  \"password\":\"Password@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/owner/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "owner",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-003 Duplicate Mobile",
           "id": "9b9c5c08-54f9-4d66-814c-29484c23c72f",
           "request": {
             "method": "POST",
@@ -2819,7 +2938,7 @@
           "response": []
         },
         {
-          "name": "AUTH-003 Duplicate Email",
+          "name": "AUTH-004 Duplicate Email",
           "id": "e515dc92-2f88-4d59-953c-52c26dccd7ba",
           "request": {
             "method": "POST",
@@ -2849,51 +2968,14 @@
           "response": []
         },
         {
-          "name": "AUTH-004 Owner Login",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "id": "4e85b681-e737-4dc8-b995-f74c0c1c6f99",
-                "exec": [
-                  ""
-                ],
-                "type": "text/javascript",
-                "packages": {},
-                "requests": {}
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "id": "47dc3f76-995c-4d1e-9021-d9e4926a2f5c",
-                "exec": [
-                  "const response = pm.response.json();\r",
-                  "\r",
-                  "if (response.success && response.data?.accessToken) {\r",
-                  "    pm.environment.set(\r",
-                  "        \"jwtToken\",\r",
-                  "        response.data.accessToken\r",
-                  "    );\r",
-                  "\r",
-                  "    console.log(\"JWT token saved successfully.\");\r",
-                  "} else {\r",
-                  "    console.log(\"Login failed. JWT token was not saved.\");\r",
-                  "}"
-                ],
-                "type": "text/javascript",
-                "packages": {},
-                "requests": {}
-              }
-            }
-          ],
-          "id": "887a06bc-61ab-454e-b08b-d44ba9aa8239",
+          "name": "AUTH-006 Wrong Password",
+          "id": "5c9701cc-564f-4e5e-840a-b76f6cf8f961",
           "request": {
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"mobileNumber\":\"9876543210\",\r\n  \"password\":\"Password@123\"\r\n}",
+              "raw": "{\r\n  \"mobileNumber\":\"9876543211\",\r\n  \"password\":\"Pass@123\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2914,31 +2996,191 @@
             }
           },
           "response": []
+        }
+      ],
+      "id": "2e348286-2ac1-4578-b6ed-49d5f95d710a",
+      "auth": {
+        "type": "noauth"
+      }
+    },
+    {
+      "name": "Customer Auth",
+      "item": [
+        {
+          "name": "AUTH-001 Customer Regisatration",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "f13ebeaf-4af3-4ac4-941a-26d39585576c",
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "if (response.success && response.data?.accessToken) {\r",
+                  "    pm.environment.set(\r",
+                  "        \"customerJwtToken\",\r",
+                  "        response.data.accessToken\r",
+                  "    );\r",
+                  "\r",
+                  "    console.log(\"Customer JWT token saved after registration.\");\r",
+                  "} else {\r",
+                  "    console.log(\"Customer registration failed. JWT token was not saved.\");\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "64d7ae86-b29f-4e19-b3ed-93837d6c0808",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "d21e8ec9-e149-4bb7-b6f1-13684565e54a",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fullName\": \"Anagha Kulkarni\",\r\n  \"mobileNumber\": \"9876500016\",\r\n  \"email\": \"anaghakulkarni@example.com\",\r\n  \"password\": \"Password@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/customer/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "customer",
+                "register"
+              ]
+            }
+          },
+          "response": []
         },
         {
-          "name": "AUTH-005 Wrong Password",
-          "id": "5c9701cc-564f-4e5e-840a-b76f6cf8f961",
+          "name": "AUTH-002 Customer Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "c475fbdf-3419-42e0-a022-4c913f2016cf",
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "if (response.success && response.data?.accessToken) {\r",
+                  "    pm.environment.set(\r",
+                  "        \"customerJwtToken\",\r",
+                  "        response.data.accessToken\r",
+                  "    );\r",
+                  "\r",
+                  "    console.log(\"Customer JWT token saved successfully.\");\r",
+                  "} else {\r",
+                  "    console.log(\"Customer login failed. JWT token was not saved.\");\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "f5d78db2-ee32-43b8-a326-0c687ce6a3d7",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "id": "e7af01a5-f022-487d-9ec1-8e7abd824f59",
           "request": {
-            "method": "GET",
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
             "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"mobileNumber\":\"9876500016\",\r\n  \"password\":\"Password@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
             "url": {
-              "raw": ""
+              "raw": "{{baseUrl}}/api/auth/customer/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "customer",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-003 Duplicate mobile number",
+          "id": "b0ea11f1-9545-46eb-9edf-2a9bd5cbba0c",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"fullName\": \"Anagha Kulkarni\",\r\n  \"mobileNumber\": \"9876500016\",\r\n  \"email\": \"anaghakulkarni@example.com\",\r\n  \"password\": \"Password@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/customer/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "customer",
+                "register"
+              ]
             }
           },
           "response": []
         }
       ],
-      "id": "2e348286-2ac1-4578-b6ed-49d5f95d710a"
-    }
-  ],
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiT1dORVIiLCJzdWIiOiI5ODc2NTQzMjEwIiwiaWF0IjoxNzg2MDE2MDk1LCJleHAiOjE3ODYxMDI0OTV9.TmVaj1yr6F9kHmX-z0j74SwvVRFhSmHgbrTrTaPIJP0",
-        "type": "string"
+      "id": "c51d56e5-af5b-4d1e-b73a-bf92c5758158",
+      "auth": {
+        "type": "noauth"
       }
-    ]
-  }
+    }
+  ]
 }

@@ -4,7 +4,7 @@ import { clearAuthSession } from "../utils/auth.utils";
 
 import { toast } from "sonner";
 
-export function useOwnerLogout() {
+export function useCustomerLogout() {
   const navigate = useNavigate();
 
   const logout = () => {
@@ -12,7 +12,8 @@ export function useOwnerLogout() {
 
     toast.success("Loged out successfully.");
 
-    navigate("/owner/login", {
+
+    navigate("/customer/login", {
       replace: true,
     });
   };

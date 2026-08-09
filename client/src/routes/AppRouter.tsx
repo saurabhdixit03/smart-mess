@@ -25,6 +25,8 @@ import { InsightsPage } from "@/features/insights/pages";
 import {
   OwnerLoginPage,
   OwnerRegistrationPage,
+  CustomerRegistrationPage,
+  CustomerLoginPage,
 } from "@/features/auth/pages";
 
 import ProtectedRoute from "./ProtectedRoute";
@@ -48,11 +50,19 @@ export default function AppRouter() {
       <Routes>
 
         {/* ============================================================
-            OWNER AUTH — PUBLIC ROUTES
+            AUTH — PUBLIC ROUTES
             ============================================================ */}
 
-        <Route element={<PublicRoute />}>
+        {/* Owner Authentication */}
 
+        <Route
+          element={
+            <PublicRoute
+              role="OWNER"
+              redirectPath="/owner"
+            />
+          }
+        >
           <Route
             path="/owner/login"
             element={<OwnerLoginPage />}
@@ -62,7 +72,28 @@ export default function AppRouter() {
             path="/owner/register"
             element={<OwnerRegistrationPage />}
           />
+        </Route>
 
+
+        {/* Customer Authentication */}
+
+        <Route
+          element={
+            <PublicRoute
+              role="CUSTOMER"
+              redirectPath="/customer"
+            />
+          }
+        >
+          <Route
+            path="/customer/register"
+            element={<CustomerRegistrationPage />}
+          />
+
+          <Route
+            path="/customer/login"
+            element={<CustomerLoginPage />}
+          />
         </Route>
 
 
@@ -71,8 +102,14 @@ export default function AppRouter() {
             Existing owner routes preserved exactly.
             ============================================================ */}
 
-        <Route element={<ProtectedRoute />}>
-
+        <Route
+          element={
+            <ProtectedRoute
+              role="OWNER"
+              loginPath="/owner/login"
+            />
+          }
+        >
           <Route
             path="/owner"
             element={<OwnerLayout />}
@@ -124,45 +161,53 @@ export default function AppRouter() {
             />
 
           </Route>
-
         </Route>
 
 
         {/* ============================================================
-            CUSTOMER PORTAL
-            Existing customer routes preserved.
+            CUSTOMER PORTAL — PROTECTED ROUTES
+            Existing customer routes preserved exactly.
             ============================================================ */}
 
         <Route
-          path="/customer"
-          element={<CustomerLayout />}
+          element={
+            <ProtectedRoute
+              role="CUSTOMER"
+              loginPath="/customer/login"
+            />
+          }
         >
-
           <Route
-            index
-            element={<CustomerMenuPage />}
-          />
+            path="/customer"
+            element={<CustomerLayout />}
+          >
 
-          <Route
-            path="menu"
-            element={<CustomerMenuPage />}
-          />
+            <Route
+              index
+              element={<CustomerMenuPage />}
+            />
 
-          <Route
-            path="my-meals"
-            element={<MyMealsPage />}
-          />
+            <Route
+              path="menu"
+              element={<CustomerMenuPage />}
+            />
 
-          <Route
-            path="my-bills"
-            element={<CustomerBillingPage />}
-          />
+            <Route
+              path="my-meals"
+              element={<MyMealsPage />}
+            />
 
-          <Route
-            path="profile"
-            element={<ProfilePage />}
-          />
+            <Route
+              path="my-bills"
+              element={<CustomerBillingPage />}
+            />
 
+            <Route
+              path="profile"
+              element={<ProfilePage />}
+            />
+
+          </Route>
         </Route>
 
 
