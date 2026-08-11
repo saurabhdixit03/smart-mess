@@ -2,6 +2,7 @@ package com.smartmess.backend.controller;
 
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +29,7 @@ public class MealResponseController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ApiResponse<MealResponseResponse> submitMealResponse(
             @Valid @RequestBody SubmitMealResponseRequest request,
             HttpServletRequest httpRequest) {
@@ -43,6 +45,7 @@ public class MealResponseController {
     }
 
     @GetMapping("/menu/{menuId}")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<List<MealResponseResponse>> getResponsesByMenu(
             @PathVariable Long menuId,
             HttpServletRequest httpRequest) {
@@ -57,7 +60,6 @@ public class MealResponseController {
         );
     }
 
-    
     @GetMapping("/customer/{customerId}/menu/{menuId}")
     public ApiResponse<MealResponseResponse> getCustomerResponse(
             @PathVariable Long customerId,

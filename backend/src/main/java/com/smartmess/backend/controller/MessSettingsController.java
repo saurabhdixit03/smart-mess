@@ -1,7 +1,9 @@
+
 package com.smartmess.backend.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.smartmess.backend.dto.request.CreateMessSettingsRequest;
@@ -23,10 +25,14 @@ public class MessSettingsController {
             MessSettingsService messSettingsService) {
 
         this.messSettingsService = messSettingsService;
-
     }
 
+    /*
+     * Create mess settings.
+     * Owner only.
+     */
     @PostMapping
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<MessSettingsResponse>> createSettings(
             @Valid @RequestBody CreateMessSettingsRequest request,
             HttpServletRequest httpRequest) {
@@ -44,10 +50,14 @@ public class MessSettingsController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(apiResponse);
-
     }
 
+    /*
+     * Get mess settings.
+     * Owner + Customer.
+     */
     @GetMapping
+    @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
     public ResponseEntity<ApiResponse<MessSettingsResponse>> getSettings(
             HttpServletRequest httpRequest) {
 
@@ -62,10 +72,14 @@ public class MessSettingsController {
                 );
 
         return ResponseEntity.ok(apiResponse);
-
     }
 
+    /*
+     * Update mess settings.
+     * Owner only.
+     */
     @PutMapping
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<MessSettingsResponse>> updateSettings(
             @Valid @RequestBody UpdateMessSettingsRequest request,
             HttpServletRequest httpRequest) {
@@ -81,7 +95,5 @@ public class MessSettingsController {
                 );
 
         return ResponseEntity.ok(apiResponse);
-
     }
-
 }

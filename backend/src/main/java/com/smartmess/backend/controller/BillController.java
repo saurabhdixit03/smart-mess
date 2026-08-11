@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.smartmess.backend.dto.request.GenerateBillRequest;
@@ -22,17 +23,16 @@ public class BillController {
 
     private final BillService billService;
 
-    public BillController(
-            BillService billService) {
-
+    public BillController(BillService billService) {
         this.billService = billService;
-
     }
 
     /*
      * Generate Bills
+     * Owner only.
      */
     @PostMapping("/generate")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<List<BillResponse>>> generateBills(
 
             @Valid
@@ -54,13 +54,16 @@ public class BillController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
-
     }
 
     /*
      * Customer Bill History
+     * Owner + Customer.
+     *
+     * Customer ownership validation will be handled separately.
      */
     @GetMapping("/customer/{customerId}")
+    @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
     public ResponseEntity<ApiResponse<List<BillResponse>>> getCustomerBills(
 
             @PathVariable Long customerId,
@@ -78,13 +81,16 @@ public class BillController {
                 );
 
         return ResponseEntity.ok(response);
-
     }
 
     /*
      * Bill Details
+     * Owner + Customer.
+     *
+     * Customer ownership validation will be handled separately.
      */
     @GetMapping("/{billId}")
+    @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
     public ResponseEntity<ApiResponse<BillDetailResponse>> getBillDetails(
 
             @PathVariable Long billId,
@@ -102,14 +108,14 @@ public class BillController {
                 );
 
         return ResponseEntity.ok(response);
-
     }
 
-    
     /*
      * Billing Overview
+     * Owner only.
      */
     @GetMapping("/overview")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<BillingOverviewResponse>> getBillingOverview(
 
             @RequestParam Integer billingMonth,
@@ -131,9 +137,6 @@ public class BillController {
                         overview
                 );
 
-        return ResponseEntity.ok(
-                response
-        );
-
+        return ResponseEntity.ok(response);
     }
 }
