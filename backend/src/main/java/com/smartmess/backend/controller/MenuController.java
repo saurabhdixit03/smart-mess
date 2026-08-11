@@ -14,6 +14,8 @@ import com.smartmess.backend.service.MenuService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+
 @RestController
 @RequestMapping("/api/menus")
 @Validated
@@ -27,6 +29,7 @@ public class MenuController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<MenuResponse> publishMenu(
             @Valid @RequestBody CreateMenuRequest request,
             HttpServletRequest httpRequest) {
@@ -41,6 +44,7 @@ public class MenuController {
     }
 
     @GetMapping("/today")
+    @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
     public ApiResponse<List<MenuResponse>> getTodayMenus(
             HttpServletRequest httpRequest) {
 
@@ -54,6 +58,7 @@ public class MenuController {
     }
 
     @GetMapping("/history")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<List<MenuResponse>> getMenuHistory(
             HttpServletRequest httpRequest) {
 
@@ -67,6 +72,7 @@ public class MenuController {
     }
 
     @GetMapping("/{menuId}")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<MenuResponse> getMenuById(
             @PathVariable Long menuId,
             HttpServletRequest httpRequest) {
@@ -79,5 +85,4 @@ public class MenuController {
                 response
         );
     }
-
 }

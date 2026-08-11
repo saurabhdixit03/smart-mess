@@ -3,6 +3,7 @@ package com.smartmess.backend.controller;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.smartmess.backend.dto.request.CreateMealRecordRequest;
@@ -28,8 +29,12 @@ public class MealRecordController {
 
         this.mealRecordService = mealRecordService;
     }
-
+    
+    /*
+     * OWNER ONLY
+     */
     @PostMapping
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<MealRecordResponse>> createMealRecord(
             @Valid @RequestBody CreateMealRecordRequest request,
             HttpServletRequest httpRequest) {
@@ -47,7 +52,11 @@ public class MealRecordController {
     
     // for meal records  
    
+    /*
+     * OWNER ONLY
+     */
     @GetMapping("/collection-queue")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<List<CollectionQueueResponse>>> getCollectionQueue(
             @RequestParam MealSession mealSession,
             HttpServletRequest httpRequest) {
@@ -61,8 +70,19 @@ public class MealRecordController {
                         httpRequest.getRequestURI(),
                         response));
     }
+    
+    /*
+     * OWNER + CUSTOMER
+     *
+     * OWNER:
+     * Can view any customer's meal history.
+     *
+     * CUSTOMER:
+     * Must only be allowed to view their own meal history.
+     */
 
     @GetMapping("/customer/{customerId}")
+    @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
     public ResponseEntity<ApiResponse<List<MealRecordResponse>>> getCustomerMealHistory(
             @PathVariable Long customerId,
             HttpServletRequest httpRequest) {
@@ -76,8 +96,12 @@ public class MealRecordController {
                         httpRequest.getRequestURI(),
                         response));
     }
-
+    
+    /*
+     * OWNER ONLY
+     */
     @GetMapping("/today")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<List<MealRecordResponse>>> getTodayMealRecords(
             @RequestParam MealSession mealSession,
             HttpServletRequest httpRequest) {

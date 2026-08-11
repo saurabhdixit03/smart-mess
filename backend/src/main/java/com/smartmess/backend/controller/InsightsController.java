@@ -1,6 +1,8 @@
+
 package com.smartmess.backend.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +23,7 @@ public class InsightsController {
     private final InsightsService insightsService;
 
     @GetMapping("/monthly")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<MonthlyInsightsResponse>> getMonthlyInsights(
 
             @RequestParam Integer month,
@@ -43,7 +46,6 @@ public class InsightsController {
                 );
 
         return ResponseEntity.ok(apiResponse);
-
     }
-
 }
+

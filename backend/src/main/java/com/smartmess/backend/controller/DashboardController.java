@@ -13,7 +13,7 @@ import com.smartmess.backend.enums.MealSession;
 import com.smartmess.backend.service.DashboardService;
 
 import jakarta.servlet.http.HttpServletRequest;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 @RestController
 @RequestMapping("/api/dashboard")
 public class DashboardController {
@@ -24,6 +24,7 @@ public class DashboardController {
         this.dashboardService = dashboardService;
     }
 
+    @PreAuthorize("hasRole('OWNER')")
     @GetMapping
     public ResponseEntity<ApiResponse<DashboardSummaryResponse>> getDashboardSummary(
             @RequestParam MealSession mealSession,

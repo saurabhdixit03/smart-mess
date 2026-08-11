@@ -1,12 +1,10 @@
+
 package com.smartmess.backend.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import com.smartmess.backend.dto.request.UpdateMealPricingRequest;
 import com.smartmess.backend.dto.response.ApiResponse;
@@ -22,15 +20,23 @@ public class MealPricingController {
 
     private final MealPricingService mealPricingService;
 
-    public MealPricingController(MealPricingService mealPricingService) {
+    public MealPricingController(
+            MealPricingService mealPricingService) {
+
         this.mealPricingService = mealPricingService;
     }
 
+    /*
+     * Get current meal pricing.
+     * Owner + Customer.
+     */
     @GetMapping
+    @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
     public ResponseEntity<ApiResponse<MealPricingResponse>> getCurrentPricing(
             HttpServletRequest request) {
 
-        MealPricingResponse response = mealPricingService.getCurrentPricing();
+        MealPricingResponse response =
+                mealPricingService.getCurrentPricing();
 
         return ResponseEntity.ok(
                 ApiResponse.success(
@@ -41,14 +47,21 @@ public class MealPricingController {
         );
     }
 
+    /*
+     * Update meal pricing.
+     * Owner only.
+     */
     @PutMapping
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<MealPricingResponse>> updatePricing(
             @Valid @RequestBody UpdateMealPricingRequest request,
             HttpServletRequest httpRequest) {
 
-        MealPricingResponse response = mealPricingService.updatePricing(request);
+        MealPricingResponse response =
+                mealPricingService.updatePricing(request);
 
-        return ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .body(
                         ApiResponse.success(
                                 "Meal pricing updated successfully.",

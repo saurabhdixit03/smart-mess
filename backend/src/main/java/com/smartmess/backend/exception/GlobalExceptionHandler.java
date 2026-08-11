@@ -17,7 +17,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import java.util.Arrays;
-
+import org.springframework.security.access.AccessDeniedException;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 	@ExceptionHandler(ResourceNotFoundException.class)
@@ -134,6 +134,22 @@ public class GlobalExceptionHandler {
 
 	    return ResponseEntity
 	            .status(HttpStatus.BAD_REQUEST)
+	            .body(response);
+	}
+	
+	@ExceptionHandler(AccessDeniedException.class)
+	public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(
+	        AccessDeniedException exception,
+	        HttpServletRequest request) {
+
+	    ApiResponse<Void> response = ApiResponse.failure(
+	            "You do not have permission to access this resource.",
+	            request.getRequestURI(),
+	            null
+	    );
+
+	    return ResponseEntity
+	            .status(HttpStatus.FORBIDDEN)
 	            .body(response);
 	}
 }

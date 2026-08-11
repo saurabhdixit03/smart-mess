@@ -1,9 +1,11 @@
+
 package com.smartmess.backend.controller;
 
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.smartmess.backend.dto.request.CreatePaymentRequest;
@@ -27,13 +29,14 @@ public class PaymentController {
             PaymentService paymentService) {
 
         this.paymentService = paymentService;
-
     }
-    
+
     /*
      * Customer requests UPI payment verification.
+     * Customer only.
      */
     @PostMapping("/request/{billId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<Void>> requestUpiPayment(
 
             @PathVariable Long billId,
@@ -52,10 +55,14 @@ public class PaymentController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
-
     }
-    
+
+    /*
+     * View pending payment requests.
+     * Owner only.
+     */
     @GetMapping("/pending")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<List<PendingPaymentResponse>>> getPendingPayments(
             HttpServletRequest request) {
 
@@ -70,14 +77,14 @@ public class PaymentController {
                 );
 
         return ResponseEntity.ok(response);
-
     }
-    
 
     /*
-     * Collect Payment
+     * Collect Payment.
+     * Owner only.
      */
     @PostMapping
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<PaymentResponse>> collectPayment(
 
             @Valid
@@ -99,13 +106,14 @@ public class PaymentController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
-
     }
 
     /*
-     * View Payment
+     * View Payment.
+     * Owner only.
      */
     @GetMapping("/{paymentId}")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPayment(
 
             @PathVariable Long paymentId,
@@ -123,13 +131,14 @@ public class PaymentController {
                 );
 
         return ResponseEntity.ok(response);
-
     }
 
     /*
-     * View Payment by Bill
+     * View Payment by Bill.
+     * Owner only.
      */
     @GetMapping("/bill/{billId}")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentByBill(
 
             @PathVariable Long billId,
@@ -147,10 +156,14 @@ public class PaymentController {
                 );
 
         return ResponseEntity.ok(response);
-
     }
-    
+
+    /*
+     * Pending payment count.
+     * Owner only.
+     */
     @GetMapping("/pending/count")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<Long>> getPendingPaymentCount(
             HttpServletRequest request) {
 
@@ -165,19 +178,20 @@ public class PaymentController {
                 );
 
         return ResponseEntity.ok(response);
-
     }
-    
-    // QR Code Generation link 
+
+    /*
+     * Generate UPI payment link / QR data.
+     * Customer only.
+     */
     @GetMapping("/upi/{billId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<UpiPaymentResponse>> generateUpiPayment(
             @PathVariable Long billId,
             HttpServletRequest request) {
 
         UpiPaymentResponse response =
-                paymentService.generateUpiPayment(
-                        billId
-                );
+                paymentService.generateUpiPayment(billId);
 
         ApiResponse<UpiPaymentResponse> apiResponse =
                 ApiResponse.success(
@@ -186,15 +200,15 @@ public class PaymentController {
                         response
                 );
 
-        return ResponseEntity.ok(
-                apiResponse
-        );
-
+        return ResponseEntity.ok(apiResponse);
     }
-    
-    // payment overview
-    
+
+    /*
+     * Payment overview.
+     * Owner only.
+     */
     @GetMapping("/overview")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<PaymentOverviewResponse>> getPaymentOverview(
             HttpServletRequest request) {
 
@@ -210,6 +224,4 @@ public class PaymentController {
 
         return ResponseEntity.ok(response);
     }
-    
-
 }

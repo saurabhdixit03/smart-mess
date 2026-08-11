@@ -124,6 +124,16 @@
           "name": "CUS-005 getCustomerById",
           "id": "c926e805-0da1-433d-a227-9dd440409f24",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiT1dORVIiLCJzdWIiOiI5ODc2NTQzMjEwIiwiaWF0IjoxNzg2MTEzOTUwLCJleHAiOjE3ODYyMDAzNTB9.LIY4zbZAHtdMAVuKFZZs6ZMdsbCkqhzNA6MTZcw42eM",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -167,6 +177,16 @@
             "disableBodyPruning": true
           },
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiT1dORVIiLCJzdWIiOiI5ODc2NTQzMjEwIiwiaWF0IjoxNzg2MDE1NzMwLCJleHAiOjE3ODYxMDIxMzB9.yGXlRsMvAH0rAFVKJpgf3L4Rr0DYjPhOoR_K_JyAvD0",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "body": {
@@ -386,6 +406,16 @@
           "name": "MEN-001 Publish Lunch Menu",
           "id": "ee146374-2f05-48d0-b44f-4e04a489633a",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
             "body": {
@@ -442,6 +472,16 @@
           "name": "MEN-003 Publish Dinner Menu",
           "id": "05e32ca6-a42e-44ed-a3c4-8bbbb7cff4f3",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
             "body": {
@@ -501,6 +541,9 @@
             "disableBodyPruning": true
           },
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "body": {
@@ -525,17 +568,27 @@
           "name": "MEN-006 GetMenubyID",
           "id": "100daeb3-c1eb-4f35-8901-92b29d6575d2",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/menus/2",
+              "raw": "{{baseUrl}}/api/menus/33",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "menus",
-                "2"
+                "33"
               ]
             }
           },
@@ -565,6 +618,16 @@
           "name": "MEN-008 Menu History",
           "id": "9983c0f9-bf1f-4534-9db1-07ab9741e4a5",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -754,11 +817,21 @@
           "name": "MRE-001 Submit First Response (Create)",
           "id": "5c3b5c1e-6bda-4320-abc5-a12d041db58a",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"customerId\": 5,\r\n  \"menuId\": 9,\r\n  \"responseStatus\": \"DECLINED\",\r\n  \r\n  \"extraRotiCount\": \"0\"\r\n}",
+              "raw": "{\r\n  \"customerId\": 1,\r\n  \"menuId\": 31,\r\n  \"responseStatus\": \"ACCEPTED\",\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 1\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1009,6 +1082,16 @@
             "disableBodyPruning": true
           },
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "body": {
@@ -1088,6 +1171,9 @@
             "disableBodyPruning": true
           },
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "body": {
@@ -1095,19 +1181,19 @@
               "raw": "{\r\n    \"halfMealPrice\": 60,\r\n    \"fullMealPrice\": -80,\r\n    \"extraRotiPrice\": 10\r\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/dashboard?mealSession=LUNCH",
+              "raw": "{{baseUrl}}/api/dashboard?mealSession=LUNCH",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "v1",
                 "dashboard"
               ],
               "query": [
                 {
                   "key": "mealSession",
-                  "value": "LUNCH"
+                  "value": "LUNCH",
+                  "uuid": "20d5ec7f-b7c4-4802-88da-e9487d5ff47f"
                 }
               ]
             }
@@ -1118,6 +1204,16 @@
           "name": "DAS-002 Dashboard for Dinner (Happy Path)",
           "id": "e6c114de-3be4-41a8-98f5-edf8a63bc18a",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -1133,7 +1229,8 @@
               "query": [
                 {
                   "key": "mealSession",
-                  "value": "DINNER"
+                  "value": "DINNER",
+                  "uuid": "f6794085-60b5-422a-b4d7-66fb7dc72f54"
                 }
               ]
             }
@@ -1498,11 +1595,21 @@
           "name": "MREC-001 Create Meal Record from Existing Meal Response",
           "id": "980dc471-12f0-4f27-b999-1faf7f0dc6f5",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"customerId\": 2,\r\n  \"menuId\": 8,\r\n  \"mealResponseId\": 25,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "raw": "{\r\n  \"customerId\": 1,\r\n  \"menuId\": 31,\r\n  \"mealResponseId\": 177,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 0\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1890,10 +1997,22 @@
           "name": "MREC-015 Customer Meal History",
           "id": "394a00a0-664e-44f6-8ad3-9023e58f7455",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": ""
+              "raw": "{{baseUrl}}/api/meal-records/customer/11",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records",
+                "customer",
+                "11"
+              ]
             }
           },
           "response": []
@@ -1914,10 +2033,35 @@
           "name": "MREC-017 Today's Meal Records (Lunch)",
           "id": "cdb30633-e20f-4db0-a3a6-c5a86240789b",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": ""
+              "raw": "{{baseUrl}}/api/meal-records/today?mealSession=LUNCH",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records",
+                "today"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "LUNCH",
+                  "uuid": "78763429-bead-4986-ae39-2c8b36e0ec36"
+                }
+              ]
             }
           },
           "response": []
@@ -1978,6 +2122,16 @@
           "name": "MREC-021 Collection Queue",
           "id": "9c98fd05-953e-4a8b-9b42-3636e5d50643",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -1993,7 +2147,8 @@
               "query": [
                 {
                   "key": "mealSession",
-                  "value": "LUNCH"
+                  "value": "LUNCH",
+                  "uuid": "6aa83c4c-bdc2-4337-8451-1b409b14fa0c"
                 }
               ]
             }
@@ -2010,11 +2165,21 @@
           "name": "BILL-001 Generate Bills",
           "id": "c76345e2-87d7-426f-aef9-9e9c335fa233",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}",
+              "raw": "{\r\n  \"billingMonth\": 8,\r\n  \"billingYear\": 2026\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2071,6 +2236,16 @@
             "disableBodyPruning": true
           },
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "body": {
@@ -2078,7 +2253,7 @@
               "raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/bills/customer/1",
+              "raw": "{{baseUrl}}/api/bills/customer/5",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -2086,7 +2261,7 @@
                 "api",
                 "bills",
                 "customer",
-                "1"
+                "5"
               ]
             }
           },
@@ -2120,6 +2295,16 @@
             "disableBodyPruning": true
           },
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "body": {
@@ -2164,10 +2349,38 @@
           "name": "BILL-007 Retrieve Billing Overview",
           "id": "633a8b9c-7dfd-4ee3-a28a-7e7dc5dc67de",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": ""
+              "raw": "{{baseUrl}}/api/bills/overview?billingMonth=8&billingYear=2026",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bills",
+                "overview"
+              ],
+              "query": [
+                {
+                  "key": "billingMonth",
+                  "value": "8"
+                },
+                {
+                  "key": "billingYear",
+                  "value": "2026"
+                }
+              ]
             }
           },
           "response": []
@@ -2206,11 +2419,21 @@
           "name": "PAY-001 Cash Payment - Successful Payment",
           "id": "abb6c769-cf46-475c-84e6-071eb5de85f9",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"billId\": 1,\r\n    \"paymentMode\": \"CASH\"\r\n}",
+              "raw": "{\r\n    \"billId\": 13,\r\n    \"paymentMode\": \"CASH\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2262,6 +2485,16 @@
           "name": "PAY-003 UPI Payment Request - Successful",
           "id": "21823755-5fc1-4428-ab54-700e7ea819f8",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
             "body": {
@@ -2274,7 +2507,7 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/api/payments/request/2",
+              "raw": "{{baseUrl}}/api/payments/request/17",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -2282,7 +2515,7 @@
                 "api",
                 "payments",
                 "request",
-                "2"
+                "17"
               ]
             }
           },
@@ -2481,6 +2714,16 @@
             "disableBodyPruning": true
           },
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "body": {
@@ -2505,6 +2748,16 @@
           "name": "PAY-012 Get Pending Payment Count",
           "id": "cfed4edb-7d15-4efd-88e7-00bc21df15e7",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -2541,6 +2794,16 @@
             "disableBodyPruning": true
           },
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "body": {
@@ -2548,7 +2811,7 @@
               "raw": "{\r\n    \"upiId\": \"smartmess@okaxis\",\r\n    \"receiverName\": \"Smart Mess\"\r\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/payments/upi/1",
+              "raw": "{{baseUrl}}/api/payments/upi/14",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -2556,7 +2819,7 @@
                 "api",
                 "payments",
                 "upi",
-                "1"
+                "14"
               ]
             }
           },
@@ -2566,10 +2829,58 @@
           "name": "PAY-015 Payment Overview",
           "id": "23c13730-e8b7-4c8b-bf26-041bb1e1c15e",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": ""
+              "raw": "{{baseUrl}}/api/payments/overview",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "overview"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-016 Get Payments By PaymentID",
+          "id": "022098ec-dc74-414b-8b66-0962c3e87ca6",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/9",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "9"
+              ]
             }
           },
           "response": []
@@ -2584,11 +2895,21 @@
           "name": "SET-001 Create Settings",
           "id": "3273d4d7-0e15-4aea-8702-31be0d328c9d",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"upiId\": \"smartmess@okaxis\",\r\n    \"receiverName\": \"Smart Mess\"\r\n}",
+              "raw": "{\r\n    \"upiId\": \"joshimess@okaxis\",\r\n    \"receiverName\": \"Joshi's Mess\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2612,10 +2933,27 @@
           "name": "SET-002 Get Settings",
           "id": "a85e9178-e253-443a-bc71-226b293c289a",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": ""
+              "raw": "{{baseUrl}}/api/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings"
+              ]
             }
           },
           "response": []
@@ -2624,11 +2962,21 @@
           "name": "SET-003 Update Settings",
           "id": "d2323f8d-878d-478d-a662-d5cf7947ee6f",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"upiId\": \"smartmess@okhdfc\",\r\n    \"receiverName\": \"Smart Mess\"\r\n}",
+              "raw": "{\r\n    \"upiId\": \"joshimess@okhdfc\",\r\n    \"receiverName\": \"Joshi's Mess\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2686,6 +3034,16 @@
           "name": "INS-001 Insights",
           "id": "08a25e2f-df96-469f-829e-4ed4666c2969",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -2701,11 +3059,13 @@
               "query": [
                 {
                   "key": "month",
-                  "value": "7"
+                  "value": "7",
+                  "uuid": "347fe605-e239-4c8d-a92b-a771b765a5b3"
                 },
                 {
                   "key": "year",
-                  "value": "2026"
+                  "value": "2026",
+                  "uuid": "d71b9e11-da6a-43d4-adb1-49a58df7e0d1"
                 }
               ]
             }
@@ -2836,7 +3196,19 @@
             {
               "listen": "prerequest",
               "script": {
-                "id": "4e85b681-e737-4dc8-b995-f74c0c1c6f99",
+                "id": "3a96a870-0623-4793-b1b0-1a03e6727340",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "35bda7d0-e1e5-4f5c-a79f-d860b314d9ff",
                 "exec": [
                   "const response = pm.response.json();\r",
                   "\r",
@@ -2855,31 +3227,12 @@
                 "packages": {},
                 "requests": {}
               }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "id": "47dc3f76-995c-4d1e-9021-d9e4926a2f5c",
-                "exec": [
-                  ""
-                ],
-                "type": "text/javascript",
-                "packages": {},
-                "requests": {}
-              }
             }
           ],
           "id": "887a06bc-61ab-454e-b08b-d44ba9aa8239",
           "request": {
             "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiT1dORVIiLCJzdWIiOiI5ODc2NTQzMjEwIiwiaWF0IjoxNzg2MDEyMzc4LCJleHAiOjE3ODYwOTg3Nzh9.CO0z4fClUoYuEht9x--NTNi_lQRBCOAFpZRo3J6QLQ4",
-                  "type": "string"
-                }
-              ]
+              "type": "noauth"
             },
             "method": "POST",
             "header": [],
@@ -3124,7 +3477,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"mobileNumber\":\"9876500016\",\r\n  \"password\":\"Password@123\"\r\n}",
+              "raw": "{\r\n  \"mobileNumber\":\"9876500018\",\r\n  \"password\":\"Password@123\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
