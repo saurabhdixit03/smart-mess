@@ -16,20 +16,20 @@ import { getCustomer } from "@/features/auth/utils/auth.utils";
 export default function MyMealsPage() {
   const customer = getCustomer();
 
-  if (!customer) {
-    return (
-      <p className="text-red-500">
-        Customer session not found.
-      </p>
-    );
-  }
+if (!customer) {
+  return (
+    <p className="text-red-500">
+      Customer session not found.
+    </p>
+  );
+}
 
-  const {
-    mealRecords,
-    loading,
-    error,
-    fetchMealRecords,
-  } = useMealRecords(customerId);
+const {
+  mealRecords,
+  loading,
+  error,
+  fetchMealRecords,
+} = useMealRecords(customer.customerId);
 
   const [search, setSearch] =
     useState("");
