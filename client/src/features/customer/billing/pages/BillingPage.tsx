@@ -7,19 +7,26 @@ import {
 } from "@/components/common/ui";
 
 import BillsList from "../components/BillsList";
-
 import { useBills } from "../hooks";
 
-export default function BillingPage() {
+import { getCustomer } from "@/features/auth/utils/auth.utils";
 
-  // Temporary until authentication is added
-  const customerId = 11;
+export default function BillingPage() {
+  const customer = getCustomer();
+
+  if (!customer) {
+    return (
+      <p className="text-red-500">
+        Customer session not found.
+      </p>
+    );
+  }
 
   const {
     bills,
     loading,
     error,
-  } = useBills(customerId);
+  } = useBills(customer.customerId);
 
   return (
     <div className="space-y-6">
@@ -30,17 +37,13 @@ export default function BillingPage() {
       />
 
       <SearchToolbar>
-
         <SearchToolbar.Left>
-
           <Input
             placeholder="Search bills..."
             leftIcon={<Search size={18} />}
             className="max-w-sm"
           />
-
         </SearchToolbar.Left>
-
       </SearchToolbar>
 
       {loading && (

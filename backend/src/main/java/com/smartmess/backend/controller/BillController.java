@@ -73,7 +73,7 @@ public class BillController {
      * Owner can request bills for any customer.
      */
     @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
     public ResponseEntity<ApiResponse<List<BillResponse>>> getCustomerBills(
 
             @PathVariable Long customerId,
