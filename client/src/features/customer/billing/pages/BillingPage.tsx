@@ -7,6 +7,7 @@ import {
 } from "@/components/common/ui";
 
 import BillsList from "../components/BillsList";
+
 import { useBills } from "../hooks";
 
 import { getCustomer } from "@/features/auth/utils/auth.utils";
@@ -26,7 +27,7 @@ export default function BillingPage() {
     bills,
     loading,
     error,
-  } = useBills(customer.customerId);
+  } = useBills(customerId);
 
   return (
     <div className="space-y-6">
@@ -37,13 +38,17 @@ export default function BillingPage() {
       />
 
       <SearchToolbar>
+
         <SearchToolbar.Left>
+
           <Input
             placeholder="Search bills..."
             leftIcon={<Search size={18} />}
             className="max-w-sm"
           />
+
         </SearchToolbar.Left>
+
       </SearchToolbar>
 
       {loading && (
