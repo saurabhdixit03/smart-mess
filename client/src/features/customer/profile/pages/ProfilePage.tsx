@@ -79,6 +79,7 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-8">
+
       <PageHeader
         title="My Profile"
         description="View and update your account information."
@@ -97,6 +98,7 @@ export default function ProfilePage() {
         }
         onUpdated={handleUpdated}
       />
+
     </div>
   );
 }

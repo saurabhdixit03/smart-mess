@@ -15,19 +15,19 @@ import { getCustomer } from "@/features/auth/utils/auth.utils";
 export default function BillingPage() {
   const customer = getCustomer();
 
-if (!customer) {
-  return (
-    <div className="py-20 text-center text-red-500">
-      Customer session not found.
-    </div>
-  );
-}
+  if (!customer) {
+    return (
+      <div className="py-20 text-center text-red-500">
+        Customer session not found.
+      </div>
+    );
+  }
 
-const {
-  bills,
-  loading,
-  error,
-} = useBills(customer.customerId);
+  const {
+    bills,
+    loading,
+    error,
+  } = useBills(customer.customerId);
 
   return (
     <div className="space-y-6">
