@@ -17,9 +17,9 @@ export default function BillingPage() {
 
   if (!customer) {
     return (
-      <p className="text-red-500">
+      <div className="py-20 text-center text-red-500">
         Customer session not found.
-      </p>
+      </div>
     );
   }
 
@@ -27,7 +27,7 @@ export default function BillingPage() {
     bills,
     loading,
     error,
-  } = useBills(customerId);
+  } = useBills(customer.customerId);
 
   return (
     <div className="space-y-6">
