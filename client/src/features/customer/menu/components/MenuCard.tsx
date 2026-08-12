@@ -25,6 +25,8 @@ import type {
   Menu,
 } from "../types";
 
+import { getCustomer } from "@/features/auth/utils/auth.utils";
+
 interface MenuCardProps {
   menu: Menu;
 }
@@ -32,7 +34,21 @@ interface MenuCardProps {
 export default function MenuCard({
   menu,
 }: MenuCardProps) {
-  const customerId = 5; // Temporary until authentication
+  const customer = getCustomer();
+
+  if (!customer) {
+    return (
+      <Card>
+        <Card.Body>
+          <p className="text-center text-red-500">
+            Customer session not found.
+          </p>
+        </Card.Body>
+      </Card>
+    );
+  }
+
+  const customerId = customer.customerId;
 
   const [open, setOpen] = useState(false);
 
@@ -51,39 +67,39 @@ export default function MenuCard({
   );
 
   async function handleSubmit(
-  responseStatus: MealResponseStatus,
-  mealOption: MealOption | null,
-  extraRotiCount: number
-) {
-  try {
-    await submitMealResponse({
-      customerId,
-      menuId: menu.menuId,
-      responseStatus,
-      mealOption,
-      extraRotiCount,
-    });
+    responseStatus: MealResponseStatus,
+    mealOption: MealOption | null,
+    extraRotiCount: number
+  ) {
+    try {
+      await submitMealResponse({
+        customerId,
+        menuId: menu.menuId,
+        responseStatus,
+        mealOption,
+        extraRotiCount,
+      });
 
-    await refetch();
+      await refetch();
 
-    toast.success(
-      mealResponse
-        ? "Your tiffin response has been updated."
-        : "Your tiffin response has been submitted."
-    );
+      toast.success(
+        mealResponse
+          ? "Your tiffin response has been updated."
+          : "Your tiffin response has been submitted."
+      );
 
-    setOpen(false);
+      setOpen(false);
 
-  } catch (error) {
+    } catch (error) {
 
-    console.error(error);
+      console.error(error);
 
-    toast.error(
-      "Unable to save your response. Please try again."
-    );
+      toast.error(
+        "Unable to save your response. Please try again."
+      );
 
+    }
   }
-}
 
   return (
     <>
@@ -119,18 +135,18 @@ export default function MenuCard({
             {mealResponse && (
               <StatusBadge
                 label={
-  mealResponse.responseStatus === "ACCEPTED"
-    ? `Accepted • ${mealResponse.mealOption}${
-        mealResponse.extraRotiCount > 0
-          ? ` • +${mealResponse.extraRotiCount} Roti${
-              mealResponse.extraRotiCount > 1
-                ? "s"
-                : ""
-            }`
-          : ""
-      }`
-    : "Not Today"
-}
+                  mealResponse.responseStatus === "ACCEPTED"
+                    ? `Accepted • ${mealResponse.mealOption}${
+                        mealResponse.extraRotiCount > 0
+                          ? ` • +${mealResponse.extraRotiCount} Roti${
+                              mealResponse.extraRotiCount > 1
+                                ? "s"
+                                : ""
+                            }`
+                          : ""
+                      }`
+                    : "Not Today"
+                }
               />
             )}
 

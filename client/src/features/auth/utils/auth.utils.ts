@@ -102,6 +102,10 @@ export function getCustomer(): {
   return JSON.parse(customer);
 }
 
+export function getCurrentCustomerId(): number | null {
+  return getCustomer()?.customerId ?? null;
+}
+
 export function clearAuthSession(): void {
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(AUTH_ROLE_KEY);
