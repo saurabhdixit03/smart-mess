@@ -1,0 +1,84 @@
+[33mcommit 6ca8bae2cce9f3c098d4dce588e180d5a9e226bf[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/authorization[m[33m, [m[1;31morigin/feature/authorization[m[33m)[m
+Author:     saurabhdixit03 <saurabhdixit2202@gmail.com>
+AuthorDate: Wed Aug 12 19:32:22 2026 +0530
+Commit:     saurabhdixit03 <saurabhdixit2202@gmail.com>
+CommitDate: Wed Aug 12 19:32:22 2026 +0530
+
+    fix: use authenticated customer id in customer pages
+
+[1mdiff --git a/client/src/features/customer/billing/pages/BillingPage.tsx b/client/src/features/customer/billing/pages/BillingPage.tsx[m
+[1mindex 6e142ce..1f83f6a 100644[m
+[1m--- a/client/src/features/customer/billing/pages/BillingPage.tsx[m
+[1m+++ b/client/src/features/customer/billing/pages/BillingPage.tsx[m
+[36m@@ -15,19 +15,19 @@[m [mimport { getCustomer } from "@/features/auth/utils/auth.utils";[m
+ export default function BillingPage() {[m
+   const customer = getCustomer();[m
+ [m
+[31m-  if (!customer) {[m
+[31m-    return ([m
+[31m-      <p className="text-red-500">[m
+[31m-        Customer session not found.[m
+[31m-      </p>[m
+[31m-    );[m
+[31m-  }[m
+[31m-[m
+[31m-  const {[m
+[31m-    bills,[m
+[31m-    loading,[m
+[31m-    error,[m
+[31m-  } = useBills(customerId);[m
+[32m+[m[32mif (!customer) {[m
+[32m+[m[32m  return ([m
+[32m+[m[32m    <div className="py-20 text-center text-red-500">[m
+[32m+[m[32m      Customer session not found.[m
+[32m+[m[32m    </div>[m
+[32m+[m[32m  );[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mconst {[m
+[32m+[m[32m  bills,[m
+[32m+[m[32m  loading,[m
+[32m+[m[32m  error,[m
+[32m+[m[32m} = useBills(customer.customerId);[m
+ [m
+   return ([m
+     <div className="space-y-6">[m
+[1mdiff --git a/client/src/features/customer/my-meals/pages/MyMealsPage.tsx b/client/src/features/customer/my-meals/pages/MyMealsPage.tsx[m
+[1mindex c46e5ee..1cf4f0c 100644[m
+[1m--- a/client/src/features/customer/my-meals/pages/MyMealsPage.tsx[m
+[1m+++ b/client/src/features/customer/my-meals/pages/MyMealsPage.tsx[m
+[36m@@ -16,20 +16,20 @@[m [mimport { getCustomer } from "@/features/auth/utils/auth.utils";[m
+ export default function MyMealsPage() {[m
+   const customer = getCustomer();[m
+ [m
+[31m-  if (!customer) {[m
+[31m-    return ([m
+[31m-      <p className="text-red-500">[m
+[31m-        Customer session not found.[m
+[31m-      </p>[m
+[31m-    );[m
+[31m-  }[m
+[31m-[m
+[31m-  const {[m
+[31m-    mealRecords,[m
+[31m-    loading,[m
+[31m-    error,[m
+[31m-    fetchMealRecords,[m
+[31m-  } = useMealRecords(customerId);[m
+[32m+[m[32mif (!customer) {[m
+[32m+[m[32m  return ([m
+[32m+[m[32m    <p className="text-red-500">[m
+[32m+[m[32m      Customer session not found.[m
+[32m+[m[32m    </p>[m
+[32m+[m[32m  );[m
+[32m+[m[32m}[m
+[32m+[m
+[32m+[m[32mconst {[m
+[32m+[m[32m  mealRecords,[m
+[32m+[m[32m  loading,[m
+[32m+[m[32m  error,[m
+[32m+[m[32m  fetchMealRecords,[m
+[32m+[m[32m} = useMealRecords(customer.customerId);[m
+ [m
+   const [search, setSearch] =[m
+     useState("");[m
