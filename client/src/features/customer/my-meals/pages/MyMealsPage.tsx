@@ -29,7 +29,7 @@ export default function MyMealsPage() {
     loading,
     error,
     fetchMealRecords,
-  } = useMealRecords(customer.customerId);
+  } = useMealRecords(customerId);
 
   const [search, setSearch] =
     useState("");
