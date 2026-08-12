@@ -6,21 +6,21 @@ import CustomerLayout from "@/layouts/CustomerLayout";
 import NotFoundPage from "@/pages/NotFoundPage";
 //import DesignSystemPage from "@/pages/DesignSystemPage";
 
-import { CustomerPage } from "@/features/customers/pages";
+import { CustomerPage } from "@/features/owner/customers/pages";
 
-import { MenuPage } from "@/features/menu";
+import { MenuPage } from "@/features/owner/menu/";
 
-import { DashboardPage } from "@/features/dashboard/pages";
+import { DashboardPage } from "@/features/owner/dashboard/pages";
 
-import { MealRecordPage } from "@/features/meal-records/pages";
+import { MealRecordPage } from "@/features/owner/meal-records/pages";
 
-import { BillingPage } from "@/features/billing/pages";
+import { BillingPage } from "@/features/owner/billing/pages";
 
-import { PaymentPage } from "@/features/payments/pages";
+import { PaymentPage } from "@/features/owner/payments/pages";
 
-import { SettingsPage } from "@/features/settings/pages";
+import { SettingsPage } from "@/features/owner/settings/pages";
 
-import { InsightsPage } from "@/features/insights/pages";
+import { InsightsPage } from "@/features/owner/insights/pages";
 
 import {
   OwnerLoginPage,

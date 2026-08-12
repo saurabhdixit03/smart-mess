@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { menuApi } from "@/features/menu/api/menu.api";
+import { menuApi } from "@/features/owner/menu/api/menu.api";
 
-import type { MenuResponse } from "@/features/menu/types/menu.types";
+import type { MenuResponse } from "@/features/owner/menu/types/menu.types";
 
 const REFRESH_INTERVAL = 5000;
 
