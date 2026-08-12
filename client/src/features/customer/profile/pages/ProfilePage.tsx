@@ -11,18 +11,25 @@ import { useProfile } from "../hooks";
 
 import type { CustomerProfile } from "../types";
 
+import { getCustomer } from "@/features/auth/utils/auth.utils";
+
 export default function ProfilePage() {
-  /*
-   * Temporary until authentication is implemented.
-   */
-  const customerId = 11;
+  const customer = getCustomer();
+
+  if (!customer) {
+    return (
+      <div className="py-20 text-center text-red-500">
+        Customer session not found.
+      </div>
+    );
+  }
 
   const {
     profile,
     loading,
     error,
     fetchProfile,
-  } = useProfile(customerId);
+  } = useProfile(customer.customerId);
 
   const [modalOpen, setModalOpen] =
     useState(false);

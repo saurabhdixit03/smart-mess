@@ -40,10 +40,10 @@ export default function OwnerRegistrationPage() {
       });
 
       toast.success(
-        "Registration successful. Please log in to continue."
+        "Registration successful."
       );
 
-      navigate("/owner/login");
+      navigate("/owner");
 
     } catch {
       // Error is already handled by the hook.

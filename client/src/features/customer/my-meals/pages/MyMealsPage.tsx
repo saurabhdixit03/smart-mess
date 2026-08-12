@@ -11,15 +11,25 @@ import {
 
 import { useMealRecords } from "../hooks";
 
+import { getCustomer } from "@/features/auth/utils/auth.utils";
+
 export default function MyMealsPage() {
-  const customerId = 11; // Temporary until authentication
+  const customer = getCustomer();
+
+  if (!customer) {
+    return (
+      <p className="text-red-500">
+        Customer session not found.
+      </p>
+    );
+  }
 
   const {
     mealRecords,
     loading,
     error,
     fetchMealRecords,
-  } = useMealRecords(customerId);
+  } = useMealRecords(customer.customerId);
 
   const [search, setSearch] =
     useState("");

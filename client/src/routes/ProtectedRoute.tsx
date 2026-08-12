@@ -13,11 +13,15 @@ type ProtectedRouteProps = {
 
 export default function ProtectedRoute({
   role,
-  loginPath,
+  loginPath,  
 }: ProtectedRouteProps) {
   const location = useLocation();
 
-  if (!isAuthenticated()) {
+  const authenticated = isAuthenticated();
+  const currentRole = getAuthRole();
+
+  // Not logged in
+  if (!authenticated) {
     return (
       <Navigate
         to={loginPath}
@@ -27,7 +31,8 @@ export default function ProtectedRoute({
     );
   }
 
-  if (getAuthRole() !== role) {
+  // Logged in but trying to access another portal
+  if (currentRole !== role) {
     return (
       <Navigate
         to={loginPath}

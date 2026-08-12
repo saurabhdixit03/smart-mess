@@ -38,10 +38,10 @@ export default function CustomerRegistrationPage() {
       });
 
       toast.success(
-        "Registration successful. Please log in to continue."
+        "Registration successful."
       );
 
-      navigate("/customer/login");
+      navigate("/customer");
     } catch {
       // Error is already handled by the hook.
     }

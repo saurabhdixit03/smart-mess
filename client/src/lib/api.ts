@@ -1,4 +1,8 @@
-import { getAccessToken } from "@/features/auth/utils/auth.utils";
+import {
+  getAccessToken,
+  clearAuthSession,
+  getAuthRole,
+} from "@/features/auth/utils/auth.utils";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -28,8 +32,29 @@ async function request<T>(
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message || "Something went wrong");
+  if (response.status === 401) {
+    const role = getAuthRole();
+
+    clearAuthSession();
+
+    window.location.href =
+      role === "OWNER"
+        ? "/owner/login"
+        : "/customer/login";
+
+    throw new Error("Session expired. Please login again.");
   }
+
+  if (response.status === 403) {
+    throw new Error(
+      data.message || "You are not authorized to perform this action."
+    );
+  }
+
+  throw new Error(
+    data.message || "Something went wrong"
+  );
+}
 
   return data as T;
 }
