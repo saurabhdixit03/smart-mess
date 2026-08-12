@@ -1,7 +1,7 @@
 import Card from "@/components/common/ui/Card/Card";
 import StatusBadge from "@/components/common/ui/StatusBadge";
 
-import type { MenuResponse } from "@/features/menu/types/menu.types";
+import type { MenuResponse } from "@/features/owner/menu/types/menu.types";
 
 type DashboardMenuCardProps = {
   menu: MenuResponse | undefined;

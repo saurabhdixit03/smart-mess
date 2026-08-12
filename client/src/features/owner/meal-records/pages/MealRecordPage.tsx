@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 
 import MealSessionSelector from "@/components/common/business/MealSessionSelector/MealSessionSelector";
-import { useMenus } from "@/features/menu/hooks/useMenus";
+import { useMenus } from "@/features/owner/menu/hooks/useMenus";
 
 import { useRecordQueue } from "../hooks";
 
