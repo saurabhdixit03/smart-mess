@@ -86,12 +86,9 @@ public class MessSettingsServiceImpl
                                 )
                         );
 
-        settings.setUpiId(
-                request.upiId()
-        );
-
-        settings.setReceiverName(
-                request.receiverName()
+        messSettingsMapper.updateEntityFromRequest(
+                request,
+                settings
         );
 
         MessSettings updatedSettings =

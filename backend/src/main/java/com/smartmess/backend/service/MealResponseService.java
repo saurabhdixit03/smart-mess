@@ -8,6 +8,7 @@ import com.smartmess.backend.dto.response.MealResponseResponse;
 public interface MealResponseService {
 
     MealResponseResponse submitMealResponse(
+            Long customerId,
             SubmitMealResponseRequest request);
 
     List<MealResponseResponse> getResponsesByMenu(

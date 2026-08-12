@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.smartmess.backend.dto.request.UpdateMealPricingRequest;
 import com.smartmess.backend.dto.response.MealPricingResponse;
 import com.smartmess.backend.entity.MealPricing;
+import com.smartmess.backend.exception.ResourceNotFoundException;
 import com.smartmess.backend.mapper.MealPricingMapper;
 import com.smartmess.backend.repository.MealPricingRepository;
 import com.smartmess.backend.service.MealPricingService;
@@ -27,19 +28,13 @@ public class MealPricingServiceImpl implements MealPricingService {
     @Override
     public MealPricingResponse getCurrentPricing() {
 
-        MealPricing mealPricing = mealPricingRepository.findAll()
-                .stream()
-                .findFirst()
-                .orElseGet(() -> {
-
-                    MealPricing defaultPricing = new MealPricing();
-
-                    defaultPricing.setHalfMealPrice(BigDecimal.ONE);
-                    defaultPricing.setFullMealPrice(BigDecimal.ONE);
-                    defaultPricing.setExtraRotiPrice(BigDecimal.ONE);
-
-                    return mealPricingRepository.save(defaultPricing);
-                });
+    	MealPricing mealPricing =
+    	        mealPricingRepository
+    	                .findTopByOrderByUpdatedAtDesc()
+    	                .orElseThrow(() ->
+    	                        new ResourceNotFoundException(
+    	                                "Meal pricing not configured."
+    	                        ));
 
         return mealPricingMapper.toResponse(mealPricing);
     }
@@ -47,19 +42,13 @@ public class MealPricingServiceImpl implements MealPricingService {
     @Override
     public MealPricingResponse updatePricing(UpdateMealPricingRequest request) {
 
-        MealPricing mealPricing = mealPricingRepository.findAll()
-                .stream()
-                .findFirst()
-                .orElseGet(() -> {
-
-                    MealPricing defaultPricing = new MealPricing();
-
-                    defaultPricing.setHalfMealPrice(BigDecimal.ONE);
-                    defaultPricing.setFullMealPrice(BigDecimal.ONE);
-                    defaultPricing.setExtraRotiPrice(BigDecimal.ONE);
-
-                    return mealPricingRepository.save(defaultPricing);
-                });
+    	MealPricing mealPricing =
+    	        mealPricingRepository
+    	                .findTopByOrderByUpdatedAtDesc()
+    	                .orElseThrow(() ->
+    	                        new ResourceNotFoundException(
+    	                                "Meal pricing not configured."
+    	                        ));
 
         mealPricingMapper.updateMealPricingFromRequest(request, mealPricing);
 

@@ -12,6 +12,16 @@
           "name": "CUS-001 Create Customer",
           "id": "1aa7700f-f816-4040-aea5-845cee355498",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
             "body": {
@@ -32,7 +42,8 @@
                 "api",
                 "customers"
               ]
-            }
+            },
+            "description": "this endpoint is removed from owner side  \nas customer registration and login moved to customer side"
           },
           "response": []
         },
@@ -129,7 +140,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiT1dORVIiLCJzdWIiOiI5ODc2NTQzMjEwIiwiaWF0IjoxNzg2MTEzOTUwLCJleHAiOjE3ODYyMDAzNTB9.LIY4zbZAHtdMAVuKFZZs6ZMdsbCkqhzNA6MTZcw42eM",
+                  "value": "{{customerJwtToken}}",
                   "type": "string"
                 }
               ]
@@ -137,14 +148,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/customers/1",
+              "raw": "{{baseUrl}}/api/customers/17",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "customers",
-                "1"
+                "17"
               ]
             }
           },
@@ -182,7 +193,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiT1dORVIiLCJzdWIiOiI5ODc2NTQzMjEwIiwiaWF0IjoxNzg2MDE1NzMwLCJleHAiOjE3ODYxMDIxMzB9.yGXlRsMvAH0rAFVKJpgf3L4Rr0DYjPhOoR_K_JyAvD0",
+                  "value": "{{customerJwtToken}}",
                   "type": "string"
                 }
               ]
@@ -215,11 +226,21 @@
           "name": "CUS-008 Update Customer",
           "id": "8243400f-55be-4a92-a984-36ddb0951473",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"fullName\": \"Saurabh Patil \",\r\n    \"mobileNumber\": \"9876543210\",\r\n    \"email\": \"saurabh@gmail.com\",\r\n    \"remarks\": \" Regular customer \"\r\n}",
+              "raw": "{\r\n    \"remarks\": \"vegiterian\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -227,14 +248,14 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/api/customers/1",
+              "raw": "{{baseUrl}}/api/customers/15",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "customers",
-                "1"
+                "15"
               ]
             }
           },
@@ -331,6 +352,16 @@
           "name": "CUS-012 Delete Customer SoftDelete",
           "id": "676f1ab9-39bf-4aa8-b751-b252ab2a013f",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "DELETE",
             "header": [],
             "body": {
@@ -343,14 +374,14 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/api/customers/3",
+              "raw": "{{baseUrl}}/api/customers/8",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "customers",
-                "3"
+                "8"
               ]
             }
           },
@@ -411,7 +442,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{customerJwtToken}}",
+                  "value": "{{ownerJwtToken}}",
                   "type": "string"
                 }
               ]
@@ -420,7 +451,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"menuDate\": \"2026-07-06\",\r\n    \"mealSession\": \"LUNCH\",\r\n    \"sabjiOne\": \"Aloo Matar\",\r\n    \"sabjiTwo\": \"Cabbage\",\r\n    \"dal\": \"Toor Dal\",\r\n    \"rice\": \"Steamed Rice\",\r\n    \"sweet\": \"Gulab Jamun\"\r\n}",
+              "raw": "{\r\n    \"menuDate\": \"2026-08-11\",\r\n    \"mealSession\": \"LUNCH\",\r\n    \"sabjiOne\": \"Aloo Matar\",\r\n    \"sabjiTwo\": \"Cabbage\",\r\n    \"dal\": \"Toor Dal\",\r\n    \"rice\": \"Steamed Rice\",\r\n    \"sweet\": \"Gulab Jamun\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -654,6 +685,16 @@
           "name": "MPR-001 Get Current Pricing (First Time)",
           "id": "457cccd8-f0c4-4eba-b242-0102db40e2a2",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -673,6 +714,16 @@
           "name": "MPR-002 Update Meal Pricing",
           "id": "206d928f-32fe-427c-b6e7-b9b50572fe5f",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
             "header": [],
             "body": {
@@ -704,6 +755,16 @@
             "disableBodyPruning": true
           },
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "body": {
@@ -831,7 +892,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"customerId\": 1,\r\n  \"menuId\": 31,\r\n  \"responseStatus\": \"ACCEPTED\",\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 1\r\n}",
+              "raw": "    {\r\n        \"customerId\": 3,\r\n    \"menuId\": 36,\r\n    \"responseStatus\": \"ACCEPTED\",\r\n    \"mealOption\": \"HALF\",\r\n    \"extraRotiCount\": 1\r\n    }",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1087,7 +1148,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{ownerJwtToken}}",
+                  "value": "{{customerJwtToken}}",
                   "type": "string"
                 }
               ]
@@ -1104,7 +1165,7 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/api/meal-responses/menu/1",
+              "raw": "{{baseUrl}}/api/meal-responses/menu/20",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1112,7 +1173,7 @@
                 "api",
                 "meal-responses",
                 "menu",
-                "1"
+                "20"
               ]
             }
           },
@@ -1150,10 +1211,31 @@
           "name": "MRE-012 Get Meal-Response By Menu ID and Customer ID",
           "id": "150f4a1e-4fcc-4eb4-9614-0e83a00cc9bd",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": ""
+              "raw": "{{baseUrl}}/api/meal-responses/customer/18/menu/20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses",
+                "customer",
+                "18",
+                "menu",
+                "20"
+              ]
             }
           },
           "response": []
@@ -1609,7 +1691,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"customerId\": 1,\r\n  \"menuId\": 31,\r\n  \"mealResponseId\": 177,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 0\r\n}",
+              "raw": "{\r\n  \"customerId\": 3,\r\n  \"menuId\": 2,\r\n  \"mealResponseId\": null,\r\n  \"mealOption\": \"FULL\",\r\n  \"extraRotiCount\": 1\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1773,11 +1855,21 @@
           "name": "MREC-007 Customer Inactive",
           "id": "6ede5ffa-4221-4842-b5c2-629782fb697f",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"customerId\": 3,\r\n  \"menuId\": 9,\r\n  \"mealResponseId\": 34,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 1\r\n}",
+              "raw": "{\r\n  \"customerId\": 9,\r\n  \"menuId\": 3,\r\n  \"mealResponseId\": null,\r\n  \"mealOption\": \"HALF\",\r\n  \"extraRotiCount\": 1\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1998,12 +2090,19 @@
           "id": "394a00a0-664e-44f6-8ad3-9023e58f7455",
           "request": {
             "auth": {
-              "type": "noauth"
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/meal-records/customer/11",
+              "raw": "{{baseUrl}}/api/meal-records/customer/3",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -2011,7 +2110,7 @@
                 "api",
                 "meal-records",
                 "customer",
-                "11"
+                "3"
               ]
             }
           },
@@ -2038,7 +2137,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{customerJwtToken}}",
+                  "value": "{{ownerJwtToken}}",
                   "type": "string"
                 }
               ]
@@ -2070,10 +2169,35 @@
           "name": "MREC-018 Today's Meal Records (Dinner)",
           "id": "47c9e169-7e59-432d-9447-e11ba4fec14f",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": ""
+              "raw": "{{baseUrl}}/api/meal-records/today?mealSession=DINNER",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-records",
+                "today"
+              ],
+              "query": [
+                {
+                  "key": "mealSession",
+                  "value": "DINNER",
+                  "uuid": "8239e171-e67f-4982-abb8-9999ffc61804"
+                }
+              ]
             }
           },
           "response": []
@@ -2253,7 +2377,7 @@
               "raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/bills/customer/5",
+              "raw": "{{baseUrl}}/api/bills/customer/11",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -2261,7 +2385,7 @@
                 "api",
                 "bills",
                 "customer",
-                "5"
+                "11"
               ]
             }
           },
@@ -2300,7 +2424,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{customerJwtToken}}",
+                  "value": "{{ownerJwtToken}}",
                   "type": "string"
                 }
               ]
@@ -2312,14 +2436,14 @@
               "raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/bills/11",
+              "raw": "{{baseUrl}}/api/bills/7",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "bills",
-                "11"
+                "7"
               ]
             }
           },
@@ -2354,7 +2478,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{customerJwtToken}}",
+                  "value": "{{ownerJwtToken}}",
                   "type": "string"
                 }
               ]
@@ -2374,11 +2498,13 @@
               "query": [
                 {
                   "key": "billingMonth",
-                  "value": "8"
+                  "value": "8",
+                  "uuid": "eb0d5acd-f904-4a8e-8f52-b234f8a78a72"
                 },
                 {
                   "key": "billingYear",
-                  "value": "2026"
+                  "value": "2026",
+                  "uuid": "e18ed5ea-ff23-4acb-8cff-550a81ac004e"
                 }
               ]
             }
@@ -2408,6 +2534,36 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "BILL-010 Authenticated customer",
+          "id": "c62ae956-25dd-42ff-802e-2eddf634125a",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/bills/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bills",
+                "me"
+              ]
+            }
+          },
+          "response": []
         }
       ],
       "id": "fbab1d32-0470-40b9-8f41-c8e2aeda1af1"
@@ -2433,7 +2589,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"billId\": 13,\r\n    \"paymentMode\": \"CASH\"\r\n}",
+              "raw": "{\r\n    \"billId\": 4,\r\n    \"paymentMode\": \"UPI\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -2525,10 +2681,20 @@
           "name": "PAY-004 UPI Payment Request - Duplicate Request",
           "id": "e065700c-a5c6-42ea-881c-9bfe4e327f8d",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/payments/request/2",
+              "raw": "{{baseUrl}}/api/payments/request/1",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -2536,7 +2702,7 @@
                 "api",
                 "payments",
                 "request",
-                "2"
+                "1"
               ]
             }
           },
@@ -2719,7 +2885,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{ownerJwtToken}}",
+                  "value": "{{customerJwtToken}}",
                   "type": "string"
                 }
               ]
@@ -2779,10 +2945,33 @@
           "name": "PAY-013 Generate UPI Payment Link",
           "id": "0bb18bb5-30fb-4b2c-8d89-e5b95b8474f8",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}"
+            },
             "url": {
-              "raw": ""
+              "raw": "{{baseUrl}}/api/payments/upi/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "upi",
+                "2"
+              ]
             }
           },
           "response": []
@@ -2872,14 +3061,49 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/payments/9",
+              "raw": "{{baseUrl}}/api/payments/1",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "payments",
-                "9"
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PAY-017 Get payment by bill",
+          "id": "420ed440-d134-4e1e-a268-f4b39639bb13",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"billId\": 3,\r\n    \"paymentMode\": \"UPI\"\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/bill/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "bill",
+                "1"
               ]
             }
           },
@@ -2938,7 +3162,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "{{customerJwtToken}}",
+                  "value": "{{ownerJwtToken}}",
                   "type": "string"
                 }
               ]
@@ -2976,7 +3200,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"upiId\": \"joshimess@okhdfc\",\r\n    \"receiverName\": \"Joshi's Mess\"\r\n}",
+              "raw": "{\r\n    \"upiId\": \"ashwinismess@okhdfc\",\r\n    \"receiverName\": \"Ashwini's Mess\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3035,19 +3259,12 @@
           "id": "08a25e2f-df96-469f-829e-4ed4666c2969",
           "request": {
             "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{ownerJwtToken}}",
-                  "type": "string"
-                }
-              ]
+              "type": "noauth"
             },
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/insights/monthly?month=7&year=2026",
+              "raw": "{{baseUrl}}/api/insights/monthly?month=5&year=2026",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -3059,7 +3276,7 @@
               "query": [
                 {
                   "key": "month",
-                  "value": "7",
+                  "value": "5",
                   "uuid": "347fe605-e239-4c8d-a92b-a771b765a5b3"
                 },
                 {
@@ -3238,7 +3455,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"mobileNumber\":\"9876543210\",\r\n  \"password\":\"Password@123\"\r\n}",
+              "raw": "{\r\n  \"mobileNumber\":\"9876500100\",\r\n  \"password\":\"Password@123\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3477,7 +3694,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"mobileNumber\":\"9876500018\",\r\n  \"password\":\"Password@123\"\r\n}",
+              "raw": "{\r\n  \"mobileNumber\":\"9876500001\",\r\n  \"password\":\"Password@123\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"

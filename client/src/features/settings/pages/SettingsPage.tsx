@@ -59,7 +59,7 @@ export default function SettingsPage() {
 
   <MealPricingForm />
 
-</div>
+</div>  
 
       <div
         className="

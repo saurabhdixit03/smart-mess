@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 
 import { useForm } from "react-hook-form";
@@ -18,79 +19,44 @@ export const useCustomerForm = (
   onSuccess: () => Promise<void>,
   onCancel: () => void
 ) => {
-
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
 
-    defaultValues:
-      CUSTOMER_FORM.DEFAULT_VALUES,
+    defaultValues: CUSTOMER_FORM.DEFAULT_VALUES,
 
     mode: "onBlur",
   });
 
   useEffect(() => {
-
     if (selectedCustomer) {
-
       form.reset({
-
-        fullName:
-          selectedCustomer.fullName,
-
-        mobileNumber:
-          selectedCustomer.mobileNumber,
-
-        email:
-          selectedCustomer.email ?? "",
-
-        remarks:
-          selectedCustomer.remarks ?? "",
-
+        remarks: selectedCustomer.remarks ?? "",
       });
-
     } else {
-
       form.reset(
         CUSTOMER_FORM.DEFAULT_VALUES
       );
-
     }
-
   }, [selectedCustomer, form]);
 
-  const onSubmit = async (
-    data: CustomerFormData
-  ) => {
+  const onSubmit = async (data: CustomerFormData) => {
+    if (!selectedCustomer) {
+      return;
+    }
 
     try {
-
       setIsSubmitting(true);
 
-      if (selectedCustomer) {
+      await customerApi.updateCustomer(
+        selectedCustomer.customerId,
+        data
+      );
 
-        await customerApi.updateCustomer(
-          selectedCustomer.customerId,
-          data
-        );
-
-        toast.success(
-          "Customer updated successfully."
-        );
-
-      } else {
-
-        await customerApi.createCustomer(
-          data
-        );
-
-        toast.success(
-          "Customer created successfully."
-        );
-
-      }
+      toast.success(
+        "Customer remarks updated successfully."
+      );
 
       form.reset(
         CUSTOMER_FORM.DEFAULT_VALUES
@@ -101,35 +67,20 @@ export const useCustomerForm = (
       onCancel();
 
     } catch (error) {
-
       console.error(error);
 
       toast.error(
-
-        selectedCustomer
-
-          ? "Failed to update customer."
-
-          : "Failed to create customer."
-
+        "Failed to update customer remarks."
       );
 
     } finally {
-
       setIsSubmitting(false);
-
     }
-
   };
 
   return {
-
     form,
-
     onSubmit,
-
     isSubmitting,
-
   };
-
 };

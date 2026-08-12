@@ -1,7 +1,6 @@
 package com.smartmess.backend.service.impl;
 
 import java.math.BigDecimal;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,11 +26,11 @@ import com.smartmess.backend.repository.MealPricingRepository;
 import com.smartmess.backend.repository.MealRecordRepository;
 import com.smartmess.backend.repository.MealResponseRepository;
 import com.smartmess.backend.repository.MenuRepository;
+import com.smartmess.backend.security.CustomerSecurity;
 import com.smartmess.backend.service.DashboardWebSocketService;
 import com.smartmess.backend.service.MealRecordService;
 
 import com.smartmess.backend.dto.response.CollectionQueueResponse;
-import com.smartmess.backend.mapper.MealCollectionMapper;
 
 @Service
 public class MealRecordServiceImpl implements MealRecordService {
@@ -45,6 +44,7 @@ public class MealRecordServiceImpl implements MealRecordService {
     private final DashboardWebSocketService dashboardWebSocketService;
     // for meal record collection queue 
     private final MealCollectionMapper mealCollectionMapper;
+    private final CustomerSecurity customerSecurity;
 
     public MealRecordServiceImpl(
             MealRecordRepository mealRecordRepository,
@@ -54,7 +54,8 @@ public class MealRecordServiceImpl implements MealRecordService {
             MealPricingRepository mealPricingRepository,
             MealRecordMapper mealRecordMapper,
             DashboardWebSocketService dashboardWebSocketService,
-            MealCollectionMapper mealCollectionMapper) {
+            MealCollectionMapper mealCollectionMapper,
+            CustomerSecurity customerSecurity) {
 
         this.mealRecordRepository = mealRecordRepository;
         this.customerRepository = customerRepository;
@@ -64,8 +65,8 @@ public class MealRecordServiceImpl implements MealRecordService {
         this.mealRecordMapper = mealRecordMapper;
         this.dashboardWebSocketService = dashboardWebSocketService;
         this.mealCollectionMapper = mealCollectionMapper;
+        this.customerSecurity = customerSecurity;
     }
-
     @Override
     public MealRecordResponse createMealRecord(
             CreateMealRecordRequest request) {
@@ -218,6 +219,8 @@ public class MealRecordServiceImpl implements MealRecordService {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Customer not found with ID: " + customerId));
+
+        customerSecurity.checkCustomerAccess(customerId);
 
         List<MealRecord> mealRecords =
                 mealRecordRepository

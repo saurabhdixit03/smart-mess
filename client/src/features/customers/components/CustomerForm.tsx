@@ -1,6 +1,6 @@
+
 import {
   Label,
-  Input,
   Textarea,
   Button,
 } from "@/components/common/ui";
@@ -12,8 +12,8 @@ import { useCustomerForm } from "../hooks/useCustomerForm";
 import type { CustomerResponse } from "../types/customer.types";
 
 type CustomerFormProps = {
-    open: boolean
-    selectedCustomer: CustomerResponse | null
+  open: boolean;
+  selectedCustomer: CustomerResponse | null;
   onSuccess: () => Promise<void>;
   onCancel: () => void;
 };
@@ -24,8 +24,6 @@ const CustomerForm = ({
   onSuccess,
   onCancel,
 }: CustomerFormProps) => {
-
-  const isEditMode = selectedCustomer !== null;
 
   const {
     form: {
@@ -42,14 +40,10 @@ const CustomerForm = ({
   );
 
   return (
-  <Modal
-    open={open}
-    onClose={onCancel}
-    title={
-        isEditMode
-          ? "Edit Customer"
-          : "Add Customer"
-      }
+    <Modal
+      open={open}
+      onClose={onCancel}
+      title="Manage Customer"
       footer={
         <>
           <Button
@@ -66,12 +60,8 @@ const CustomerForm = ({
             disabled={isSubmitting}
           >
             {isSubmitting
-              ? isEditMode
-                ? "Updating..."
-                : "Saving..."
-              : isEditMode
-                ? "Update Customer"
-                : "Save Customer"}
+              ? "Updating..."
+              : "Update Remarks"}
           </Button>
         </>
       }
@@ -82,82 +72,53 @@ const CustomerForm = ({
         className="space-y-5"
       >
 
-        {/* Full Name */}
+        {/* Customer Information */}
 
-        <div className="space-y-2">
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-background-secondary)] p-4">
 
-          <Label htmlFor="fullName">
-            Full Name *
-          </Label>
+          <div className="grid grid-cols-2 gap-4">
 
-          <Input
-            id="fullName"
-            fullWidth
-            placeholder="Enter full name"
-            error={!!errors.fullName}
-            {...register("fullName")}
-          />
+            <div>
+              <p className="text-xs text-[var(--color-text-secondary)]">
+                Customer ID
+              </p>
 
-          {errors.fullName && (
+              <p className="mt-1 font-semibold">
+                #{selectedCustomer?.customerId ?? "-"}
+              </p>
+            </div>
 
-            <p className="text-sm text-red-500">
-              {errors.fullName.message}
-            </p>
+            <div>
+              <p className="text-xs text-[var(--color-text-secondary)]">
+                Status
+              </p>
 
-          )}
+              <p className="mt-1 font-semibold">
+                {selectedCustomer?.status ?? "-"}
+              </p>
+            </div>
 
-        </div>
+            <div>
+              <p className="text-xs text-[var(--color-text-secondary)]">
+                Customer
+              </p>
 
-        {/* Mobile */}
+              <p className="mt-1 font-semibold">
+                {selectedCustomer?.fullName ?? "-"}
+              </p>
+            </div>
 
-        <div className="space-y-2">
+            <div>
+              <p className="text-xs text-[var(--color-text-secondary)]">
+                Mobile
+              </p>
 
-          <Label htmlFor="mobileNumber">
-            Mobile Number *
-          </Label>
+              <p className="mt-1 font-semibold">
+                {selectedCustomer?.mobileNumber ?? "-"}
+              </p>
+            </div>
 
-          <Input
-            id="mobileNumber"
-            fullWidth
-            placeholder="Enter mobile number"
-            error={!!errors.mobileNumber}
-            {...register("mobileNumber")}
-          />
-
-          {errors.mobileNumber && (
-
-            <p className="text-sm text-red-500">
-              {errors.mobileNumber.message}
-            </p>
-
-          )}
-
-        </div>
-
-        {/* Email */}
-
-        <div className="space-y-2">
-
-          <Label htmlFor="email">
-            Email
-          </Label>
-
-          <Input
-            id="email"
-            type="email"
-            fullWidth
-            placeholder="Enter email"
-            error={!!errors.email}
-            {...register("email")}
-          />
-
-          {errors.email && (
-
-            <p className="text-sm text-red-500">
-              {errors.email.message}
-            </p>
-
-          )}
+          </div>
 
         </div>
 
@@ -171,27 +132,25 @@ const CustomerForm = ({
 
           <Textarea
             id="remarks"
-            rows={4}
+            rows={5}
             fullWidth
-            placeholder="Additional notes..."
+            placeholder="Add remarks about the customer..."
             error={!!errors.remarks}
             {...register("remarks")}
           />
 
           {errors.remarks && (
-
             <p className="text-sm text-red-500">
               {errors.remarks.message}
             </p>
-
           )}
 
         </div>
 
       </form>
-
     </Modal>
   );
 };
 
 export default CustomerForm;
+

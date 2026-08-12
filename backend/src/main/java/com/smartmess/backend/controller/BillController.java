@@ -1,3 +1,4 @@
+
 package com.smartmess.backend.controller;
 
 import java.util.List;
@@ -5,7 +6,14 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.smartmess.backend.dto.request.GenerateBillRequest;
 import com.smartmess.backend.dto.response.ApiResponse;
@@ -29,6 +37,7 @@ public class BillController {
 
     /*
      * Generate Bills
+     *
      * Owner only.
      */
     @PostMapping("/generate")
@@ -58,12 +67,13 @@ public class BillController {
 
     /*
      * Customer Bill History
-     * Owner + Customer.
      *
-     * Customer ownership validation will be handled separately.
+     * Owner only.
+     *
+     * Owner can request bills for any customer.
      */
     @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<List<BillResponse>>> getCustomerBills(
 
             @PathVariable Long customerId,
@@ -84,10 +94,42 @@ public class BillController {
     }
 
     /*
+     * Authenticated Customer Bill History
+     *
+     * Customer only.
+     *
+     * Customer ID comes from the JWT.
+     * The client does NOT provide a customer ID.
+     */
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<List<BillResponse>>> getMyBills(
+
+            HttpServletRequest request) {
+
+        List<BillResponse> bills =
+                billService.getMyBills();
+
+        ApiResponse<List<BillResponse>> response =
+                ApiResponse.success(
+                        "Your bills retrieved successfully.",
+                        request.getRequestURI(),
+                        bills
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /*
      * Bill Details
+     *
      * Owner + Customer.
      *
-     * Customer ownership validation will be handled separately.
+     * Owner can view any bill.
+     *
+     * Customer can view only their own bill.
+     *
+     * Ownership validation is handled inside BillServiceImpl.
      */
     @GetMapping("/{billId}")
     @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
@@ -112,6 +154,7 @@ public class BillController {
 
     /*
      * Billing Overview
+     *
      * Owner only.
      */
     @GetMapping("/overview")
