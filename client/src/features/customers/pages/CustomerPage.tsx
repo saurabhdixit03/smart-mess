@@ -22,11 +22,10 @@ import StatsCard from "@/components/common/ui/StatsCard";
 import SearchToolbar from "@/components/common/ui/SearchToolbar";
 
 import {
-    Plus, 
-    Search,
-    Users,
-    UserCheck,
-    UserX,
+  Search,
+  Users,
+  UserCheck,
+  UserX,
 } from "lucide-react";
 
 const CustomerPage = () => {
@@ -39,14 +38,18 @@ const CustomerPage = () => {
   } = useCustomers();
 
   // -------------------------
-  // Modal State
+  // Customer Management State
   // -------------------------
-
-  const [isFormOpen, setIsFormOpen] =
-    useState(false);
 
   const [selectedCustomer, setSelectedCustomer] =
     useState<CustomerResponse | null>(null);
+
+  const [isManageOpen, setIsManageOpen] =
+    useState(false);
+
+  // -------------------------
+  // Deactivation State
+  // -------------------------
 
   const [customerToDeactivate, setCustomerToDeactivate] =
     useState<CustomerResponse | null>(null);
@@ -55,18 +58,15 @@ const CustomerPage = () => {
   // Search
   // -------------------------
 
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
 
   // -------------------------
   // Pagination
   // -------------------------
 
-  const [currentPage, setCurrentPage] =
-    useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const [rowsPerPage, setRowsPerPage] =
-    useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // -------------------------
   // Filter
@@ -84,6 +84,11 @@ const CustomerPage = () => {
     return customers.filter((customer) => {
 
       return (
+
+        String(customer.customerId)
+          .includes(keyword)
+
+        ||
 
         customer.fullName
           .toLowerCase()
@@ -107,8 +112,7 @@ const CustomerPage = () => {
   }, [customers, search]);
 
   // -------------------------
-  // Search always starts
-  // from page 1
+  // Search starts from page 1
   // -------------------------
 
   useEffect(() => {
@@ -151,232 +155,232 @@ const CustomerPage = () => {
     ]);
 
   // -------------------------
-  // Add Customer
+  // Manage Customer
   // -------------------------
 
-  const handleAddCustomer = () => {
-
-    setSelectedCustomer(null);
-
-    setIsFormOpen(true);
-
-  };
-
-  // -------------------------
-  // Edit
-  // -------------------------
-
-  const handleEditCustomer = (
+  const handleManageCustomer = (
     customer: CustomerResponse
   ) => {
 
     setSelectedCustomer(customer);
 
-    setIsFormOpen(true);
+    setIsManageOpen(true);
 
   };
 
   // -------------------------
-  // Close Form
+  // Close Management
   // -------------------------
 
   const handleCancel = () => {
 
     setSelectedCustomer(null);
 
-    setIsFormOpen(false);
+    setIsManageOpen(false);
 
   };
 
   // -------------------------
-  // Refresh after
-  // create / update
+  // Refresh after update
   // -------------------------
 
-  const handleSuccess =
-    async () => {
+  const handleSuccess = async () => {
+
+    await fetchCustomers();
+
+    setSelectedCustomer(null);
+
+    setIsManageOpen(false);
+
+  };
+
+  // -------------------------
+  // Deactivate Customer
+  // -------------------------
+
+  const handleDeactivate = async () => {
+
+    if (!customerToDeactivate) {
+      return;
+    }
+
+    try {
+
+      await customerApi.deleteCustomer(
+        customerToDeactivate.customerId
+      );
+
+      toast.success(
+        "Customer deactivated successfully."
+      );
 
       await fetchCustomers();
 
-      setCurrentPage(1);
+      setCustomerToDeactivate(null);
 
-      setSelectedCustomer(null);
+    } catch (error) {
 
-      setIsFormOpen(false);
+      console.error(error);
 
-    };
+      toast.error(
+        "Failed to deactivate customer."
+      );
+
+    }
+
+  };
 
   // -------------------------
-  // Deactivate
+  // Statistics
   // -------------------------
 
-  const handleDeactivate =
-    async () => {
-
-      if (!customerToDeactivate)
-        return;
-
-      try {
-
-        await customerApi.deleteCustomer(
-          customerToDeactivate.customerId
-        );
-
-        toast.success(
-          "Customer deactivated successfully."
-        );
-
-        await fetchCustomers();
-
-        setCustomerToDeactivate(null);
-
-      } catch (error) {
-
-        console.error(error);
-
-        toast.error(
-          "Failed to deactivate customer."
-        );
-
-      }
-
-    };
-
-
-    const activeCustomers = customers.filter(
-        (customer) => customer.status === "ACTIVE"
+  const activeCustomers =
+    customers.filter(
+      (customer) =>
+        customer.status === "ACTIVE"
     ).length;
 
-    const inactiveCustomers = customers.filter(
-        (customer) => customer.status === "INACTIVE"
+  const inactiveCustomers =
+    customers.filter(
+      (customer) =>
+        customer.status === "INACTIVE"
     ).length;
 
   return (
     <>
       <div className="space-y-6">
 
-    <PageHeader
-        title="Customers"
-        description="View, add and track your customers."
-        action={
-          <Button onClick={handleAddCustomer}>
-            <Plus size={18} />
-            <span className="ml-2">Register Customer</span>
-          </Button>
-        }
-    />
+        <PageHeader
+          title="Customers"
+          description="View and manage your customers."
+        />
 
-        {/* ---------- Start Card ---------- */}
+        {/* ---------- Stats ---------- */}
 
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
 
-  <StatsCard
-    title="Total Customers"
-    value={totalCustomers}
-    description="Registered customers"
-    icon={<Users size={26} />}
-  />
+          <StatsCard
+            title="Total Customers"
+            value={totalCustomers}
+            description="Registered customers"
+            icon={<Users size={26} />}
+          />
 
-  <StatsCard
-    title="Active Customers"
-    value={activeCustomers}
-    description="Currently active"
-    icon={<UserCheck size={26} />}
-  />
+          <StatsCard
+            title="Active Customers"
+            value={activeCustomers}
+            description="Currently active"
+            icon={<UserCheck size={26} />}
+          />
 
-  <StatsCard
-    title="Inactive Customers"
-    value={inactiveCustomers}
-    description="Currently inactive"
-    icon={<UserX size={26} />}
-  />
+          <StatsCard
+            title="Inactive Customers"
+            value={inactiveCustomers}
+            description="Currently inactive"
+            icon={<UserX size={26} />}
+          />
 
-</div>
+        </div>
 
-        {/* ---------- Search Card ---------- */}
+        {/* ---------- Search ---------- */}
+
         <SearchToolbar>
 
-  <SearchToolbar.Left>
+          <SearchToolbar.Left>
 
-    <Input
-      fullWidth
-      leftIcon={<Search size={18} />}
-      placeholder="Search customers by name, mobile or email..."
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-    />
+            <Input
+              fullWidth
+              leftIcon={<Search size={18} />}
+              placeholder="Search by customer ID, name, mobile or email..."
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+            />
 
-  </SearchToolbar.Left>
+          </SearchToolbar.Left>
 
-  <SearchToolbar.Right>
+          <SearchToolbar.Right>
 
-    <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
 
-      <span className="text-sm text-[var(--color-text-secondary)]">
-        Rows
-      </span>
+              <span className="text-sm text-[var(--color-text-secondary)]">
+                Rows
+              </span>
 
-      <select
-        value={rowsPerPage}
-        onChange={(e) => {
-          setRowsPerPage(Number(e.target.value));
-          setCurrentPage(1);
-        }}
-        className="
-          h-10
-          rounded-xl
-          border border-[var(--color-border)]
-          bg-white
-          px-3
-          text-sm
-          outline-none
-          transition-all
-          focus:border-[var(--color-primary)]
-          focus:ring-2
-          focus:ring-[var(--color-primary)]/20
-        "
-      >
-        <option value={10}>10</option>
-        <option value={20}>20</option>
-        <option value={50}>50</option>
-      </select>
+              <select
+                value={rowsPerPage}
+                onChange={(e) => {
 
-    </div>
+                  setRowsPerPage(
+                    Number(e.target.value)
+                  );
 
-  </SearchToolbar.Right>
+                  setCurrentPage(1);
 
-</SearchToolbar>
+                }}
+                className="
+                  h-10
+                  rounded-xl
+                  border border-[var(--color-border)]
+                  bg-white
+                  px-3
+                  text-sm
+                  outline-none
+                  transition-all
+                  focus:border-[var(--color-primary)]
+                  focus:ring-2
+                  focus:ring-[var(--color-primary)]/20
+                "
+              >
 
-<p className="mt-3 text-sm text-[var(--color-text-secondary)]">
-  Showing{" "}
-  <span className="font-semibold text-[var(--color-text)]">
-    {totalCustomers}
-  </span>{" "}
-  customer{totalCustomers !== 1 ? "s" : ""}
-</p>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
 
-          
+              </select>
 
-        
-      
+            </div>
 
-        {/* ---------- Table ---------- */}
+          </SearchToolbar.Right>
+
+        </SearchToolbar>
+
+        <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
+
+          Showing{" "}
+
+          <span className="font-semibold text-[var(--color-text)]">
+            {totalCustomers}
+          </span>{" "}
+
+          customer
+          {totalCustomers !== 1 ? "s" : ""}
+
+        </p>
+
+        {/* ---------- Customer Table ---------- */}
 
         <CustomerTable
           customers={paginatedCustomers}
           loading={loading}
           error={error}
-          onEdit={handleEditCustomer}
+
+          onEdit={handleManageCustomer}
+
           onDeactivate={
             setCustomerToDeactivate
           }
+
           currentPage={currentPage}
           totalPages={totalPages}
+
           onPrevious={() =>
             setCurrentPage((page) =>
               Math.max(1, page - 1)
             )
           }
+
           onNext={() =>
             setCurrentPage((page) =>
               Math.min(
@@ -389,13 +393,11 @@ const CustomerPage = () => {
 
       </div>
 
-      {/* ---------- Add / Edit Modal ---------- */}
+      {/* ---------- Manage Customer Modal ---------- */}
 
       <CustomerForm
-        open={isFormOpen}
-        selectedCustomer={
-          selectedCustomer
-        }
+        open={isManageOpen}
+        selectedCustomer={selectedCustomer}
         onSuccess={handleSuccess}
         onCancel={handleCancel}
       />
@@ -408,19 +410,14 @@ const CustomerPage = () => {
         }
         title="Deactivate Customer"
         onClose={() =>
-          setCustomerToDeactivate(
-            null
-          )
+          setCustomerToDeactivate(null)
         }
         footer={
           <>
-
             <Button
               variant="secondary"
               onClick={() =>
-                setCustomerToDeactivate(
-                  null
-                )
+                setCustomerToDeactivate(null)
               }
             >
               Cancel
@@ -428,13 +425,10 @@ const CustomerPage = () => {
 
             <Button
               variant="danger"
-              onClick={
-                handleDeactivate
-              }
+              onClick={handleDeactivate}
             >
               Deactivate
             </Button>
-
           </>
         }
       >
@@ -444,11 +438,9 @@ const CustomerPage = () => {
           Are you sure you want to deactivate{" "}
 
           <strong>
-
             {
               customerToDeactivate?.fullName
             }
-
           </strong>
 
           ?
@@ -466,7 +458,6 @@ const CustomerPage = () => {
 
     </>
   );
-
 };
 
 export default CustomerPage;

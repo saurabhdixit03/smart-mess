@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.smartmess.backend.entity.Customer;
@@ -17,10 +18,24 @@ public class CustomerSeeder {
     private static final Logger log =
             LoggerFactory.getLogger(CustomerSeeder.class);
 
+    /*
+     * Demo password used only for seeded customers.
+     *
+     * All seeded customers will have the same initial password.
+     * The password is stored in the database as a BCrypt hash.
+     */
+    private static final String DEMO_PASSWORD = "Password@123";
+
     private final CustomerRepository customerRepository;
 
-    public CustomerSeeder(CustomerRepository customerRepository) {
+    private final PasswordEncoder passwordEncoder;
+
+    public CustomerSeeder(
+            CustomerRepository customerRepository,
+            PasswordEncoder passwordEncoder) {
+
         this.customerRepository = customerRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     private record CustomerSeed(
@@ -46,6 +61,15 @@ public class CustomerSeeder {
             return;
         }
 
+        /*
+         * Encode the demo password once.
+         *
+         * Never store the plain-text password
+         * directly in the database.
+         */
+        String encodedPassword =
+                passwordEncoder.encode(DEMO_PASSWORD);
+
         for (CustomerSeed seed : buildDemoCustomers()) {
 
             Customer customer = new Customer();
@@ -55,6 +79,8 @@ public class CustomerSeeder {
             customer.setMobileNumber(seed.mobileNumber());
 
             customer.setEmail(seed.email());
+
+            customer.setPassword(encodedPassword);
 
             customer.setRemarks(seed.remarks());
 
@@ -66,6 +92,7 @@ public class CustomerSeeder {
         }
 
         log.info("Demo Customers seeded successfully.");
+        log.info("Demo customer password: {}", DEMO_PASSWORD);
     }
 
     private List<CustomerSeed> buildDemoCustomers() {

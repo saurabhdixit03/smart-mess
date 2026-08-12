@@ -7,11 +7,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
-public class SubmitMealResponseRequest {
-
-    // Temporary until authentication is implemented
-    @NotNull(message = "Customer ID is required.")
-    private Long customerId;
+public class SubmitMealResponseRequest {  
 
     @NotNull(message = "Menu ID is required.")
     private Long menuId;
@@ -27,14 +23,6 @@ public class SubmitMealResponseRequest {
     private Integer extraRotiCount;
 
     public SubmitMealResponseRequest() {
-    }
-
-    public Long getCustomerId() {
-        return customerId;
-    }
-
-    public void setCustomerId(Long customerId) {
-        this.customerId = customerId;
     }
 
     public Long getMenuId() {

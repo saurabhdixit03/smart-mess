@@ -1,3 +1,4 @@
+
 package com.smartmess.backend.service.impl;
 
 import java.math.BigDecimal;
@@ -13,6 +14,7 @@ import com.smartmess.backend.dto.request.GenerateBillRequest;
 import com.smartmess.backend.dto.response.BillDetailResponse;
 import com.smartmess.backend.dto.response.BillResponse;
 import com.smartmess.backend.dto.response.BillingOverviewResponse;
+import com.smartmess.backend.dto.response.BillingSummaryResponse;
 import com.smartmess.backend.entity.Bill;
 import com.smartmess.backend.entity.Customer;
 import com.smartmess.backend.entity.MealRecord;
@@ -25,10 +27,8 @@ import com.smartmess.backend.mapper.MealRecordMapper;
 import com.smartmess.backend.repository.BillRepository;
 import com.smartmess.backend.repository.CustomerRepository;
 import com.smartmess.backend.repository.MealRecordRepository;
+import com.smartmess.backend.security.CustomerSecurity;
 import com.smartmess.backend.service.BillService;
-
-import com.smartmess.backend.dto.response.BillingOverviewResponse;
-import com.smartmess.backend.dto.response.BillingSummaryResponse;
 
 @Service
 public class BillServiceImpl implements BillService {
@@ -43,22 +43,28 @@ public class BillServiceImpl implements BillService {
 
     private final MealRecordMapper mealRecordMapper;
 
+    private final CustomerSecurity customerSecurity;
+
     public BillServiceImpl(
             BillRepository billRepository,
             CustomerRepository customerRepository,
             MealRecordRepository mealRecordRepository,
             BillMapper billMapper,
-            MealRecordMapper mealRecordMapper) {
+            MealRecordMapper mealRecordMapper,
+            CustomerSecurity customerSecurity) {
 
         this.billRepository = billRepository;
         this.customerRepository = customerRepository;
         this.mealRecordRepository = mealRecordRepository;
         this.billMapper = billMapper;
         this.mealRecordMapper = mealRecordMapper;
+        this.customerSecurity = customerSecurity;
     }
 
     /*
      * Generate Bills
+     *
+     * Owner only.
      */
     @Override
     public List<BillResponse> generateBills(
@@ -109,6 +115,10 @@ public class BillServiceImpl implements BillService {
                 continue;
             }
 
+            /*
+             * Get meal records for the customer's
+             * selected billing period.
+             */
             List<MealRecord> mealRecords =
                     mealRecordRepository
                             .findByCustomerAndCollectedAtBetween(
@@ -118,7 +128,7 @@ public class BillServiceImpl implements BillService {
                             );
 
             /*
-             * Skip Customers having no Meal Records.
+             * Skip customers having no meal records.
              */
             if (mealRecords.isEmpty()) {
                 continue;
@@ -126,9 +136,7 @@ public class BillServiceImpl implements BillService {
 
             BigDecimal totalAmount =
                     mealRecords.stream()
-
                             .map(MealRecord::getTotalAmount)
-
                             .reduce(
                                     BigDecimal.ZERO,
                                     BigDecimal::add
@@ -176,23 +184,25 @@ public class BillServiceImpl implements BillService {
             generatedBills.add(
                     billMapper.toResponse(savedBill)
             );
-
         }
-        
+
         if (generatedBills.isEmpty()) {
 
             throw new BusinessException(
                     "No bills were generated for the selected billing period."
             );
-
         }
 
         return generatedBills;
-
     }
 
     /*
      * Customer Bill History
+     *
+     * Owner use case.
+     *
+     * The owner can request bills for any customer.
+     * Authorization is handled at the controller level.
      */
     @Override
     public List<BillResponse> getCustomerBills(
@@ -200,7 +210,6 @@ public class BillServiceImpl implements BillService {
 
         Customer customer =
                 customerRepository.findById(customerId)
-
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Customer not found with ID: "
@@ -216,11 +225,46 @@ public class BillServiceImpl implements BillService {
         return billMapper.toResponseList(
                 bills
         );
+    }
 
+    /*
+     * Authenticated Customer Bill History
+     *
+     * Customer ID comes directly from the JWT.
+     *
+     * The client does NOT provide a customer ID.
+     */
+    @Override
+    public List<BillResponse> getMyBills() {
+
+        Long customerId =
+                customerSecurity.getCurrentUserId();
+
+        Customer customer =
+                customerRepository.findById(customerId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Customer not found with ID: "
+                                                + customerId
+                                ));
+
+        List<Bill> bills =
+                billRepository
+                        .findByCustomerOrderByGeneratedAtDesc(
+                                customer
+                        );
+
+        return billMapper.toResponseList(
+                bills
+        );
     }
 
     /*
      * Bill Details
+     *
+     * Owner can view any bill.
+     *
+     * Customer can view only their own bill.
      */
     @Override
     public BillDetailResponse getBillDetails(
@@ -228,18 +272,32 @@ public class BillServiceImpl implements BillService {
 
         Bill bill =
                 billRepository.findById(billId)
-
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Bill not found with ID: "
                                                 + billId
                                 ));
 
+        /*
+         * Ownership validation.
+         *
+         * OWNER:
+         *     checkCustomerAccess() allows access.
+         *
+         * CUSTOMER:
+         *     checkCustomerAccess() verifies that
+         *     the bill belongs to the authenticated customer.
+         */
+        customerSecurity.checkCustomerAccess(
+                bill.getCustomer().getCustomerId()
+        );
+
         List<MealRecord> mealRecords =
                 mealRecordRepository
                         .findByBillOrderByCollectedAtAsc(
                                 bill
                         );
+
         BillDetailResponse response =
                 billMapper.toDetailResponse(
                         bill
@@ -252,9 +310,13 @@ public class BillServiceImpl implements BillService {
         );
 
         return response;
-
     }
 
+    /*
+     * Billing Overview
+     *
+     * Owner only.
+     */
     @Override
     public BillingOverviewResponse getBillingOverview(
             Integer billingMonth,
@@ -272,19 +334,19 @@ public class BillServiceImpl implements BillService {
             throw new BusinessException(
                     "No bills found for the selected billing period."
             );
-
         }
-        
+
         List<Object[]> summaryResult =
                 billRepository.getMonthlyFinancialInsights(
                         billingMonth,
                         billingYear
                 );
-        
+
         BillingSummaryResponse summary =
                 new BillingSummaryResponse();
-        
-        Object[] row = summaryResult.get(0);
+
+        Object[] row =
+                summaryResult.get(0);
 
         summary.setTotalBills(
                 ((Number) row[1]).longValue()
@@ -309,15 +371,15 @@ public class BillServiceImpl implements BillService {
         summary.setPendingRevenue(
                 (BigDecimal) row[6]
         );
-        
+
         List<BillResponse> billResponses =
                 billMapper.toResponseList(
                         bills
                 );
-        
+
         BillingOverviewResponse response =
                 new BillingOverviewResponse();
-        
+
         response.setSummary(
                 summary
         );
@@ -327,6 +389,5 @@ public class BillServiceImpl implements BillService {
         );
 
         return response;
-
     }
 }

@@ -37,5 +37,12 @@ public interface BillService {
             Integer billingMonth,
             Integer billingYear
     );
+    
+    /*
+     * exists specifically for the authenticated customer.
+     */
+    List<BillResponse> getMyBills();
+    
+     
 
 }

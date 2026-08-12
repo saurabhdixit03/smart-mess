@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.smartmess.backend.dto.request.SubmitMealResponseRequest;
 import com.smartmess.backend.dto.response.ApiResponse;
 import com.smartmess.backend.dto.response.MealResponseResponse;
+import com.smartmess.backend.security.CustomerSecurity;
 import com.smartmess.backend.service.MealResponseService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,9 +24,14 @@ import jakarta.validation.Valid;
 public class MealResponseController {
 
     private final MealResponseService mealResponseService;
+    private final CustomerSecurity customerSecurity;
 
-    public MealResponseController(MealResponseService mealResponseService) {
+    public MealResponseController(
+            MealResponseService mealResponseService,
+            CustomerSecurity customerSecurity) {
+
         this.mealResponseService = mealResponseService;
+        this.customerSecurity = customerSecurity;
     }
 
     @PostMapping
@@ -34,8 +40,13 @@ public class MealResponseController {
             @Valid @RequestBody SubmitMealResponseRequest request,
             HttpServletRequest httpRequest) {
 
+        Long customerId =
+                customerSecurity.getCurrentUserId();
+
         MealResponseResponse response =
-                mealResponseService.submitMealResponse(request);
+                mealResponseService.submitMealResponse(
+                        customerId,
+                        request);
 
         return ApiResponse.success(
                 "Meal response submitted successfully.",
@@ -61,6 +72,7 @@ public class MealResponseController {
     }
 
     @GetMapping("/customer/{customerId}/menu/{menuId}")
+    @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
     public ApiResponse<MealResponseResponse> getCustomerResponse(
             @PathVariable Long customerId,
             @PathVariable Long menuId,
