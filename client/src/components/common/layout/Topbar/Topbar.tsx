@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 type TopbarProps = {
-  title: string;
+  title?: string;
   actions?: ReactNode;
 };
 
@@ -14,6 +14,7 @@ export default function Topbar({
       className="
         flex
         h-16
+        shrink-0
         items-center
         justify-between
         border-b
@@ -22,11 +23,19 @@ export default function Topbar({
         px-6
       "
     >
-      <h1 className="text-xl font-semibold">
-        {title}
-      </h1>
+      <div>
+        {title && (
+          <span className="text-sm font-medium text-[var(--color-text-secondary)]">
+            {title}
+          </span>
+        )}
+      </div>
 
-      <div>{actions}</div>
+      {actions && (
+        <div className="flex items-center gap-3">
+          {actions}
+        </div>
+      )}
     </header>
   );
 }
