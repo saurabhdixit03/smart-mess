@@ -17,11 +17,10 @@ public class SeedDataService {
     private final MenuSeeder menuSeeder;
     private final MealResponseSeeder mealResponseSeeder;
     private final MealRecordSeeder mealRecordSeeder; 
-    private final BillSeeder billSeeder;
-    private final PaymentSeeder paymentSeeder;
+    //  private final BillSeeder billSeeder;
+    // private final PaymentSeeder paymentSeeder;
 
     
-    @PostConstruct
     public void seedDemoData() {
 
         mealPricingSeeder.seed();
@@ -36,9 +35,11 @@ public class SeedDataService {
         
         mealRecordSeeder.seedMealRecords();
         
-        billSeeder.seedDemoData();
+        // intentionally disable to stop generating bills automatically 
         
-        paymentSeeder.seedPayments();
+       // billSeeder.seedDemoData();
+        
+       // paymentSeeder.seedPayments();
 
         
     }

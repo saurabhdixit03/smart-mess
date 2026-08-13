@@ -20,5 +20,7 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
     List<Menu> findByMenuDateOrderByMealSessionAsc(LocalDate menuDate);
 
     List<Menu> findAllByOrderByMenuDateDescMealSessionAsc();
+    
+    List<Menu> findAllByOrderByMenuDateAscMealSessionAsc();
 
 }

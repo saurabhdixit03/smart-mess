@@ -42,12 +42,12 @@ export const ownerNavigation: NavigationItem[] = [
     icon: UtensilsCrossed,
   },
 
-  {
-    label: "Live Dashboard",
-    title: "Live Dashboard",
-    path: ROUTES.MEALS,
-    icon: ClipboardList,
-  },
+  // {
+  //   label: "Live Responses",
+  //   title: "Live Responses",
+  //   path: ROUTES.MEALS,
+  //   icon: ClipboardList,
+  // },
   {
     label: "Meal Collection",
     title: "Meal Records",
@@ -84,7 +84,7 @@ export const customerNavigation: NavigationItem[] = [
   {
     label: "Today's Menu",
     title: "Today's Menu",
-    path: ROUTES.HOME,
+    path: "/customer",
     icon: UtensilsCrossed,
   },
   {

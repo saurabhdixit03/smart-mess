@@ -12,20 +12,24 @@ export default function AppShell({
   children,
 }: AppShellProps) {
   return (
-    <div className="flex min-h-screen bg-[var(--color-background)]">
+    <div className="flex h-screen bg-[var(--color-background)]">
+      {/* Sidebar */}
+      <aside className="shrink-0">
+        {sidebar}
+      </aside>
 
-      {sidebar}
-
+      {/* Main Application */}
       <div className="flex min-w-0 flex-1 flex-col">
+        {/* Topbar */}
+        <div className="shrink-0">
+          {topbar}
+        </div>
 
-        {topbar}
-
-        <main className="flex-1 overflow-auto p-6">
+        {/* Page Content */}
+        <main className="min-h-0 flex-1 overflow-y-auto p-6">
           {children}
         </main>
-
       </div>
-
     </div>
   );
 }

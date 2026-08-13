@@ -4,7 +4,6 @@ import AppShell from "@/components/common/layout/AppShell";
 import Sidebar from "@/components/common/layout/Sidebar";
 import Topbar from "@/components/common/layout/Topbar";
 
-import { Button } from "@/components/common/ui";
 import { getCustomer } from "@/features/auth/utils/auth.utils";
 import { useCustomerLogout } from "@/features/auth/hooks";
 
@@ -20,22 +19,18 @@ export default function CustomerLayout() {
       sidebar={
         <Sidebar
           title="Smart Mess"
-          subtitle="Customer Portal"
+          subtitle="Meal Planning & Mess Operations"
           navigation={customerNavigation}
+          account={{
+            name: customer?.fullName ?? "Customer",
+            role: "Customer",
+            onLogout: logout,
+          }}
         />
       }
       topbar={
         <Topbar
-          title={customer?.fullName ?? "Customer"}
-          actions={
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={logout}
-            >
-              Logout
-            </Button>
-          }
+          title="Smart Mess"
         />
       }
     >

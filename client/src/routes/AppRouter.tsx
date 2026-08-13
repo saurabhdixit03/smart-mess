@@ -181,32 +181,30 @@ export default function AppRouter() {
             path="/customer"
             element={<CustomerLayout />}
           >
+          <Route
+            index
+            element={<CustomerMenuPage />}
+          />
 
-            <Route
-              index
-              element={<CustomerMenuPage />}
-            />
+          <Route  
+            path="menu"
+            element={<CustomerMenuPage />}
+          />
 
-            <Route
-              path="menu"
-              element={<CustomerMenuPage />}
-            />
+          <Route
+            path="my-meals"
+            element={<MyMealsPage />}
+          />
 
-            <Route
-              path="my-meals"
-              element={<MyMealsPage />}
-            />
+          <Route
+            path="my-bills"
+            element={<CustomerBillingPage />}
+          />
 
-            <Route
-              path="my-bills"
-              element={<CustomerBillingPage />}
-            />
-
-            <Route
-              path="profile"
-              element={<ProfilePage />}
-            />
-
+          <Route
+            path="profile"
+            element={<ProfilePage />}
+          />
           </Route>
         </Route>
 

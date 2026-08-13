@@ -4,7 +4,6 @@ import AppShell from "@/components/common/layout/AppShell";
 import Sidebar from "@/components/common/layout/Sidebar";
 import Topbar from "@/components/common/layout/Topbar";
 
-import { Button } from "@/components/common/ui";
 import { getOwner } from "@/features/auth/utils/auth.utils";
 import { useOwnerLogout } from "@/features/auth/hooks";
 
@@ -20,22 +19,18 @@ export default function OwnerLayout() {
       sidebar={
         <Sidebar
           title="Smart Mess"
-          subtitle="Owner Portal"
+          subtitle="Meal Planning & Mess Operations"
           navigation={ownerNavigation}
+          account={{
+            name: owner?.fullName ?? "Mess Owner",
+            role: "Mess Owner",
+            onLogout: logout,
+          }}
         />
       }
       topbar={
         <Topbar
           title={owner?.messName ?? "Smart Mess"}
-          actions={
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={logout}
-            >
-              Logout
-            </Button>
-          }
         />
       }
     >
