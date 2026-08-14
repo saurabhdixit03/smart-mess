@@ -4,7 +4,7 @@ import {
 } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
-const WS_URL = "http://localhost:8080/ws-dashboard";
+const WS_URL = import.meta.env.VITE_WS_URL;
 
 export const websocketClient = new Client({
   webSocketFactory: () => new SockJS(WS_URL),
