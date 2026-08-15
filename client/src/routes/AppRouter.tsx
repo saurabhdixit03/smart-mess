@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import OwnerLayout from "@/layouts/OwnerLayout";
 import CustomerLayout from "@/layouts/CustomerLayout";
 
+import LandingPage from "@/pages/LandingPage";
+
 import NotFoundPage from "@/pages/NotFoundPage";
 //import DesignSystemPage from "@/pages/DesignSystemPage";
 
@@ -210,13 +212,23 @@ export default function AppRouter() {
 
 
         {/* ============================================================
+            LANDING
+            ============================================================ */}
+
+          <Route
+            path="/"
+            element={<LandingPage />}
+          />
+
+        {/* ============================================================
             FALLBACK
             ============================================================ */}
 
-        <Route
-          path="*"
-          element={<NotFoundPage />}
-        />
+          <Route
+            path="*"
+            element={<NotFoundPage />}
+          />
+
 
       </Routes>
     </BrowserRouter>
