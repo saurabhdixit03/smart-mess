@@ -7,8 +7,6 @@ import {
 
 import { useSettings } from "../hooks";
 
-
-
 export default function SettingsPage() {
 
   const {

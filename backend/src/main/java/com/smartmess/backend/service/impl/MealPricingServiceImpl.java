@@ -42,18 +42,16 @@ public class MealPricingServiceImpl implements MealPricingService {
     @Override
     public MealPricingResponse updatePricing(UpdateMealPricingRequest request) {
 
-    	MealPricing mealPricing =
-    	        mealPricingRepository
-    	                .findTopByOrderByUpdatedAtDesc()
-    	                .orElseThrow(() ->
-    	                        new ResourceNotFoundException(
-    	                                "Meal pricing not configured."
-    	                        ));
+        MealPricing mealPricing =
+                mealPricingRepository
+                        .findTopByOrderByUpdatedAtDesc()
+                        .orElseGet(MealPricing::new);
 
         mealPricingMapper.updateMealPricingFromRequest(request, mealPricing);
 
-        MealPricing updatedPricing = mealPricingRepository.save(mealPricing);
+        MealPricing savedPricing =
+                mealPricingRepository.save(mealPricing);
 
-        return mealPricingMapper.toResponse(updatedPricing);
+        return mealPricingMapper.toResponse(savedPricing);
     }
 }
