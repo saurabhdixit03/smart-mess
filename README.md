@@ -1,129 +1,194 @@
 # Smart Mess
 
-A modern web application that helps local mess and tiffin service providers manage their daily operations while reducing food wastage through real-time customer engagement.
+A production-oriented Progressive Web Application for digitizing daily operations of a local mess service, with a focus on real-time meal planning, customer responses, meal collection, billing, and payment tracking.
 
-> 🚧 **Project Status:** Under Active Development
+## 🌐 Live Demo
 
----
+**Application:** https://smart-mess-client.onrender.com
 
-## Overview
+## 📋 Overview
 
-Smart Mess is designed to digitize the day-to-day workflow of small and medium-sized mess businesses without changing how they naturally operate.
+Smart Mess provides a digital platform for managing the daily workflow between a mess owner and customers.
 
-Instead of relying on assumptions for daily meal preparation, the platform enables customers to respond after the menu is published, giving the mess owner better visibility into expected demand before cooking begins.
+The system focuses on real-time operational visibility rather than simply digitizing records. Customers can respond to daily menus, while the mess owner can monitor responses, manage meals, track collections, generate bills, and manage payments.
 
-Along with meal planning, the system also simplifies customer management, meal tracking, billing, payments, and operational reporting.
+## ✨ Key Features
 
----
+### Owner Portal
 
-## Problem Statement
+* Dashboard with operational overview
+* Menu publishing and management
+* Real-time customer meal responses
+* Meal collection tracking
+* Customer management
+* Monthly billing
+* Payment tracking
+* Business insights
+* Meal pricing and UPI settings
 
-Many local mess providers estimate food quantity based on experience rather than actual customer demand. Since customers usually decide whether to eat only after viewing the menu, this often results in:
+### Customer Portal
 
-- Food wastage
-- Over or under preparation
-- Manual communication
-- Time-consuming administrative work
+* View today's menu
+* Select meal preference
+* View meal records
+* View billing history
+* View payment history
+* Make UPI payment requests
+* Manage profile
 
-Smart Mess addresses these challenges by providing a simple digital workflow that supports better operational decisions.
+### Real-Time Operations
 
----
+* Live dashboard updates using WebSocket
+* Real-time meal response monitoring
+* Continuous visibility during meal collection
 
-## Key Features
-
-- Customer Management
-- Daily Menu Management
-- Meal Response Tracking
-- Live Meal Collection Dashboard
-- Monthly Billing
-- Payment Tracking
-- Reports & Analytics
-- Responsive User Interface
-
-> More features are currently under development.
-
----
-
-## Technology Stack
-
-### Backend
-
-- Java 17
-- Spring Boot
-- Spring Data JPA
-- Hibernate
-- MySQL
-- REST APIs
-- MapStruct
+## 🛠️ Tech Stack
 
 ### Frontend
 
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- React Router
+* React
+* TypeScript
+* Vite
+* Tailwind CSS
+* Axios
+* React Router
+* STOMP / SockJS
 
----
+### Backend
 
-## Project Structure
+* Java 17
+* Spring Boot
+* Spring Data JPA
+* Spring Security
+* JWT Authentication
+* MapStruct
+* Maven
 
+### Database & Deployment
+
+* MySQL
+* Aiven Cloud
+* Render
+* Git & GitHub
+
+## 🔄 System Workflow
+
+```text
+Menu Publishing
+       ↓
+Customer Meal Response
+       ↓
+Real-Time Dashboard
+       ↓
+Meal Collection
+       ↓
+Meal Records
+       ↓
+Monthly Billing
+       ↓
+Payment Tracking
 ```
-backend/
-client/
-docs/
+
+## 🏗️ Architecture
+
+```text
+React + TypeScript
+        │
+        ├── REST API
+        │
+        └── WebSocket
+              ↓
+      Spring Boot Backend
+              ↓
+        MySQL Database
 ```
 
----
+The application uses separate Owner and Customer portals connected to a common Spring Boot backend.
 
-## Product Philosophy
+## 🚀 Local Setup
 
-Smart Mess is not intended to replace the experience of a mess owner.
+### Prerequisites
 
-The platform provides timely operational information that helps owners make better decisions while allowing them to continue running their business in the way they already know best.
+* Java 17+
+* Node.js
+* Maven
+* MySQL
+* pnpm
 
----
+### Backend
 
-## Current Development Progress
+```bash
+cd backend
+./mvnw spring-boot:run
+```
 
-- ✅ Customer Management
-- ✅ Menu Management
-- ✅ Meal Response Workflow
-- ✅ Live Dashboard
-- ✅ Meal Records
-- ✅ Monthly Billing
+Backend runs by default on:
 
-🚧 In Progress
+```text
+http://localhost:8080
+```
 
-- Payment Management
-- Reports & Analytics
-- Settings Module
+### Frontend
 
----
+```bash
+cd client
+pnpm install
+pnpm dev
+```
 
-## Future Roadmap
+Frontend runs by default on:
 
-- Customer Portal
-- Enhanced Reports
-- Export & Printing
-- Notification System
-- Mobile-Friendly Experience
-- Performance Improvements
+```text
+http://localhost:5173
+```
 
----
+To create a production build:
 
-## Repository
+```bash
+pnpm build
+```
 
-This repository is actively maintained and updated as the project evolves.
+## 🔐 Environment Variables
 
-The detailed business documents, architecture, API specifications, and design decisions are maintained separately during development.
+### Backend
 
----
+Configure the required production/local environment variables:
 
-## Author
+```text
+DB_URL=
+DB_USERNAME=
+DB_PASSWORD=
+JWT_SECRET=
+JWT_EXPIRATION=
+SPRING_PROFILES_ACTIVE=
+```
 
-**Saurabh Dixit**
+### Frontend
 
-Java Full Stack Developer
+```text
+VITE_API_URL=
+VITE_WS_URL=
+```
 
-Building practical software solutions for real-world business problems.
+Do not commit credentials, JWT secrets, or other sensitive environment values to the repository.
+
+## 🚀 Deployment
+
+The application is deployed using:
+
+* **Frontend:** Render
+* **Backend:** Render
+* **Database:** Aiven Cloud MySQL
+
+Production frontend:
+
+**https://smart-mess-client.onrender.com**
+
+## 🔮 Future Scope
+
+* Push notifications
+* Improved offline support
+* PDF bill generation
+* QR-based customer registration
+* Additional payment integrations
+* Further operational analytics
