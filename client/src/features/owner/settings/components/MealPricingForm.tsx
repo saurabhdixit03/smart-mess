@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 
 import Button from "@/components/common/ui/Button/Button";
@@ -6,6 +7,12 @@ import Input from "@/components/common/ui/Input/Input";
 import { useMealPricing } from "../hooks";
 
 import type { UpdateMealPricingRequest } from "../types";
+
+type PricingFormState = {
+  halfMealPrice: string;
+  fullMealPrice: string;
+  extraRotiPrice: string;
+};
 
 export default function MealPricingForm() {
   const {
@@ -16,10 +23,10 @@ export default function MealPricingForm() {
   } = useMealPricing();
 
   const [form, setForm] =
-    useState<UpdateMealPricingRequest>({
-      halfMealPrice: 0,
-      fullMealPrice: 0,
-      extraRotiPrice: 0,
+    useState<PricingFormState>({
+      halfMealPrice: "",
+      fullMealPrice: "",
+      extraRotiPrice: "",
     });
 
   useEffect(() => {
@@ -28,19 +35,19 @@ export default function MealPricingForm() {
     }
 
     setForm({
-      halfMealPrice: pricing.halfMealPrice,
-      fullMealPrice: pricing.fullMealPrice,
-      extraRotiPrice: pricing.extraRotiPrice,
+      halfMealPrice: String(pricing.halfMealPrice),
+      fullMealPrice: String(pricing.fullMealPrice),
+      extraRotiPrice: String(pricing.extraRotiPrice),
     });
   }, [pricing]);
 
   function handleChange(
-    field: keyof UpdateMealPricingRequest,
+    field: keyof PricingFormState,
     value: string
   ) {
     setForm((previous) => ({
       ...previous,
-      [field]: Number(value),
+      [field]: value,
     }));
   }
 
@@ -49,15 +56,25 @@ export default function MealPricingForm() {
   ) {
     e.preventDefault();
 
+    const halfMealPrice = Number(form.halfMealPrice);
+    const fullMealPrice = Number(form.fullMealPrice);
+    const extraRotiPrice = Number(form.extraRotiPrice);
+
     if (
-      form.halfMealPrice <= 0 ||
-      form.fullMealPrice <= 0 ||
-      form.extraRotiPrice <= 0
+      halfMealPrice <= 0 ||
+      fullMealPrice <= 0 ||
+      extraRotiPrice <= 0
     ) {
       return;
     }
 
-    await updatePricing(form);
+    const payload: UpdateMealPricingRequest = {
+      halfMealPrice,
+      fullMealPrice,
+      extraRotiPrice,
+    };
+
+    await updatePricing(payload);
   }
 
   if (loading) {
