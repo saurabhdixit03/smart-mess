@@ -1,4 +1,11 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { useLocation } from "react-router-dom";
+
+import MobileDrawer from "../MobileNavigation/MobileDrawer";
+import {
+  MobileNavigationProvider,
+  useMobileNavigation,
+} from "../MobileNavigation/MobileNavigationContext";
 
 type AppShellProps = {
   sidebar: ReactNode;
@@ -12,11 +19,41 @@ export default function AppShell({
   children,
 }: AppShellProps) {
   return (
+    <MobileNavigationProvider>
+      <AppShellContent
+        sidebar={sidebar}
+        topbar={topbar}
+      >
+        {children}
+      </AppShellContent>
+    </MobileNavigationProvider>
+  );
+}
+
+function AppShellContent({
+  sidebar,
+  topbar,
+  children,
+}: AppShellProps) {
+  const { close } = useMobileNavigation();
+  const location = useLocation();
+
+  // Close the mobile drawer whenever navigation occurs.
+  useEffect(() => {
+    close();
+  }, [location.pathname, close]);
+
+  return (
     <div className="flex h-screen bg-[var(--color-background)]">
-      {/* Sidebar */}
-      <aside className="shrink-0">
+      {/* Desktop Sidebar */}
+      <aside className="hidden shrink-0 md:block">
         {sidebar}
       </aside>
+
+      {/* Mobile Drawer */}
+      <MobileDrawer>
+        {sidebar}
+      </MobileDrawer>
 
       {/* Main Application */}
       <div className="flex min-w-0 flex-1 flex-col">
@@ -26,7 +63,7 @@ export default function AppShell({
         </div>
 
         {/* Page Content */}
-        <main className="min-h-0 flex-1 overflow-y-auto p-6">
+        <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
           {children}
         </main>
       </div>

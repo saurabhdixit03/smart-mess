@@ -1,4 +1,7 @@
+import { Menu } from "lucide-react";
 import type { ReactNode } from "react";
+
+import { useMobileNavigation } from "../MobileNavigation/MobileNavigationContext";
 
 type TopbarProps = {
   title?: string;
@@ -9,6 +12,8 @@ export default function Topbar({
   title,
   actions,
 }: TopbarProps) {
+  const { open } = useMobileNavigation();
+
   return (
     <header
       className="
@@ -20,19 +25,46 @@ export default function Topbar({
         border-b
         border-[var(--color-border)]
         bg-[var(--color-surface)]
-        px-6
+        px-4
+        sm:px-6
       "
     >
-      <div>
+      <div className="flex min-w-0 items-center gap-3">
+        {/* Mobile Menu */}
+        <button
+          type="button"
+          onClick={open}
+          aria-label="Open navigation"
+          className="
+            flex
+            h-10
+            w-10
+            shrink-0
+            items-center
+            justify-center
+            rounded-[var(--radius-md)]
+            text-[var(--color-text-secondary)]
+            transition-colors
+            hover:bg-[var(--color-surface-hover)]
+            hover:text-[var(--color-text)]
+            focus:outline-none
+            focus:ring-2
+            focus:ring-[var(--color-primary)]/20
+            md:hidden
+          "
+        >
+          <Menu size={22} />
+        </button>
+
         {title && (
-          <span className="text-sm font-medium text-[var(--color-text-secondary)]">
+          <span className="truncate text-sm font-medium text-[var(--color-text-secondary)]">
             {title}
           </span>
         )}
       </div>
 
       {actions && (
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           {actions}
         </div>
       )}
