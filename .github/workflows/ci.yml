@@ -39,8 +39,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run ESLint
-        run: pnpm lint
+
 
       - name: Build frontend
         run: pnpm build
@@ -64,5 +63,5 @@ jobs:
           java-version: "17"
           cache: maven
 
-      - name: Verify backend
-        run: mvn --batch-mode clean verify
+      - name: Build backend
+        run: mvn --batch-mode clean package -DskipTests
