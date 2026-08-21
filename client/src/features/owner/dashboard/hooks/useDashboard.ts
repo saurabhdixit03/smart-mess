@@ -18,9 +18,9 @@ import type {
 } from "../types/dashboard.types";
 
 export function useDashboard(
-  mealSession: MealSession
+  mealSession: MealSession,
+  enabled = true
 ) {
-
   const [dashboard, setDashboard] =
     useState<DashboardSummary | null>(null);
 
@@ -31,16 +31,20 @@ export function useDashboard(
     useState<string | null>(null);
 
   const subscriptionRef = useRef<
-  ReturnType<typeof subscribeTopic> | null
->(null);
+    ReturnType<typeof subscribeTopic> | null
+  >(null);
 
   const fetchDashboard = useCallback(
     async () => {
+      if (!enabled) {
+        setDashboard(null);
+        setLoading(false);
+        setError(null);
+        return;
+      }
 
       try {
-
         setLoading(true);
-
         setError(null);
 
         const response =
@@ -49,66 +53,54 @@ export function useDashboard(
           );
 
         setDashboard(response.data);
-
       } catch {
-
         setError(
           "Failed to load dashboard."
         );
-
       } finally {
-
         setLoading(false);
-
       }
-
     },
-    [mealSession]
+    [mealSession, enabled]
   );
 
-useEffect(() => {
+  useEffect(() => {
+    if (!enabled) {
+      subscriptionRef.current?.unsubscribe();
+      subscriptionRef.current = null;
 
-  fetchDashboard();
+      return;
+    }
 
-  connectWebSocket(() => {
+    fetchDashboard();
 
-    subscriptionRef.current?.unsubscribe();
+    connectWebSocket(() => {
+      subscriptionRef.current?.unsubscribe();
 
-    subscriptionRef.current =
-      subscribeTopic<DashboardSummary>(
-        `/topic/dashboard/${mealSession}`,
-        (dashboard) => {
+      subscriptionRef.current =
+        subscribeTopic<DashboardSummary>(
+          `/topic/dashboard/${mealSession}`,
+          (dashboard) => {
+            console.log(
+              "📡 Dashboard Update",
+              dashboard
+            );
 
-          console.log(
-            "📡 Dashboard Update",
-            dashboard
-          );
+            setDashboard(dashboard);
+          }
+        );
+    });
 
-          setDashboard(dashboard);
-
-        }
-      );
-
-  });
-
-  return () => {
-
-    subscriptionRef.current?.unsubscribe();
-
-  };
-
-}, [fetchDashboard, mealSession]);
+    return () => {
+      subscriptionRef.current?.unsubscribe();
+      subscriptionRef.current = null;
+    };
+  }, [fetchDashboard, mealSession, enabled]);
 
   return {
-
     dashboard,
-
     loading,
-
     error,
-
     refresh: fetchDashboard,
-
   };
-
 }

@@ -16,8 +16,6 @@ import { useTodayMealRecords } from "../hooks";
 
 import MealRecordTable from "../components/MealRecordTable";
 
-
-
 import Input from "@/components/common/ui/Input/Input";
 import SearchToolbar from "@/components/common/ui/SearchToolbar/SearchToolbar";
 import { Search } from "lucide-react";
@@ -25,7 +23,12 @@ import { Search } from "lucide-react";
 import Pagination from "@/components/common/ui/Pagination/Pagination";
 import Select from "@/components/common/ui/Select/Select";
 
+import { useNavigate } from "react-router-dom";
+import Button from "@/components/common/ui/Button/Button";
+
 export default function MealRecordPage() {
+
+const navigate = useNavigate();
 
   const {
     todayMenus,
@@ -49,6 +52,40 @@ export default function MealRecordPage() {
 
 });
 
+useEffect(() => {
+  if (todayMenus.length === 0) {
+    return;
+  }
+
+  const selectedMenuExists =
+    todayMenus.some(
+      (menu) =>
+        menu.mealSession ===
+        selectedSession
+    );
+
+  if (!selectedMenuExists) {
+    const lunchMenu =
+      todayMenus.find(
+        (menu) =>
+          menu.mealSession === "LUNCH"
+      );
+
+    setSelectedSession(
+      lunchMenu
+        ? "LUNCH"
+        : todayMenus[0].mealSession
+    );
+  }
+}, [todayMenus, selectedSession]);
+
+const hasSelectedMenu =
+  todayMenus.some(
+    (menu) =>
+      menu.mealSession ===
+      selectedSession
+  );
+
 const [rowsPerPage, setRowsPerPage] =
   useState(10);
 
@@ -69,7 +106,10 @@ useEffect(() => {
     loading,
     error,
     refetch,
-  } = useRecordQueue(selectedSession);
+  } = useRecordQueue(
+  selectedSession,
+  hasSelectedMenu && !menusLoading
+);
 
   const [
     selectedCustomer,
@@ -107,7 +147,8 @@ const {
   error: historyError,
   refetch: refetchHistory,
 } = useTodayMealRecords(
-  selectedSession
+  selectedSession,
+  hasSelectedMenu && !menusLoading
 );
 
 const totalPages = Math.max(
@@ -136,6 +177,30 @@ const paginatedRecords =
     );
 
   }
+
+  if (todayMenus.length === 0) {
+  return (
+    <section className="space-y-6">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center">
+        <h2 className="text-lg font-semibold text-[var(--color-text)]">
+          No menu published for today
+        </h2>
+
+        <p className="mx-auto mt-2 max-w-md text-sm text-[var(--color-text-secondary)]">
+          Publish today's menu before starting meal collection.
+        </p>
+
+        <Button
+          type="button"
+          className="mt-6"
+          onClick={() => navigate("/owner/menu")}
+        >
+          Go to Menu
+        </Button>
+      </div>
+    </section>
+  );
+}
 
   if (
   menusError ||

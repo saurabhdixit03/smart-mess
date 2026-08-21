@@ -1,4 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import { getTodayMealRecords } from "../api";
 
@@ -8,9 +12,9 @@ import type {
 } from "../types";
 
 export function useTodayMealRecords(
-  mealSession: MealSession
+  mealSession: MealSession,
+  enabled = true
 ) {
-
   const [
     mealRecords,
     setMealRecords,
@@ -19,7 +23,7 @@ export function useTodayMealRecords(
   const [
     loading,
     setLoading,
-  ] = useState(true);
+  ] = useState(false);
 
   const [
     error,
@@ -28,10 +32,16 @@ export function useTodayMealRecords(
 
   const fetchTodayMealRecords =
     useCallback(async () => {
+      if (!enabled) {
+        setMealRecords([]);
+        setLoading(false);
+        setError(null);
+        return;
+      }
 
       try {
-
         setLoading(true);
+        setError(null);
 
         const response =
           await getTodayMealRecords(
@@ -41,39 +51,33 @@ export function useTodayMealRecords(
         setMealRecords(
           response.data
         );
-
-        setError(null);
-
       } catch {
-
         setError(
           "Failed to load today's meal records."
         );
-
       } finally {
-
         setLoading(false);
-
       }
-
-    }, [mealSession]);
+    }, [mealSession, enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      setMealRecords([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
 
     fetchTodayMealRecords();
-
-  }, [fetchTodayMealRecords]);
+  }, [
+    fetchTodayMealRecords,
+    enabled,
+  ]);
 
   return {
-
     mealRecords,
-
     loading,
-
     error,
-
     refetch: fetchTodayMealRecords,
-
   };
-
 }
