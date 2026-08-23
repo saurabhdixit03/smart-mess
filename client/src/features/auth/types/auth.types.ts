@@ -1,6 +1,6 @@
 export interface OwnerLoginRequest {
-mobileNumber: string;
-password: string;
+  email: string;
+  password: string;
 }
 
 export interface OwnerLoginResponse {
@@ -30,7 +30,7 @@ export interface OwnerRegistrationRequest {
 // customer login 
 
 export interface CustomerLoginRequest {
-  mobileNumber: string;
+  email: string;
   password: string;
 }
 
@@ -45,6 +45,22 @@ export interface CustomerLoginResponse {
 export interface CustomerRegistrationRequest {
   fullName: string;
   mobileNumber: string;
-  email?: string;
+  email: string;
   password: string;
+}
+
+// for Forget and Reset password
+
+export type AuthRole =
+  | "OWNER"
+  | "CUSTOMER";
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
 }

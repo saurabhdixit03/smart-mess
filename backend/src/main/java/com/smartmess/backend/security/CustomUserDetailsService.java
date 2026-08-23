@@ -36,16 +36,16 @@ public class CustomUserDetailsService implements UserDetailsService {
             throws UsernameNotFoundException {
 
         throw new UnsupportedOperationException(
-                "Use loadUserByMobileNumber() instead."
+                "Use loadUserByEmail() instead."
         );
     }
 
     /**
-     * Loads the authenticated user using the mobile number
+     * Loads the authenticated user using the email
      * and role extracted from the JWT.
      */
-    public UserDetails loadUserByMobileNumber(
-            String mobileNumber,
+    public UserDetails loadUserByEmail(
+            String email,
             UserRole role) {
 
         switch (role) {
@@ -53,7 +53,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             case OWNER:
 
                 MessOwner owner = messOwnerRepository
-                        .findByMobileNumber(mobileNumber)
+                        .findByEmail(email)
                         .orElseThrow(() ->
                                 new UsernameNotFoundException(
                                         "Owner not found."
@@ -61,7 +61,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
                 return new CustomUserDetails(
                         owner.getMessOwnerId(),
-                        owner.getMobileNumber(),
+                        owner.getEmail(),
                         owner.getPassword(),
                         UserRole.OWNER
                 );
@@ -69,7 +69,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             case CUSTOMER:
 
                 Customer customer = customerRepository
-                        .findByMobileNumber(mobileNumber)
+                        .findByEmail(email)
                         .orElseThrow(() ->
                                 new UsernameNotFoundException(
                                         "Customer not found."
@@ -77,7 +77,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
                 return new CustomUserDetails(
                         customer.getCustomerId(),
-                        customer.getMobileNumber(),
+                        customer.getEmail(),
                         customer.getPassword(),
                         UserRole.CUSTOMER
                 );

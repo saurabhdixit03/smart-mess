@@ -36,7 +36,7 @@ public class Customer extends BaseEntity {
     @Column(name = "mobile_number", nullable = false, unique = true, length = 10)
     private String mobileNumber;
 
-    @Column(name = "email", length = 100)
+    @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 
     @Column(name = "remarks", length = 500)
