@@ -29,6 +29,8 @@ import {
   OwnerRegistrationPage,
   CustomerRegistrationPage,
   CustomerLoginPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
 } from "@/features/auth/pages";
 
 import ProtectedRoute from "./ProtectedRoute";
@@ -74,9 +76,20 @@ export default function AppRouter() {
             path="/owner/register"
             element={<OwnerRegistrationPage />}
           />
+
+          <Route
+            path="/forgot-password"
+            element={<ForgotPasswordPage />}
+          />
+
+          <Route
+            path="/reset-password"
+            element={<ResetPasswordPage />}
+          />
+
         </Route>
 
-
+        
         {/* Customer Authentication */}
 
         <Route

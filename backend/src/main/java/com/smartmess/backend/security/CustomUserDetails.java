@@ -12,18 +12,18 @@ import com.smartmess.backend.enums.UserRole;
 public class CustomUserDetails implements UserDetails {
 
     private final Long userId;
-    private final String mobileNumber;
+    private final String email;
     private final String password;
     private final UserRole role;
 
     public CustomUserDetails(
             Long userId,
-            String mobileNumber,
+            String email,
             String password,
             UserRole role) {
 
         this.userId = userId;
-        this.mobileNumber = mobileNumber;
+        this.email = email;
         this.password = password;
         this.role = role;
     }
@@ -51,7 +51,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return mobileNumber;
+        return email;
     }
 
     @Override

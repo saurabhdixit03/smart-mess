@@ -32,8 +32,8 @@ export default function CustomerRegistrationPage() {
     try {
       await register({
         fullName,
-        mobileNumber,
-        email: email || undefined,
+        mobileNumber, 
+        email,
         password,
       });
 
@@ -115,7 +115,7 @@ export default function CustomerRegistrationPage() {
                 onChange={(event) =>
                   setEmail(event.target.value)
                 }
-                placeholder="Enter email address (optional)"
+                placeholder="Enter email address"
                 autoComplete="email"
                 fullWidth
               />

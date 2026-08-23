@@ -18,6 +18,7 @@ public record CustomerRegistrationRequest(
         )
         String mobileNumber,
 
+        @NotBlank(message = "Email is required")
         @Email(message = "Invalid email address")
         @Size(max = 100, message = "Email cannot exceed 100 characters")
         String email,

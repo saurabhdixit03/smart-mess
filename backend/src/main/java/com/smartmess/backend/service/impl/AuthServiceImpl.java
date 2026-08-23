@@ -3,30 +3,25 @@ package com.smartmess.backend.service.impl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.smartmess.backend.constant.AppConstants;
+import com.smartmess.backend.dto.request.CustomerLoginRequest;
 import com.smartmess.backend.dto.request.CustomerRegistrationRequest;
 import com.smartmess.backend.dto.request.OwnerLoginRequest;
 import com.smartmess.backend.dto.request.OwnerRegistrationRequest;
 import com.smartmess.backend.dto.response.CustomerLoginResponse;
 import com.smartmess.backend.dto.response.OwnerLoginResponse;
+import com.smartmess.backend.entity.Customer;
 import com.smartmess.backend.entity.MessOwner;
+import com.smartmess.backend.enums.CustomerStatus;
 import com.smartmess.backend.enums.MessOwnerStatus;
 import com.smartmess.backend.enums.UserRole;
 import com.smartmess.backend.exception.BusinessException;
+import com.smartmess.backend.mapper.CustomerMapper;
 import com.smartmess.backend.mapper.MessOwnerMapper;
+import com.smartmess.backend.repository.CustomerRepository;
 import com.smartmess.backend.repository.MessOwnerRepository;
 import com.smartmess.backend.security.JwtService;
 import com.smartmess.backend.service.AuthService;
-
-import com.smartmess.backend.constant.AppConstants;
-
-import com.smartmess.backend.dto.request.CustomerLoginRequest;
-import com.smartmess.backend.dto.request.CustomerRegistrationRequest;
-import com.smartmess.backend.dto.response.CustomerLoginResponse;
-import com.smartmess.backend.entity.Customer;
-import com.smartmess.backend.enums.CustomerStatus;
-import com.smartmess.backend.mapper.CustomerMapper;
-import com.smartmess.backend.repository.CustomerRepository;
-
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -35,7 +30,7 @@ public class AuthServiceImpl implements AuthService {
     private final MessOwnerMapper messOwnerMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    
+
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
 
@@ -54,6 +49,7 @@ public class AuthServiceImpl implements AuthService {
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;
     }
+
     private OwnerLoginResponse buildLoginResponse(
             MessOwner owner,
             String accessToken) {
@@ -66,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
                 owner.getMessName()
         );
     }
-    
+
     private CustomerLoginResponse buildCustomerLoginResponse(
             Customer customer,
             String accessToken) {
@@ -79,69 +75,93 @@ public class AuthServiceImpl implements AuthService {
                 customer.getMobileNumber()
         );
     }
-    
+
     @Override
     public OwnerLoginResponse registerOwner(
             OwnerRegistrationRequest request) {
 
-        if (messOwnerRepository.existsByMobileNumber(request.mobileNumber())) {
+        if (messOwnerRepository.existsByMobileNumber(
+                request.mobileNumber())) {
+
             throw new BusinessException(
                     "A mess owner with this mobile number already exists."
             );
         }
 
-        if (messOwnerRepository.existsByEmail(request.email())) {
+        if (messOwnerRepository.existsByEmail(
+                request.email())) {
+
             throw new BusinessException(
                     "A mess owner with this email already exists."
             );
         }
 
-        MessOwner owner = messOwnerMapper.toEntity(request);
-        
+        MessOwner owner =
+                messOwnerMapper.toEntity(request);
+
         owner.setPassword(
-                passwordEncoder.encode(request.password())
-        );
-        
-        MessOwner savedOwner = messOwnerRepository.save(owner);
-        
-        String accessToken = jwtService.generateToken(
-                owner.getMobileNumber(),
-                UserRole.OWNER
+                passwordEncoder.encode(
+                        request.password()
+                )
         );
 
-        return buildLoginResponse(owner, accessToken);
+        MessOwner savedOwner =
+                messOwnerRepository.save(owner);
+
+        String accessToken =
+                jwtService.generateToken(
+                        savedOwner.getEmail(),
+                        UserRole.OWNER
+                );
+
+        return buildLoginResponse(
+                savedOwner,
+                accessToken
+        );
     }
 
     @Override
-    public OwnerLoginResponse loginOwner(OwnerLoginRequest request) {
+    public OwnerLoginResponse loginOwner(
+            OwnerLoginRequest request) {
 
-        MessOwner owner = messOwnerRepository.findByMobileNumber(
-                request.mobileNumber())
-                .orElseThrow(() ->
-                        new BusinessException("Invalid mobile number or password."));
+        MessOwner owner =
+                messOwnerRepository
+                        .findByEmail(
+                                request.email()
+                        )
+                        .orElseThrow(() ->
+                                new BusinessException(
+                                        "Invalid email or password."
+                                )
+                        );
 
         if (!passwordEncoder.matches(
                 request.password(),
                 owner.getPassword())) {
 
             throw new BusinessException(
-                    "Invalid mobile number or password."
+                    "Invalid email or password."
             );
         }
 
-        if (owner.getStatus() != MessOwnerStatus.ACTIVE) {
+        if (owner.getStatus()
+                != MessOwnerStatus.ACTIVE) {
+
             throw new BusinessException(
                     "Your account is inactive. Please contact support."
             );
         }
 
-        String accessToken = jwtService.generateToken(
-                owner.getMobileNumber(),
-                UserRole.OWNER
-        );
+        String accessToken =
+                jwtService.generateToken(
+                        owner.getEmail(),
+                        UserRole.OWNER
+                );
 
-        return buildLoginResponse(owner, accessToken); 
-        
+        return buildLoginResponse(
+                owner,
+                accessToken
+        );
     }
 
     @Override
@@ -156,11 +176,21 @@ public class AuthServiceImpl implements AuthService {
             );
         }
 
+        if (customerRepository.existsByEmail(
+                request.email())) {
+
+            throw new BusinessException(
+                    "A customer with this email already exists."
+            );
+        }
+
         Customer customer =
                 customerMapper.toEntity(request);
 
         customer.setPassword(
-                passwordEncoder.encode(request.password())
+                passwordEncoder.encode(
+                        request.password()
+                )
         );
 
         Customer savedCustomer =
@@ -168,7 +198,7 @@ public class AuthServiceImpl implements AuthService {
 
         String accessToken =
                 jwtService.generateToken(
-                        savedCustomer.getMobileNumber(),
+                        savedCustomer.getEmail(),
                         UserRole.CUSTOMER
                 );
 
@@ -183,24 +213,27 @@ public class AuthServiceImpl implements AuthService {
             CustomerLoginRequest request) {
 
         Customer customer =
-                customerRepository.findByMobileNumber(
-                        request.mobileNumber()
-                )
-                .orElseThrow(() ->
-                        new BusinessException(
-                                "Invalid mobile number or password."
-                        ));
+                customerRepository
+                        .findByEmail(
+                                request.email()
+                        )
+                        .orElseThrow(() ->
+                                new BusinessException(
+                                        "Invalid email or password."
+                                )
+                        );
 
         if (!passwordEncoder.matches(
                 request.password(),
                 customer.getPassword())) {
 
             throw new BusinessException(
-                    "Invalid mobile number or password."
+                    "Invalid email or password."
             );
         }
 
-        if (customer.getStatus() != CustomerStatus.ACTIVE) {
+        if (customer.getStatus()
+                != CustomerStatus.ACTIVE) {
 
             throw new BusinessException(
                     "Your account is inactive. Please contact your mess owner."
@@ -209,7 +242,7 @@ public class AuthServiceImpl implements AuthService {
 
         String accessToken =
                 jwtService.generateToken(
-                        customer.getMobileNumber(),
+                        customer.getEmail(),
                         UserRole.CUSTOMER
                 );
 

@@ -2377,7 +2377,7 @@
               "raw": "{\r\n  \"billingMonth\": 7,\r\n  \"billingYear\": 2026\r\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/bills/customer/11",
+              "raw": "{{baseUrl}}/api/bills/customer/1",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -2385,7 +2385,7 @@
                 "api",
                 "bills",
                 "customer",
-                "11"
+                "1"
               ]
             }
           },
@@ -3566,6 +3566,71 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "AUTH-007 Forget Password",
+          "id": "fb7e5743-c4bc-4dd7-ab95-b9fed798038a",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"test@example.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/owner/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "owner",
+                "forgot-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-008 Reset Password",
+          "id": "c4f7e60f-72c2-4858-be07-fe07eb4aa3b4",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"token\": \"PASTE_RESET_TOKEN_HERE\",\r\n  \"newPassword\": \"TestPassword@123\",\r\n  \"confirmPassword\": \"TestPassword@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "reset-password"
+              ]
+            }
+          },
+          "response": []
         }
       ],
       "id": "2e348286-2ac1-4578-b6ed-49d5f95d710a",
@@ -3741,6 +3806,71 @@
                 "auth",
                 "customer",
                 "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-004 Forget Password",
+          "id": "ea3ee256-e4b8-4966-8a64-6926c2ac41d7",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"test@example.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/customer/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "customer",
+                "forgot-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "AUTH-008 Reset Password",
+          "id": "60183bf7-834d-4afe-9b68-841f8a0d0efc",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"token\": \"PASTE_RESET_TOKEN_HERE\",\r\n  \"newPassword\": \"TestPassword@123\",\r\n  \"confirmPassword\": \"TestPassword@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "reset-password"
               ]
             }
           },

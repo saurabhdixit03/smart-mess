@@ -20,7 +20,7 @@ export default function CustomerLoginPage() {
     error,
   } = useCustomerLogin();
 
-  const [mobileNumber, setMobileNumber] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (event: FormEvent) => {
@@ -28,7 +28,7 @@ export default function CustomerLoginPage() {
 
     try {
       await login({
-        mobileNumber,
+        email,
         password,
       });
 
@@ -57,25 +57,22 @@ export default function CustomerLoginPage() {
             className="space-y-5"
           >
             <div>
-              <Label
-                htmlFor="mobileNumber"
-                required
-              >
-                Mobile Number
+              <Label htmlFor="email" required>
+                Email
               </Label>
 
-              <Input
-                id="mobileNumber"
-                type="tel"
-                value={mobileNumber}
-                onChange={(event) =>
-                  setMobileNumber(event.target.value)
-                }
-                placeholder="Enter mobile number"
-                autoComplete="tel"
-                fullWidth
-                required
-              />
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(event) =>
+              setEmail(event.target.value)
+            }
+              placeholder="Enter email address"
+              autoComplete="email"
+              fullWidth
+              required
+            />
             </div>
 
             <div>
@@ -98,6 +95,18 @@ export default function CustomerLoginPage() {
                 fullWidth
                 required
               />
+            </div>
+
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() =>
+                navigate("/forgot-password?role=CUSTOMER")
+                }
+                  className="text-sm font-medium text-[var(--color-primary)] hover:underline"
+                >
+                  Forgot Password?
+              </button>
             </div>
 
             {error && (

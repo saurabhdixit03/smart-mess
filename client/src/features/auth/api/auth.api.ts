@@ -8,6 +8,8 @@ import type {
   CustomerLoginRequest,
   CustomerLoginResponse,
   CustomerRegistrationRequest,
+  ForgotPasswordRequest,
+ResetPasswordRequest,
 } from "../types/auth.types";
 
 const OWNER_LOGIN_ENDPOINT = "/auth/owner/login";
@@ -15,6 +17,11 @@ const OWNER_REGISTER_ENDPOINT = "/auth/owner/register";
 
 const CUSTOMER_LOGIN_ENDPOINT = "/auth/customer/login";
 const CUSTOMER_REGISTER_ENDPOINT = "/auth/customer/register";
+
+const OWNER_FORGOT_PASSWORD_ENDPOINT = "/auth/owner/forgot-password";
+const CUSTOMER_FORGOT_PASSWORD_ENDPOINT = "/auth/customer/forgot-password";
+
+const RESET_PASSWORD_ENDPOINT = "/auth/reset-password";
 
 export const authApi = {
   // -------------------------
@@ -52,4 +59,31 @@ export const authApi = {
       payload
     );
   },
+
+  ownerForgotPassword(
+  payload: ForgotPasswordRequest
+) {
+  return api.post<ApiResponse<void>>(
+    OWNER_FORGOT_PASSWORD_ENDPOINT,
+    payload
+  );
+},
+
+customerForgotPassword(
+  payload: ForgotPasswordRequest
+) {
+  return api.post<ApiResponse<void>>(
+    CUSTOMER_FORGOT_PASSWORD_ENDPOINT,
+    payload
+  );
+},
+
+resetPassword(
+  payload: ResetPasswordRequest
+) {
+  return api.post<ApiResponse<void>>(
+    RESET_PASSWORD_ENDPOINT,
+    payload
+  );
+},
 };

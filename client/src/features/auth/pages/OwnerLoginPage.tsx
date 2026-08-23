@@ -20,8 +20,7 @@ export default function OwnerLoginPage() {
     error,
   } = useOwnerLogin();
 
-  const [mobileNumber, setMobileNumber] =
-    useState("");
+  const [email, setEmail] = useState("");
 
   const [password, setPassword] =
     useState("");
@@ -37,7 +36,7 @@ export default function OwnerLoginPage() {
 
     try {
       await login({
-        mobileNumber,
+        email,
         password,
       });
 
@@ -71,25 +70,25 @@ export default function OwnerLoginPage() {
 
             <div>
               <Label
-                htmlFor="mobileNumber"
-                required
-              >
-                Mobile Number
+              htmlFor="email"
+              required
+            >
+              Email
               </Label>
 
-              <Input
-                id="mobileNumber"
-                type="tel"
-                value={mobileNumber}
-                onChange={(event) =>
-                  setMobileNumber(event.target.value)
-                }
-                placeholder="Enter mobile number"
-                autoComplete="tel"
-                fullWidth
-                required
-              />
-            </div>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(event) =>
+              setEmail(event.target.value)
+            }
+              placeholder="Enter email address"
+              autoComplete="email"
+              fullWidth
+              required
+            />
+          </div>
 
             <div>
               <Label
@@ -111,6 +110,18 @@ export default function OwnerLoginPage() {
                 fullWidth
                 required
               />
+            </div>
+
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() =>
+                  navigate("/forgot-password?role=OWNER")
+                }
+                className="text-sm font-medium text-[var(--color-primary)] hover:underline"
+                >
+                  Forgot Password?
+              </button>
             </div>
 
             {error && (
