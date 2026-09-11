@@ -6,7 +6,12 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+type HttpMethod =
+  | "GET"
+  | "POST"
+  | "PUT"
+  | "PATCH"
+  | "DELETE";
 
 async function request<T>(
   endpoint: string,
@@ -32,48 +37,82 @@ async function request<T>(
   const data = await response.json();
 
   if (!response.ok) {
-  if (response.status === 401) {
-    const role = getAuthRole();
+    if (response.status === 401) {
+      const role = getAuthRole();
 
-    clearAuthSession();
+      clearAuthSession();
 
-    window.location.href =
-      role === "OWNER"
-        ? "/owner/login"
-        : "/customer/login";
+      window.location.href =
+        role === "OWNER"
+          ? "/owner/login"
+          : "/customer/login";
 
-    throw new Error("Session expired. Please login again.");
-  }
+      throw new Error(
+        "Session expired. Please login again."
+      );
+    }
 
-  if (response.status === 403) {
+    if (response.status === 403) {
+      throw new Error(
+        data.message ||
+          "You are not authorized to perform this action."
+      );
+    }
+
     throw new Error(
-      data.message || "You are not authorized to perform this action."
+      data.message || "Something went wrong"
     );
   }
-
-  throw new Error(
-    data.message || "Something went wrong"
-  );
-}
 
   return data as T;
 }
 
 const api = {
   get<T>(endpoint: string) {
-    return request<T>(endpoint, "GET");
+    return request<T>(
+      endpoint,
+      "GET"
+    );
   },
 
-  post<T>(endpoint: string, body: unknown) {
-    return request<T>(endpoint, "POST", body);
+  post<T>(
+    endpoint: string,
+    body: unknown
+  ) {
+    return request<T>(
+      endpoint,
+      "POST",
+      body
+    );
   },
 
-  put<T>(endpoint: string, body: unknown) {
-    return request<T>(endpoint, "PUT", body);
+  put<T>(
+    endpoint: string,
+    body: unknown
+  ) {
+    return request<T>(
+      endpoint,
+      "PUT",
+      body
+    );
+  },
+
+  patch<T>(
+    endpoint: string,
+    body?: unknown
+  ) {
+    return request<T>(
+      endpoint,
+      "PATCH",
+      body
+    );
   },
 
   delete<T>(endpoint: string) {
-    return request<T>(endpoint, "DELETE");
+    return request<T>(
+      endpoint,
+      "DELETE"
+    );
   },
 };
 

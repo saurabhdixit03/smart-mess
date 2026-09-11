@@ -3,10 +3,14 @@ import { useState } from "react";
 import MealMenuCard from "../MealMenuCard";
 import PublishMenuDialog from "../PublishMenuDialog";
 
-import type { MenuResponse } from "../../types/menu.types";
+import type {
+  MenuAvailabilityResponse,
+  MenuResponse,
+} from "../../types/menu.types";
 
 type TodayMenusProps = {
   todayMenus: MenuResponse[];
+  availability: MenuAvailabilityResponse[];
   loading: boolean;
   error: string | null;
   onRefresh: () => Promise<void>;
@@ -14,6 +18,7 @@ type TodayMenusProps = {
 
 export default function TodayMenus({
   todayMenus,
+  availability,
   loading,
   error,
   onRefresh,
@@ -29,6 +34,14 @@ export default function TodayMenus({
 
   const dinnerMenu = todayMenus.find(
     (menu) => menu.mealSession === "DINNER"
+  );
+
+  const lunchAvailability = availability.find(
+    (item) => item.mealSession === "LUNCH"
+  );
+
+  const dinnerAvailability = availability.find(
+    (item) => item.mealSession === "DINNER"
   );
 
   if (loading) {
@@ -55,6 +68,7 @@ export default function TodayMenus({
           <MealMenuCard
             title="Lunch"
             menu={lunchMenu}
+            availability={lunchAvailability}
             onPublish={() => {
               setSelectedMeal("Lunch");
               setOpenDialog(true);
@@ -64,6 +78,7 @@ export default function TodayMenus({
           <MealMenuCard
             title="Dinner"
             menu={dinnerMenu}
+            availability={dinnerAvailability}
             onPublish={() => {
               setSelectedMeal("Dinner");
               setOpenDialog(true);

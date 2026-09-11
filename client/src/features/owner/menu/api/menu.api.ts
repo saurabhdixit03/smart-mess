@@ -5,6 +5,7 @@ import { MENU_API_ENDPOINT } from "../constants/menu.constants";
 import type {
   ApiResponse,
   CreateMenuRequest,
+  MenuAvailabilityResponse,
   MenuResponse,
 } from "../types/menu.types";
 
@@ -19,6 +20,12 @@ export const menuApi = {
   getTodayMenus() {
     return api.get<ApiResponse<MenuResponse[]>>(
       `${MENU_API_ENDPOINT}/today`
+    );
+  },
+
+  getTodayMenuAvailability() {
+    return api.get<ApiResponse<MenuAvailabilityResponse[]>>(
+      `${MENU_API_ENDPOINT}/today/availability`
     );
   },
 

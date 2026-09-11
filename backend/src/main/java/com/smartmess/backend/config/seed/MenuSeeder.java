@@ -1,6 +1,6 @@
-
 package com.smartmess.backend.config.seed;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
@@ -21,10 +21,16 @@ public class MenuSeeder {
 
     private final MenuRepository menuRepository;
 
+    private final Clock clock;
+
     private final Random random = new Random();
 
-    public MenuSeeder(MenuRepository menuRepository) {
+    public MenuSeeder(
+            MenuRepository menuRepository,
+            Clock clock) {
+
         this.menuRepository = menuRepository;
+        this.clock = clock;
     }
 
     private record MenuTemplate(
@@ -42,25 +48,44 @@ public class MenuSeeder {
             return;
         }
 
-        List<MenuTemplate> templates = buildMenuTemplates();
+        List<MenuTemplate> templates =
+                buildMenuTemplates();
 
-        LocalDate startDate = LocalDate.now().minusDays(43);
-        LocalDate endDate = LocalDate.now();
+        LocalDate today =
+                LocalDate.now(clock);
+
+        LocalDate startDate =
+                today.minusDays(43);
+
+        LocalDate endDate =
+                today;
 
         for (LocalDate date = startDate;
              !date.isAfter(endDate);
              date = date.plusDays(1)) {
 
             MenuTemplate lunchTemplate =
-                    templates.get(random.nextInt(templates.size()));
+                    templates.get(
+                            random.nextInt(
+                                    templates.size()
+                            )
+                    );
 
             MenuTemplate dinnerTemplate =
-                    templates.get(random.nextInt(templates.size()));
+                    templates.get(
+                            random.nextInt(
+                                    templates.size()
+                            )
+                    );
 
             // Avoid identical lunch and dinner menus on the same day.
             while (dinnerTemplate == lunchTemplate) {
                 dinnerTemplate =
-                        templates.get(random.nextInt(templates.size()));
+                        templates.get(
+                                random.nextInt(
+                                        templates.size()
+                                )
+                        );
             }
 
             saveMenu(
@@ -88,18 +113,40 @@ public class MenuSeeder {
             MealSession mealSession,
             MenuTemplate template) {
 
-        Menu menu = new Menu();
+        Menu menu =
+                new Menu();
 
-        menu.setMenuDate(date);
-        menu.setMealSession(mealSession);
+        menu.setMenuDate(
+                date
+        );
 
-        menu.setSabjiOne(template.sabjiOne());
-        menu.setSabjiTwo(template.sabjiTwo());
-        menu.setDal(template.dal());
-        menu.setRice(template.rice());
-        menu.setSweet(template.sweet());
+        menu.setMealSession(
+                mealSession
+        );
 
-        menuRepository.save(menu);
+        menu.setSabjiOne(
+                template.sabjiOne()
+        );
+
+        menu.setSabjiTwo(
+                template.sabjiTwo()
+        );
+
+        menu.setDal(
+                template.dal()
+        );
+
+        menu.setRice(
+                template.rice()
+        );
+
+        menu.setSweet(
+                template.sweet()
+        );
+
+        menuRepository.save(
+                menu
+        );
     }
 
     private List<MenuTemplate> buildMenuTemplates() {
@@ -188,4 +235,3 @@ public class MenuSeeder {
         );
     }
 }
-

@@ -23,3 +23,10 @@ export interface ApiResponse<T> {
 }
 
 export type TodayMenusResponse = ApiResponse<Menu[]>;
+
+export interface MealResponseAvailability {
+  menuId: number;
+  mealSession: MealSession;
+  canRespond: boolean;
+  reason: string | null;
+}

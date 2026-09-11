@@ -13,6 +13,7 @@ import MenuSummary from "@/components/common/business/MenuSummary";
 import {
   useCustomerMealResponse,
   useMealResponse,
+  useMealResponseAvailability,
 } from "../hooks";
 
 import { MEAL_SESSION_LABELS } from "../constants";
@@ -65,6 +66,22 @@ export default function MenuCard({
     customerId,
     menu.menuId
   );
+
+  const {
+    availability,
+    loading: availabilityLoading,
+    error: availabilityError,
+  } = useMealResponseAvailability(
+    menu.menuId
+  );
+
+  const canRespond =
+    availability?.canRespond ?? false;
+
+  const responseUnavailableReason =
+    availabilityError
+      ? "Unable to check response availability. Please try again later."
+      : availability?.reason ?? null;
 
   async function handleSubmit(
     responseStatus: MealResponseStatus,
@@ -166,17 +183,31 @@ export default function MenuCard({
 
         </Card.Body>
 
-        <Card.Footer>
+        <Card.Footer className="space-y-2">
 
           <Button
             fullWidth
-            disabled={responseLoading}
+            disabled={
+              responseLoading ||
+              availabilityLoading ||
+              !canRespond
+            }
             onClick={() => setOpen(true)}
           >
             {mealResponse
               ? "Update Response"
               : "Respond"}
           </Button>
+
+          {!availabilityLoading &&
+            !canRespond &&
+            responseUnavailableReason && (
+
+            <p className="text-center text-sm text-[var(--color-text-secondary)]">
+              {responseUnavailableReason}
+            </p>
+
+          )}
 
         </Card.Footer>
 

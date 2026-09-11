@@ -1,5 +1,6 @@
 package com.smartmess.backend.config.seed;
 
+import java.time.Clock;
 import java.time.LocalDate;
 
 import org.slf4j.Logger;
@@ -14,21 +15,25 @@ import com.smartmess.backend.service.BillService;
 @Component
 public class BillSeeder {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(BillSeeder.class);
+
     private final BillService billService;
-    
+
     private final BillRepository billRepository;
+
+    private final Clock clock;
 
     public BillSeeder(
             BillRepository billRepository,
-            BillService billService) {
+            BillService billService,
+            Clock clock) {
 
         this.billRepository = billRepository;
         this.billService = billService;
+        this.clock = clock;
     }
-    
-    private static final Logger log =
-            LoggerFactory.getLogger(BillSeeder.class);
-    
+
     public void seedDemoData() {
 
         seedBills();
@@ -40,23 +45,31 @@ public class BillSeeder {
             return;
         }
 
+        LocalDate today =
+                LocalDate.now(clock);
+
         GenerateBillRequest request =
                 new GenerateBillRequest(
-                        LocalDate.now().getMonthValue(),
-                        LocalDate.now().getYear()
+                        today.getMonthValue(),
+                        today.getYear()
                 );
 
         try {
 
-            billService.generateBills(request);
+            billService.generateBills(
+                    request
+            );
 
-            log.info("Demo Bills generated successfully.");
+            log.info(
+                    "Demo Bills generated successfully."
+            );
 
         } catch (BusinessException ex) {
 
-            log.warn("Skipping Bill seeding: {}", ex.getMessage());
-
+            log.warn(
+                    "Skipping Bill seeding: {}",
+                    ex.getMessage()
+            );
         }
     }
-
 }

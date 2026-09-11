@@ -1,12 +1,24 @@
-
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import Button from "@/components/common/ui/Button/Button";
 import Input from "@/components/common/ui/Input/Input";
 
-import { useMealPricing } from "../hooks";
+import type {
+  MealPricingResponse,
+  UpdateMealPricingRequest,
+} from "../types";
 
-import type { UpdateMealPricingRequest } from "../types";
+type MealPricingFormProps = {
+  pricing: MealPricingResponse | null;
+  saving: boolean;
+
+  onUpdate: (
+    payload: UpdateMealPricingRequest
+  ) => Promise<boolean>;
+};
 
 type PricingFormState = {
   halfMealPrice: string;
@@ -14,14 +26,11 @@ type PricingFormState = {
   extraRotiPrice: string;
 };
 
-export default function MealPricingForm() {
-  const {
-    pricing,
-    loading,
-    saving,
-    updatePricing,
-  } = useMealPricing();
-
+export default function MealPricingForm({
+  pricing,
+  saving,
+  onUpdate,
+}: MealPricingFormProps) {
   const [form, setForm] =
     useState<PricingFormState>({
       halfMealPrice: "",
@@ -35,9 +44,15 @@ export default function MealPricingForm() {
     }
 
     setForm({
-      halfMealPrice: String(pricing.halfMealPrice),
-      fullMealPrice: String(pricing.fullMealPrice),
-      extraRotiPrice: String(pricing.extraRotiPrice),
+      halfMealPrice: String(
+        pricing.halfMealPrice
+      ),
+      fullMealPrice: String(
+        pricing.fullMealPrice
+      ),
+      extraRotiPrice: String(
+        pricing.extraRotiPrice
+      ),
     });
   }, [pricing]);
 
@@ -56,9 +71,14 @@ export default function MealPricingForm() {
   ) {
     e.preventDefault();
 
-    const halfMealPrice = Number(form.halfMealPrice);
-    const fullMealPrice = Number(form.fullMealPrice);
-    const extraRotiPrice = Number(form.extraRotiPrice);
+    const halfMealPrice =
+      Number(form.halfMealPrice);
+
+    const fullMealPrice =
+      Number(form.fullMealPrice);
+
+    const extraRotiPrice =
+      Number(form.extraRotiPrice);
 
     if (
       halfMealPrice <= 0 ||
@@ -68,21 +88,14 @@ export default function MealPricingForm() {
       return;
     }
 
-    const payload: UpdateMealPricingRequest = {
-      halfMealPrice,
-      fullMealPrice,
-      extraRotiPrice,
-    };
+    const payload:
+      UpdateMealPricingRequest = {
+        halfMealPrice,
+        fullMealPrice,
+        extraRotiPrice,
+      };
 
-    await updatePricing(payload);
-  }
-
-  if (loading) {
-    return (
-      <p className="text-sm text-[var(--color-text-secondary)]">
-        Loading meal pricing...
-      </p>
-    );
+    await onUpdate(payload);
   }
 
   return (

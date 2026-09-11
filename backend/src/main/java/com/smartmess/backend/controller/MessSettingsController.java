@@ -1,4 +1,3 @@
-
 package com.smartmess.backend.controller;
 
 import org.springframework.http.HttpStatus;
@@ -7,7 +6,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.smartmess.backend.dto.request.CreateMessSettingsRequest;
-import com.smartmess.backend.dto.request.UpdateMessSettingsRequest;
+import com.smartmess.backend.dto.request.UpdatePaymentSettingsRequest;
+import com.smartmess.backend.dto.request.UpdateResponseWindowRequest;
+import com.smartmess.backend.dto.request.UpdateWeeklyScheduleRequest;
 import com.smartmess.backend.dto.response.ApiResponse;
 import com.smartmess.backend.dto.response.MessSettingsResponse;
 import com.smartmess.backend.service.MessSettingsService;
@@ -75,21 +76,67 @@ public class MessSettingsController {
     }
 
     /*
-     * Update mess settings.
+     * Update payment settings.
      * Owner only.
      */
-    @PutMapping
+    @PutMapping("/payment")
     @PreAuthorize("hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<MessSettingsResponse>> updateSettings(
-            @Valid @RequestBody UpdateMessSettingsRequest request,
+    public ResponseEntity<ApiResponse<MessSettingsResponse>> updatePaymentSettings(
+            @Valid @RequestBody UpdatePaymentSettingsRequest request,
             HttpServletRequest httpRequest) {
 
         MessSettingsResponse response =
-                messSettingsService.updateSettings(request);
+                messSettingsService.updatePaymentSettings(request);
 
         ApiResponse<MessSettingsResponse> apiResponse =
                 ApiResponse.success(
-                        "Mess settings updated successfully.",
+                        "Payment settings updated successfully.",
+                        httpRequest.getRequestURI(),
+                        response
+                );
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    /*
+     * Update customer response window.
+     * Owner only.
+     */
+    @PutMapping("/response-window")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<MessSettingsResponse>> updateResponseWindow(
+            @Valid @RequestBody UpdateResponseWindowRequest request,
+            HttpServletRequest httpRequest) {
+
+        MessSettingsResponse response =
+                messSettingsService.updateResponseWindow(request);
+
+        ApiResponse<MessSettingsResponse> apiResponse =
+                ApiResponse.success(
+                        "Response window updated successfully.",
+                        httpRequest.getRequestURI(),
+                        response
+                );
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    /*
+     * Update recurring weekly schedule.
+     * Owner only.
+     */
+    @PutMapping("/weekly-schedule")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<MessSettingsResponse>> updateWeeklySchedule(
+            @RequestBody UpdateWeeklyScheduleRequest request,
+            HttpServletRequest httpRequest) {
+
+        MessSettingsResponse response =
+                messSettingsService.updateWeeklySchedule(request);
+
+        ApiResponse<MessSettingsResponse> apiResponse =
+                ApiResponse.success(
+                        "Weekly schedule updated successfully.",
                         httpRequest.getRequestURI(),
                         response
                 );

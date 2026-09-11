@@ -1,6 +1,7 @@
 package com.smartmess.backend.service.impl;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.smartmess.backend.dto.request.CreateMealRecordRequest;
+import com.smartmess.backend.dto.response.CollectionQueueResponse;
 import com.smartmess.backend.dto.response.MealRecordResponse;
 import com.smartmess.backend.entity.Customer;
 import com.smartmess.backend.entity.MealPricing;
@@ -30,8 +32,6 @@ import com.smartmess.backend.security.CustomerSecurity;
 import com.smartmess.backend.service.DashboardWebSocketService;
 import com.smartmess.backend.service.MealRecordService;
 
-import com.smartmess.backend.dto.response.CollectionQueueResponse;
-
 @Service
 public class MealRecordServiceImpl implements MealRecordService {
 
@@ -42,9 +42,12 @@ public class MealRecordServiceImpl implements MealRecordService {
     private final MealPricingRepository mealPricingRepository;
     private final MealRecordMapper mealRecordMapper;
     private final DashboardWebSocketService dashboardWebSocketService;
-    // for meal record collection queue 
+
+    // Used for mapping meal responses into the meal collection queue.
     private final MealCollectionMapper mealCollectionMapper;
+
     private final CustomerSecurity customerSecurity;
+    private final Clock clock;
 
     public MealRecordServiceImpl(
             MealRecordRepository mealRecordRepository,
@@ -55,7 +58,8 @@ public class MealRecordServiceImpl implements MealRecordService {
             MealRecordMapper mealRecordMapper,
             DashboardWebSocketService dashboardWebSocketService,
             MealCollectionMapper mealCollectionMapper,
-            CustomerSecurity customerSecurity) {
+            CustomerSecurity customerSecurity,
+            Clock clock) {
 
         this.mealRecordRepository = mealRecordRepository;
         this.customerRepository = customerRepository;
@@ -66,90 +70,132 @@ public class MealRecordServiceImpl implements MealRecordService {
         this.dashboardWebSocketService = dashboardWebSocketService;
         this.mealCollectionMapper = mealCollectionMapper;
         this.customerSecurity = customerSecurity;
+        this.clock = clock;
     }
+
     @Override
     public MealRecordResponse createMealRecord(
             CreateMealRecordRequest request) {
 
         // Load Customer
 
-        Customer customer = customerRepository.findById(request.customerId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Customer not found with ID: " + request.customerId()));
+        Customer customer =
+                customerRepository.findById(request.customerId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Customer not found with ID: "
+                                                + request.customerId()
+                                )
+                        );
 
         // Customer Validation
 
         if (customer.getStatus() != CustomerStatus.ACTIVE) {
             throw new BusinessException(
-                    "Only active customers can collect meals.");
+                    "Only active customers can collect meals."
+            );
         }
 
         // Load Menu
 
-        Menu menu = menuRepository.findById(request.menuId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Menu not found with ID: " + request.menuId()));
+        Menu menu =
+                menuRepository.findById(request.menuId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Menu not found with ID: "
+                                                + request.menuId()
+                                )
+                        );
+
+        /*
+         * An existing menu represents an operational meal session.
+         *
+         * Response cutoff restrictions apply only to customer meal responses.
+         * The owner may still record meal collection for an existing menu,
+         * including direct or walk-in meal collection.
+         */
 
         // Load Meal Pricing
 
-        MealPricing mealPricing = mealPricingRepository
-                .findTopByOrderByUpdatedAtDesc()
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Meal pricing is not configured."));
+        MealPricing mealPricing =
+                mealPricingRepository
+                        .findTopByOrderByUpdatedAtDesc()
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Meal pricing is not configured."
+                                )
+                        );
 
-     // Meal Pricing Validation
+        // Meal Pricing Validation
 
-        if (mealPricing.getHalfMealPrice().compareTo(BigDecimal.ZERO) <= 0
-                || mealPricing.getFullMealPrice().compareTo(BigDecimal.ZERO) <= 0
-                || mealPricing.getExtraRotiPrice().compareTo(BigDecimal.ZERO) <= 0) {
+        if (mealPricing.getHalfMealPrice()
+                .compareTo(BigDecimal.ZERO) <= 0
+                || mealPricing.getFullMealPrice()
+                .compareTo(BigDecimal.ZERO) <= 0
+                || mealPricing.getExtraRotiPrice()
+                .compareTo(BigDecimal.ZERO) <= 0) {
 
             throw new BusinessException(
-                    "Meal pricing is invalid. Please configure valid meal prices.");
+                    "Meal pricing is invalid. Please configure valid meal prices."
+            );
         }
-        
+
         // Load Meal Response (Optional)
 
         MealResponse mealResponse = null;
 
         if (request.mealResponseId() != null) {
 
-            mealResponse = mealResponseRepository
-                    .findById(request.mealResponseId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Meal response not found with ID: "
-                                    + request.mealResponseId()));
+            mealResponse =
+                    mealResponseRepository
+                            .findById(request.mealResponseId())
+                            .orElseThrow(() ->
+                                    new ResourceNotFoundException(
+                                            "Meal response not found with ID: "
+                                                    + request.mealResponseId()
+                                    )
+                            );
         }
 
-     // Business Validation
+        // Business Validation
 
         if (mealResponse != null) {
 
-            if (!mealResponse.getCustomer().getCustomerId()
+            if (!mealResponse.getCustomer()
+                    .getCustomerId()
                     .equals(customer.getCustomerId())) {
 
                 throw new BusinessException(
-                        "Meal response does not belong to the selected customer.");
+                        "Meal response does not belong to the selected customer."
+                );
             }
 
-            if (!mealResponse.getMenu().getMenuId()
+            if (!mealResponse.getMenu()
+                    .getMenuId()
                     .equals(menu.getMenuId())) {
 
                 throw new BusinessException(
-                        "Meal response does not belong to the selected menu.");
+                        "Meal response does not belong to the selected menu."
+                );
             }
 
-            if (mealRecordRepository.findByMealResponse(mealResponse).isPresent()) {
+            if (mealRecordRepository
+                    .findByMealResponse(mealResponse)
+                    .isPresent()) {
 
                 throw new BusinessException(
-                        "Meal has already been collected for this response.");
+                        "Meal has already been collected for this response."
+                );
             }
 
         } else {
 
-            if (mealRecordRepository.existsByCustomerAndMenu(customer, menu)) {
+            if (mealRecordRepository
+                    .existsByCustomerAndMenu(customer, menu)) {
 
                 throw new BusinessException(
-                        "Meal has already been collected for this customer and menu.");
+                        "Meal has already been collected for this customer and menu."
+                );
             }
         }
 
@@ -158,112 +204,133 @@ public class MealRecordServiceImpl implements MealRecordService {
         BigDecimal mealPrice;
 
         if (request.mealOption() == MealOption.FULL) {
-
             mealPrice = mealPricing.getFullMealPrice();
-
         } else {
-
             mealPrice = mealPricing.getHalfMealPrice();
         }
 
-        BigDecimal extraRotiPrice = mealPricing.getExtraRotiPrice();
+        BigDecimal extraRotiPrice =
+                mealPricing.getExtraRotiPrice();
 
         BigDecimal totalAmount =
                 mealPrice.add(
                         extraRotiPrice.multiply(
-                                BigDecimal.valueOf(request.extraRotiCount())));
-        
-        
+                                BigDecimal.valueOf(
+                                        request.extraRotiCount()
+                                )
+                        )
+                );
+
         // Create Meal Record
-        
-        MealRecord mealRecord = MealRecord.builder()
 
-                .customer(customer)
-
-                .menu(menu)
-
-                .mealResponse(mealResponse)
-
-                .mealOption(request.mealOption())
-
-                .mealPrice(mealPrice)
-
-                .extraRotiCount(request.extraRotiCount())
-
-                .extraRotiPrice(extraRotiPrice)
-
-                .totalAmount(totalAmount)
-
-                .collectedAt(LocalDateTime.now())
-
-                .build();
+        MealRecord mealRecord =
+                MealRecord.builder()
+                        .customer(customer)
+                        .menu(menu)
+                        .mealResponse(mealResponse)
+                        .mealOption(request.mealOption())
+                        .mealPrice(mealPrice)
+                        .extraRotiCount(request.extraRotiCount())
+                        .extraRotiPrice(extraRotiPrice)
+                        .totalAmount(totalAmount)
+                        .collectedAt(LocalDateTime.now(clock))
+                        .build();
 
         // Save Meal Record
 
         MealRecord savedMealRecord =
                 mealRecordRepository.save(mealRecord);
-        
-        dashboardWebSocketService.broadcastDashboard(
-                menu.getMealSession());
-    
-     // Return Response
 
-        return mealRecordMapper.toResponse(savedMealRecord);
+        dashboardWebSocketService.broadcastDashboard(
+                menu.getMealSession()
+        );
+
+        // Return Response
+
+        return mealRecordMapper.toResponse(
+                savedMealRecord
+        );
     }
-    
 
     @Override
     public List<MealRecordResponse> getCustomerMealHistory(
             Long customerId) {
 
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Customer not found with ID: " + customerId));
+        Customer customer =
+                customerRepository.findById(customerId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Customer not found with ID: "
+                                                + customerId
+                                )
+                        );
 
-        customerSecurity.checkCustomerAccess(customerId);
+        customerSecurity.checkCustomerAccess(
+                customerId
+        );
 
         List<MealRecord> mealRecords =
                 mealRecordRepository
-                        .findByCustomerOrderByCollectedAtDesc(customer);
+                        .findByCustomerOrderByCollectedAtDesc(
+                                customer
+                        );
 
-        return mealRecordMapper.toResponseList(mealRecords);
+        return mealRecordMapper.toResponseList(
+                mealRecords
+        );
     }
 
     @Override
     public List<MealRecordResponse> getTodayMealRecords(
             MealSession mealSession) {
 
-        Menu menu = menuRepository
-                .findByMenuDateAndMealSession(
-                        LocalDate.now(),
-                        mealSession)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Menu not found for today and session: "
-                                + mealSession));
+        Menu menu =
+                menuRepository
+                        .findByMenuDateAndMealSession(
+                                LocalDate.now(clock),
+                                mealSession
+                        )
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Menu not found for today and session: "
+                                                + mealSession
+                                )
+                        );
 
         List<MealRecord> mealRecords =
                 mealRecordRepository.findByMenu(menu);
 
-        return mealRecordMapper.toResponseList(mealRecords);
+        return mealRecordMapper.toResponseList(
+                mealRecords
+        );
     }
 
-    // for prefilling meal responses to meal record.. Final call will be of owner  
-    
+    // Prefills accepted meal responses into the collection queue.
+    // The final meal collection action is always performed by the owner.
+
     @Override
     public List<CollectionQueueResponse> getCollectionQueue(
             MealSession mealSession) {
 
-        Menu menu = menuRepository
-                .findByMenuDateAndMealSession(
-                        LocalDate.now(),
-                        mealSession)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Menu not found for today and session: "
-                                + mealSession));
+        Menu menu =
+                menuRepository
+                        .findByMenuDateAndMealSession(
+                                LocalDate.now(clock),
+                                mealSession
+                        )
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Menu not found for today and session: "
+                                                + mealSession
+                                )
+                        );
 
         List<MealResponse> mealResponses =
-                mealResponseRepository.findCollectionQueue(menu);
+                mealResponseRepository
+                        .findCollectionQueue(menu);
 
-        return mealCollectionMapper.toResponseList(mealResponses);
+        return mealCollectionMapper.toResponseList(
+                mealResponses
+        );
     }
 }

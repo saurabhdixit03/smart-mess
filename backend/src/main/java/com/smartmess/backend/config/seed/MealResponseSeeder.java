@@ -1,5 +1,6 @@
 package com.smartmess.backend.config.seed;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -16,7 +17,6 @@ import com.smartmess.backend.entity.Menu;
 import com.smartmess.backend.enums.CustomerStatus;
 import com.smartmess.backend.enums.MealOption;
 import com.smartmess.backend.enums.MealResponseStatus;
-import com.smartmess.backend.enums.MealSession;
 import com.smartmess.backend.repository.CustomerRepository;
 import com.smartmess.backend.repository.MealResponseRepository;
 import com.smartmess.backend.repository.MenuRepository;
@@ -30,6 +30,7 @@ public class MealResponseSeeder {
     private final MealResponseRepository mealResponseRepository;
     private final CustomerRepository customerRepository;
     private final MenuRepository menuRepository;
+    private final Clock clock;
 
     /*
      * Fixed seed keeps demo data reproducible.
@@ -43,11 +44,13 @@ public class MealResponseSeeder {
     public MealResponseSeeder(
             MealResponseRepository mealResponseRepository,
             CustomerRepository customerRepository,
-            MenuRepository menuRepository) {
+            MenuRepository menuRepository,
+            Clock clock) {
 
         this.mealResponseRepository = mealResponseRepository;
         this.customerRepository = customerRepository;
         this.menuRepository = menuRepository;
+        this.clock = clock;
     }
 
     public void seed() {
@@ -57,7 +60,9 @@ public class MealResponseSeeder {
         }
 
         List<Customer> customers =
-                customerRepository.findByStatus(CustomerStatus.ACTIVE);
+                customerRepository.findByStatus(
+                        CustomerStatus.ACTIVE
+                );
 
         if (customers.isEmpty()) {
 
@@ -91,7 +96,9 @@ public class MealResponseSeeder {
              * available for manual testing.
              */
             boolean isToday =
-                    menu.getMenuDate().equals(LocalDate.now());
+                    menu.getMenuDate().equals(
+                            LocalDate.now(clock)
+                    );
 
             for (Customer customer : customers) {
 
@@ -107,9 +114,14 @@ public class MealResponseSeeder {
                 }
 
                 MealResponse response =
-                        createMealResponse(customer, menu);
+                        createMealResponse(
+                                customer,
+                                menu
+                        );
 
-                mealResponseRepository.save(response);
+                mealResponseRepository.save(
+                        response
+                );
 
                 responseCount++;
             }
@@ -121,7 +133,8 @@ public class MealResponseSeeder {
         );
     }
 
-    private boolean shouldCustomerRespond(boolean isToday) {
+    private boolean shouldCustomerRespond(
+            boolean isToday) {
 
         /*
          * Today's responses:
@@ -145,11 +158,16 @@ public class MealResponseSeeder {
             Customer customer,
             Menu menu) {
 
-        MealResponse response = new MealResponse();
+        MealResponse response =
+                new MealResponse();
 
-        response.setCustomer(customer);
+        response.setCustomer(
+                customer
+        );
 
-        response.setMenu(menu);
+        response.setMenu(
+                menu
+        );
 
         /*
          * Approximately:
@@ -175,7 +193,9 @@ public class MealResponseSeeder {
                             ? MealOption.FULL
                             : MealOption.HALF;
 
-            response.setMealOption(mealOption);
+            response.setMealOption(
+                    mealOption
+            );
 
             response.setExtraRotiCount(
                     generateExtraRotiCount()
@@ -191,9 +211,13 @@ public class MealResponseSeeder {
              * Declined response must not have
              * a meal option or extra rotis.
              */
-            response.setMealOption(null);
+            response.setMealOption(
+                    null
+            );
 
-            response.setExtraRotiCount(0);
+            response.setExtraRotiCount(
+                    0
+            );
         }
 
         /*
@@ -204,7 +228,9 @@ public class MealResponseSeeder {
          * between approximately 7:00 AM and 10:00 PM.
          */
         response.setRespondedAt(
-                generateResponseTime(menu.getMenuDate())
+                generateResponseTime(
+                        menu.getMenuDate()
+                )
         );
 
         return response;
@@ -212,7 +238,8 @@ public class MealResponseSeeder {
 
     private int generateExtraRotiCount() {
 
-        double value = random.nextDouble();
+        double value =
+                random.nextDouble();
 
         /*
          * ~75% → no extra roti
@@ -245,7 +272,10 @@ public class MealResponseSeeder {
 
         return LocalDateTime.of(
                 menuDate,
-                LocalTime.of(hour, minute)
+                LocalTime.of(
+                        hour,
+                        minute
+                )
         );
     }
 }

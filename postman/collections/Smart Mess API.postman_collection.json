@@ -674,6 +674,61 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "MEN-009 Get Today’s Menu Publishing Availability",
+          "id": "50312e4a-c19e-4b85-8bd6-c6a622b33243",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": ""
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MEN-010 Menu availability blocked by weekly schedule",
+          "id": "067ba426-3979-4f0c-98bc-b6a3b07b760d",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/menus/today/availability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "menus",
+                "today",
+                "availability"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MEN-011 Menu availability blocked by temporary closure",
+          "id": "0da2289a-3824-4e0a-bb80-d4b4e4ba3953",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": ""
+            }
+          },
+          "response": []
         }
       ],
       "id": "072a964c-18aa-4169-9713-9ec92de357f5"
@@ -892,7 +947,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "    {\r\n        \"customerId\": 3,\r\n    \"menuId\": 36,\r\n    \"responseStatus\": \"ACCEPTED\",\r\n    \"mealOption\": \"HALF\",\r\n    \"extraRotiCount\": 1\r\n    }",
+              "raw": "    {\r\n        \"customerId\": 1,\r\n    \"menuId\": 105,\r\n    \"responseStatus\": \"ACCEPTED\",\r\n    \"mealOption\": \"FULL\",\r\n    \"extraRotiCount\": 1\r\n    }",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1235,6 +1290,70 @@
                 "18",
                 "menu",
                 "20"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MRE-013 Get Meal Response Availability Before Cutoff",
+          "id": "92e4e7c6-26e6-4201-90e3-04d377b1990f",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-responses/menu/105/availability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses",
+                "menu",
+                "105",
+                "availability"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "MRE-014 Availability blocked after cutoff.",
+          "id": "4b449428-e15b-4461-89a2-7b47024fea84",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/meal-responses/menu/105/availability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "meal-responses",
+                "menu",
+                "105",
+                "availability"
               ]
             }
           },
@@ -3154,7 +3273,7 @@
           "response": []
         },
         {
-          "name": "SET-002 Get Settings",
+          "name": "SET-002 Get Current Mess Settings",
           "id": "a85e9178-e253-443a-bc71-226b293c289a",
           "request": {
             "auth": {
@@ -3183,7 +3302,7 @@
           "response": []
         },
         {
-          "name": "SET-003 Update Settings",
+          "name": "SET-003 Update Payment Settings Successfully",
           "id": "d2323f8d-878d-478d-a662-d5cf7947ee6f",
           "request": {
             "auth": {
@@ -3221,20 +3340,294 @@
           "response": []
         },
         {
-          "name": "SET-004 Duplicate Create",
-          "id": "6b7cac1a-fa64-4d70-b036-f2ac3a38ca5c",
+          "name": "SET-004 Payment Settings Validation",
+          "id": "305f2ad9-0f10-442f-957a-88e1afca968b",
           "request": {
-            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"upiId\": \"smartmess@okaxis\",\r\n    \"receiverName\": \"Smart Mess\"\r\n}",
+              "raw": "{\r\n    \"upiId\": \"\",\r\n    \"receiverName\": \"Smart Mess\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings/payment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings",
+                "payment"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SET-005 Update Response Window Successfully",
+          "id": "c57c8a9b-3674-4e68-8341-7af26fa1e978",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"lunchResponseCutoff\": \"11:00:00\",\r\n    \"dinnerResponseCutoff\": \"18:00:00\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings/response-window",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings",
+                "response-window"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SET-006 Response Window Missing Cutoff",
+          "id": "b8a0857b-9e62-4d5f-b181-3f6e0e612bee",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"lunchResponseCutoff\": \"11:00:00\",\r\n    \"dinnerResponseCutoff\": null\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings/response-window",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings",
+                "response-window"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SET-007 Configure Valid Weekly Off",
+          "id": "7f8b30cf-a154-422e-b66f-03c410f3b4b9",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"weeklyClosedDay\": \"WEDNESDAY\",\r\n    \"weeklyLunchClosed\": false,\r\n    \"weeklyDinnerClosed\": true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings/weekly-schedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings",
+                "weekly-schedule"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SET-008 Invalid Weekly Schedule: Day Selected but No Session Closed",
+          "id": "e282168a-ea14-4bb8-b66c-98415316c307",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"weeklyClosedDay\": \"WEDNESDAY\",\r\n    \"weeklyLunchClosed\": false,\r\n    \"weeklyDinnerClosed\": false\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings/weekly-schedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings",
+                "weekly-schedule"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SET-009 Invalid Weekly Schedule: Closed Session Without Day",
+          "id": "3702ad84-0f0d-457f-b116-db354a7a20ea",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"weeklyClosedDay\": null,\r\n    \"weeklyLunchClosed\": false,\r\n    \"weeklyDinnerClosed\": true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings/weekly-schedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings",
+                "weekly-schedule"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SET-010 Disable Weekly Off",
+          "id": "909972cd-f2b9-4514-b6a0-67d12e33f64e",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"weeklyClosedDay\": null,\r\n    \"weeklyLunchClosed\": false,\r\n    \"weeklyDinnerClosed\": false\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/settings/weekly-schedule",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "settings",
+                "weekly-schedule"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SET-011 GET Settings Again",
+          "id": "ed663d86-333a-4bf0-af58-428e02702db2",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/settings",
               "host": [
@@ -3881,6 +4274,1055 @@
       "auth": {
         "type": "noauth"
       }
+    },
+    {
+      "name": "Mess Closures",
+      "item": [
+        {
+          "name": "CLO-001 Create Temporary Closure",
+          "id": "69843b82-d001-4743-8650-b20e65b15091",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-05\",\r\n  \"startSession\": \"DINNER\",\r\n  \"endDate\": \"2026-09-08\",\r\n  \"endSession\": \"LUNCH\",\r\n  \"reason\": \"Mess closed due to Maintenance.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-002 Get Current & Upcoming Closures",
+          "id": "fb0ec787-cc46-418e-ba27-85f6e28f51e7",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-003 Update Temporary Closure",
+          "id": "c70e6c4a-aecf-49b5-8e95-7cfc623f8659",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-06\",\r\n  \"startSession\": \"LUNCH\",\r\n  \"endDate\": \"2026-09-09\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Mess closed due to maintenance.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-004 Get Closure History",
+          "id": "61878d09-e9c5-4dd9-98b0-9e0d1f256e3c",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": ""
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-005 Delete Temporary Closure",
+          "id": "3342eeba-921a-4036-ae9b-4af8bd85e4a6",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-006 Verify Deleted Closure Is Removed",
+          "id": "4823247b-88a1-431d-bd7f-554e32de83c0",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-007 Reject Past Start Date",
+          "id": "f8783891-310f-40f5-8c31-db779143e00c",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-01\",\r\n  \"startSession\": \"LUNCH\",\r\n  \"endDate\": \"2026-09-03\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Testing past date validation.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-008 Reject End Date Before Start Date",
+          "id": "00076152-b2c7-4eb6-a876-3a4472da5f72",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-05\",\r\n  \"startSession\": \"LUNCH\",\r\n  \"endDate\": \"2026-09-04\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Testing invalid date range.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-009 Reject Invalid Same-Day Session Range",
+          "id": "54f3d965-a015-4e63-b53e-a150bb41d440",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-05\",\r\n  \"startSession\": \"DINNER\",\r\n  \"endDate\": \"2026-09-05\",\r\n  \"endSession\": \"LUNCH\",\r\n  \"reason\": \"Testing invalid same-day session range.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-010 Reject Overlapping Closure",
+          "id": "aa541204-e7e8-4761-8802-3df5c778b01d",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-05\",\r\n  \"startSession\": \"DINNER\",\r\n  \"endDate\": \"2026-09-08\",\r\n  \"endSession\": \"LUNCH\",\r\n  \"reason\": \"Baseline closure for overlap testing.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-011 Reject Overlapping Closure",
+          "id": "ee743747-3e14-40d5-9f06-c8d81aaa6ef4",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-07\",\r\n  \"startSession\": \"LUNCH\",\r\n  \"endDate\": \"2026-09-09\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Testing overlapping closure validation.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-012 Allow Adjacent Non-Overlapping Closure",
+          "id": "25cf99e7-bad1-4a70-93b8-31a3e262bdcf",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-08\",\r\n  \"startSession\": \"DINNER\",\r\n  \"endDate\": \"2026-09-09\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Testing adjacent non-overlapping closure.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-013 Reject Overlapping Closure Update",
+          "id": "908091d2-2c10-496c-be18-55758e715b82",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-07\",\r\n  \"startSession\": \"DINNER\",\r\n  \"endDate\": \"2026-09-09\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Testing overlap validation during update.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures/3",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-014 Reject Update for Unknown Closure",
+          "id": "51baf1ac-34de-447f-bf62-1064d057d7ce",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-10\",\r\n  \"startSession\": \"LUNCH\",\r\n  \"endDate\": \"2026-09-10\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Testing update for unknown closure.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures",
+                "999999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-015 Reject Delete for Unknown Closure",
+          "id": "07b43835-92a7-4877-97e1-edfbd475b146",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures",
+                "999999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-016 Adjust Closure Start Around Published Menu",
+          "id": "342f5636-6f5b-478a-8578-be0b1f380d55",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-02\",\r\n  \"startSession\": \"LUNCH\",\r\n  \"endDate\": \"2026-09-03\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Testing closure adjustment around a published menu.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-017 Reject Closure When No Session Is Available",
+          "id": "c86f910d-b1ab-4470-86cb-3a63605bcafb",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-02\",\r\n  \"startSession\": \"LUNCH\",\r\n  \"endDate\": \"2026-09-02\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Testing closure when all requested sessions are already published.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-017A Delete Setup Closure",
+          "id": "11a577ba-123f-406f-a832-9376cae6e31c",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures/4",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures",
+                "4"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-018 Shift Closure to Next Day When Today Is Fully Published",
+          "id": "3965b583-3187-4902-902c-b899d4119a1c",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-02\",\r\n  \"startSession\": \"LUNCH\",\r\n  \"endDate\": \"2026-09-04\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Testing closure shift after all today's sessions are published.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-019 Reject Missing Required Closure Field",
+          "id": "2f9153a0-70c3-4d4e-9f3a-6419c31ee4c7",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-10\",\r\n  \"endDate\": \"2026-09-11\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Testing required field validation.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-020 Reject Blank Closure Reason",
+          "id": "44cd1b6a-e203-4eba-86bb-fa8da8332983",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-10\",\r\n  \"startSession\": \"LUNCH\",\r\n  \"endDate\": \"2026-09-11\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-021 Reject Closure Reason Over 255 Characters",
+          "id": "5dafcd3c-f805-4611-8e3d-673d13e1d07a",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-10\",\r\n  \"startSession\": \"LUNCH\",\r\n  \"endDate\": \"2026-09-11\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"This is a deliberately long closure reason created to verify that the API correctly rejects values that exceed the maximum allowed length of two hundred and fifty-five characters. The request should fail at DTO validation level before any closure business rules are evaluated by the service.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-022 Reject Invalid Session Value",
+          "id": "a2b401fa-253c-45a2-89f7-6216dc7baeeb",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-10\",\r\n  \"startSession\": \"BREAKFAST\",\r\n  \"endDate\": \"2026-09-11\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Testing invalid meal session value.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-023 Verify Current & Upcoming Closures After All Tests",
+          "id": "654a3602-42f3-41bd-8ce9-c5f88f9ebc09",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-024 Allow Same-Day Lunch-Only Closure",
+          "id": "3d9efe5c-0a0c-4232-90f2-0859973b323b",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-10\",\r\n  \"startSession\": \"LUNCH\",\r\n  \"endDate\": \"2026-09-10\",\r\n  \"endSession\": \"LUNCH\",\r\n  \"reason\": \"Testing lunch-only temporary closure.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-025 Allow Same-Day Dinner-Only Closure",
+          "id": "02400a2a-ce21-4263-9ec2-0a12e6d71b21",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-10\",\r\n  \"startSession\": \"DINNER\",\r\n  \"endDate\": \"2026-09-10\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Testing dinner-only temporary closure.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-026 Allow Same-Day Full-Day Closure",
+          "id": "fce8a180-5db7-4934-aeee-ad9cecd62caa",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startDate\": \"2026-09-11\",\r\n  \"startSession\": \"LUNCH\",\r\n  \"endDate\": \"2026-09-11\",\r\n  \"endSession\": \"DINNER\",\r\n  \"reason\": \"Testing full-day temporary closure.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "CLO-027 Verify Failed Update Did Not Modify Closure",
+          "id": "a5679971-d6d9-45e1-9721-77d50546ff7c",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ownerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mess-closures",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "mess-closures"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "55e21152-35ad-4684-949d-4c463cb31a8b"
+    },
+    {
+      "name": "Notification",
+      "item": [
+        {
+          "name": "NOTI-001 Get Notifications",
+          "id": "05dcc74b-ccce-4a2c-b904-c1efff221ed3",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerJwtToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "notifications"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "2402e37d-56c8-4845-8c02-3420c86879de"
     }
   ]
 }

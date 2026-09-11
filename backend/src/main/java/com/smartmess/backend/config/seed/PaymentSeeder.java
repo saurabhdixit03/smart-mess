@@ -1,13 +1,12 @@
 package com.smartmess.backend.config.seed;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
-
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
 
 import com.smartmess.backend.entity.Bill;
 import com.smartmess.backend.entity.Payment;
@@ -16,134 +15,165 @@ import com.smartmess.backend.enums.PaymentMode;
 import com.smartmess.backend.repository.BillRepository;
 import com.smartmess.backend.repository.PaymentRepository;
 
-
 @Component
 public class PaymentSeeder {
 
     private static final Logger log =
-            LoggerFactory.getLogger(PaymentSeeder.class); 
-    
+            LoggerFactory.getLogger(PaymentSeeder.class);
+
     private final BillRepository billRepository;
 
-	private final PaymentRepository paymentRepository;
+    private final PaymentRepository paymentRepository;
+
+    private final Clock clock;
 
     public PaymentSeeder(
-
             PaymentRepository paymentRepository,
-
-            BillRepository billRepository
-
-    ) {
+            BillRepository billRepository,
+            Clock clock) {
 
         this.paymentRepository = paymentRepository;
-
         this.billRepository = billRepository;
-
+        this.clock = clock;
     }
 
     public void seedDemoData() {
 
         seedPayments();
-
     }
-    
+
     private record PaymentSeed(
-
             int billIndex,
-
             PaymentMode paymentMode,
-
-            BillStatus billStatus
-
-    ) {
+            BillStatus billStatus) {
     }
 
     public void seedPayments() {
-    	
-    	if (paymentRepository.count() > 0) {
-    	    return;
-    	}
-    
-    	List<Bill> bills = billRepository.findAll();
 
-    	if (bills.isEmpty()) {
+        if (paymentRepository.count() > 0) {
+            return;
+        }
 
-    	    log.warn("Skipping Payment seeding because bills are missing.");
+        List<Bill> bills =
+                billRepository.findAll();
 
-    	    return;
-    	}
-    	
-    	List<PaymentSeed> payments = List.of(
+        if (bills.isEmpty()) {
 
-    	        new PaymentSeed(0, PaymentMode.CASH, BillStatus.PAID),
+            log.warn(
+                    "Skipping Payment seeding because bills are missing."
+            );
 
-    	        new PaymentSeed(1, PaymentMode.UPI, BillStatus.PAID),
+            return;
+        }
 
-    	        new PaymentSeed(2, PaymentMode.CASH, BillStatus.PAID),
+        List<PaymentSeed> payments =
+                List.of(
 
-    	        new PaymentSeed(3, PaymentMode.UPI, BillStatus.PAYMENT_PENDING),
+                        new PaymentSeed(
+                                0,
+                                PaymentMode.CASH,
+                                BillStatus.PAID
+                        ),
 
-    	        new PaymentSeed(4, PaymentMode.CASH, BillStatus.UNPAID),
+                        new PaymentSeed(
+                                1,
+                                PaymentMode.UPI,
+                                BillStatus.PAID
+                        ),
 
-    	        new PaymentSeed(5, PaymentMode.UPI, BillStatus.PAID)
+                        new PaymentSeed(
+                                2,
+                                PaymentMode.CASH,
+                                BillStatus.PAID
+                        ),
 
-    	);
-    	
-    	
-    	for (PaymentSeed seed : payments) {
-    		
-    		if (seed.billIndex() >= bills.size()) {
+                        new PaymentSeed(
+                                3,
+                                PaymentMode.UPI,
+                                BillStatus.PAYMENT_PENDING
+                        ),
 
-    		    log.warn(
-    		        "Skipping payment seed because bill index {} does not exist.",
-    		        seed.billIndex()
-    		    );
+                        new PaymentSeed(
+                                4,
+                                PaymentMode.CASH,
+                                BillStatus.UNPAID
+                        ),
 
-    		    continue;
-    		}
+                        new PaymentSeed(
+                                5,
+                                PaymentMode.UPI,
+                                BillStatus.PAID
+                        )
+                );
 
-    		    Bill bill = bills.get(seed.billIndex());
-    		    
-     		    if (seed.billStatus() == BillStatus.UNPAID) {
+        for (PaymentSeed seed : payments) {
 
-       		        continue;
-    		    }
+            if (seed.billIndex() >= bills.size()) {
 
-    		    if (seed.billStatus() == BillStatus.PAYMENT_PENDING) {
+                log.warn(
+                        "Skipping payment seed because bill index {} does not exist.",
+                        seed.billIndex()
+                );
 
-       		        bill.setBillStatus(BillStatus.PAYMENT_PENDING);
+                continue;
+            }
 
-    		        billRepository.save(bill);
+            Bill bill =
+                    bills.get(
+                            seed.billIndex()
+                    );
 
-    		        continue;
-    		    }
+            if (seed.billStatus() == BillStatus.UNPAID) {
+                continue;
+            }
 
-    		    Payment payment = new Payment();
+            if (seed.billStatus() == BillStatus.PAYMENT_PENDING) {
 
-    		    payment.setBill(bill);
+                bill.setBillStatus(
+                        BillStatus.PAYMENT_PENDING
+                );
 
-    		    payment.setPaymentAmount(
-    		            bill.getTotalAmount()
-    		    );
+                billRepository.save(
+                        bill
+                );
 
-    		    payment.setPaymentMode(
-    		            seed.paymentMode()
-    		    );
+                continue;
+            }
 
-    		    payment.setPaidAt(
-    		            LocalDateTime.now()
-    		    );
+            Payment payment =
+                    new Payment();
 
-    		    paymentRepository.save(payment);
-    		    
-     		    bill.setBillStatus(BillStatus.PAID);
+            payment.setBill(
+                    bill
+            );
 
-    		    billRepository.save(bill);
+            payment.setPaymentAmount(
+                    bill.getTotalAmount()
+            );
 
-    		}
-    	
-    	log.info("Demo Payments seeded successfully.");
+            payment.setPaymentMode(
+                    seed.paymentMode()
+            );
 
-    	}
+            payment.setPaidAt(
+                    LocalDateTime.now(clock)
+            );
 
+            paymentRepository.save(
+                    payment
+            );
+
+            bill.setBillStatus(
+                    BillStatus.PAID
+            );
+
+            billRepository.save(
+                    bill
+            );
+        }
+
+        log.info(
+                "Demo Payments seeded successfully."
+        );
+    }
 }
