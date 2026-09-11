@@ -1,0 +1,1 @@
+export { default as MessDetailsPage } from "./pages/MessDetailsPage";

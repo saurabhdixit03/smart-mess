@@ -9,6 +9,7 @@ import {
   BarChart3,
   Settings,
   User,
+  Building2,
 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
@@ -48,6 +49,7 @@ export const ownerNavigation: NavigationItem[] = [
   //   path: ROUTES.MEALS,
   //   icon: ClipboardList,
   // },
+
   {
     label: "Meal Collection",
     title: "Meal Records",
@@ -61,17 +63,17 @@ export const ownerNavigation: NavigationItem[] = [
     icon: Receipt,
   },
   {
-  label: "Payments",
-  title: "Payment Management",
-  path: ROUTES.PAYMENTS,
-  icon: Wallet,
-},
+    label: "Payments",
+    title: "Payment Management",
+    path: ROUTES.PAYMENTS,
+    icon: Wallet,
+  },
   {
-  label: "Insights",
-  title: "Business Insights",
-  path: ROUTES.INSIGHTS,
-  icon: BarChart3,
-},
+    label: "Insights",
+    title: "Business Insights",
+    path: ROUTES.INSIGHTS,
+    icon: BarChart3,
+  },
   {
     label: "Settings",
     title: "Settings",
@@ -98,6 +100,12 @@ export const customerNavigation: NavigationItem[] = [
     title: "My Bills",
     path: ROUTES.MY_BILLS,
     icon: Receipt,
+  },
+  {
+    label: "Mess Details",
+    title: "Mess Details",
+    path: ROUTES.MESS_DETAILS,
+    icon: Building2,
   },
   {
     label: "Profile",

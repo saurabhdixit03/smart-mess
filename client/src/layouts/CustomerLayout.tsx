@@ -4,13 +4,14 @@ import AppShell from "@/components/common/layout/AppShell";
 import Sidebar from "@/components/common/layout/Sidebar";
 import Topbar from "@/components/common/layout/Topbar";
 
-import { getCustomer } from "@/features/auth/utils/auth.utils";
-import { useCustomerLogout } from "@/features/auth/hooks";
-
-import { useNotifications } from "@/features/customer/notifications/hooks";
-
 import { customerNavigation } from "@/config/navigation";
+
+import { useCustomerLogout } from "@/features/auth/hooks";
+import { getCustomer } from "@/features/auth/utils/auth.utils";
+
+import { CustomerClosureNotice } from "@/features/customer/closures";
 import NotificationBell from "@/features/customer/notifications/components/NotificationBell";
+import { useNotifications } from "@/features/customer/notifications/hooks";
 
 export default function CustomerLayout() {
   const { logout } = useCustomerLogout();
@@ -33,6 +34,9 @@ export default function CustomerLayout() {
           title="Smart Mess"
           subtitle="Meal Planning & Mess Operations"
           navigation={customerNavigation}
+          bottomContent={
+            <CustomerClosureNotice />
+          }
           account={{
             name: customer?.fullName ?? "Customer",
             role: "Customer",
@@ -42,9 +46,9 @@ export default function CustomerLayout() {
       }
       topbar={
         <Topbar
-  title="Smart Mess"
-  actions={<NotificationBell />}
-/>
+          title="Smart Mess"
+          actions={<NotificationBell />}
+        />
       }
     >
       <Outlet />

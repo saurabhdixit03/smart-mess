@@ -42,9 +42,9 @@ import { MenuPage as CustomerMenuPage } from "@/features/customer/menu";
 
 import { MyMealsPage } from "@/features/customer/my-meals";
 
-import {
-  BillingPage as CustomerBillingPage,
-} from "@/features/customer/billing";
+import { BillingPage as CustomerBillingPage, } from "@/features/customer/billing";
+
+import { MessDetailsPage } from "@/features/customer/mess-details";
 
 import { ProfilePage } from "@/features/customer/profile";
 
@@ -214,6 +214,11 @@ export default function AppRouter() {
           <Route
             path="my-bills"
             element={<CustomerBillingPage />}
+          />
+
+          <Route
+            path="mess-details"
+            element={<MessDetailsPage />}
           />
 
           <Route

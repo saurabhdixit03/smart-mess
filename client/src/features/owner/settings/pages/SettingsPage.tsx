@@ -90,15 +90,30 @@ function SettingsCard({
           {icon}
         </div>
 
-        <Button
+        <button
           type="button"
-          variant="secondary"
-          size="sm"
           onClick={onEdit}
+          aria-label={`Edit ${title}`}
+          title={`Edit ${title}`}
+          className="
+            flex
+            h-8
+            w-8
+            shrink-0
+            items-center
+            justify-center
+            rounded-lg
+            text-[var(--color-text-secondary)]
+            transition-colors
+            hover:bg-[var(--color-surface-hover)]
+            hover:text-[var(--color-text)]
+            focus:outline-none
+            focus-visible:ring-2
+            focus-visible:ring-[var(--color-primary)]
+          "
         >
-          <Pencil size={14} />
-          Edit
-        </Button>
+          <Pencil size={15} />
+        </button>
       </div>
 
       <div className="mt-4">
@@ -414,9 +429,7 @@ export default function SettingsPage() {
         "
       >
         <SettingsCard
-          icon={
-            <Clock3 size={18} />
-          }
+          icon={<Clock3 size={18} />}
           title="Response Window"
           description="Customer meal response cutoffs."
           onEdit={() =>
@@ -448,9 +461,7 @@ export default function SettingsPage() {
 
         <SettingsCard
           icon={
-            <CalendarDays
-              size={18}
-            />
+            <CalendarDays size={18} />
           }
           title="Weekly Schedule"
           description="Recurring weekly closure."

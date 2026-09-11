@@ -83,7 +83,7 @@ public class MessClosureController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
     public ApiResponse<List<MessClosureResponse>>
             getCurrentAndUpcomingClosures(
                     HttpServletRequest httpRequest) {
