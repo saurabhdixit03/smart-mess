@@ -18,7 +18,6 @@ import com.smartmess.backend.entity.MessSettings;
 import com.smartmess.backend.enums.MealSession;
 import com.smartmess.backend.enums.NotificationType;
 import com.smartmess.backend.exception.BusinessException;
-import com.smartmess.backend.exception.ResourceNotFoundException;
 import com.smartmess.backend.mapper.MenuMapper;
 import com.smartmess.backend.repository.MenuRepository;
 import com.smartmess.backend.repository.MessClosureRepository;
@@ -180,7 +179,7 @@ public class MenuServiceImpl
             CreateMenuRequest request) {
 
         MessSettings settings =
-                getMessSettings();
+                getSettingsOrDefaults();
 
         if (settings.getWeeklyClosedDay() == null) {
             return;
@@ -230,7 +229,7 @@ public class MenuServiceImpl
             CreateMenuRequest request) {
 
         MessSettings settings =
-                getMessSettings();
+                getSettingsOrDefaults();
 
         LocalTime cutoffTime =
                 getResponseCutoff(
@@ -278,7 +277,7 @@ public class MenuServiceImpl
         }
 
         MessSettings settings =
-                getMessSettings();
+                getSettingsOrDefaults();
 
         if (settings.getWeeklyClosedDay() != null
                 && today.getDayOfWeek()
@@ -343,15 +342,11 @@ public class MenuServiceImpl
         );
     }
 
-    private MessSettings getMessSettings() {
+    private MessSettings getSettingsOrDefaults() {
 
         return messSettingsRepository
                 .findTopByOrderBySettingsIdAsc()
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Mess settings not found."
-                        )
-                );
+                .orElseGet(MessSettings::new);
     }
 
     private LocalTime getResponseCutoff(
@@ -435,7 +430,7 @@ public class MenuServiceImpl
                 };
 
         MessSettings settings =
-                getMessSettings();
+                getSettingsOrDefaults();
 
         LocalTime cutoffTime =
                 getResponseCutoff(
