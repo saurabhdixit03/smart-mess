@@ -6,11 +6,8 @@ export const ROUTES = {
 
   CUSTOMERS: "customers",
   MENU: "menu",
-
-  // Customer Responses
   MEAL_RESPONSES: "meal-responses",
 
-  // Owner Modules
   MEALS: "meals",
   MEAL_RECORDS: "meal-records",
 
@@ -24,6 +21,7 @@ export const ROUTES = {
   HOME: "menu",
   MY_MEALS: "my-meals",
   MY_BILLS: "my-bills",
+  MESS_DETAILS: "mess-details",
   PROFILE: "profile",
 
   DESIGN_SYSTEM: "/design-system",

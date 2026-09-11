@@ -17,14 +17,22 @@ import {
 } from "@/services/websocket/websocket.service";
 
 export function useNotifications() {
-  const [notifications, setNotifications] =
-    useState<Notification[]>([]);
+  const [
+    notifications,
+    setNotifications,
+  ] = useState<Notification[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const [
+    error,
+    setError,
+  ] = useState<string | null>(
+    null
+  );
 
   const subscriptionRef = useRef<
     ReturnType<typeof subscribeTopic> | null
@@ -33,23 +41,27 @@ export function useNotifications() {
   /**
    * Load existing notifications.
    */
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const fetchNotifications =
+    async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const response =
-        await notificationApi.getNotifications();
+        const response =
+          await notificationApi
+            .getNotifications();
 
-      setNotifications(response.data);
-    } catch {
-      setError(
-        "Failed to load notifications."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+        setNotifications(
+          response.data
+        );
+      } catch {
+        setError(
+          "Failed to load notifications."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
   /**
    * Initial REST fetch +
@@ -59,24 +71,26 @@ export function useNotifications() {
     fetchNotifications();
 
     const handleConnected = () => {
-      subscriptionRef.current?.unsubscribe();
+      subscriptionRef.current
+        ?.unsubscribe();
 
       subscriptionRef.current =
         subscribeTopic<Notification>(
           "/user/queue/notifications",
           (notification) => {
-            console.log(
-              "🔔 Real-time Notification",
-              notification
-            );
-
             setNotifications(
-              (currentNotifications) => {
+              (
+                currentNotifications
+              ) => {
                 const alreadyExists =
                   currentNotifications.some(
-                    (currentNotification) =>
-                      currentNotification.notificationId ===
-                      notification.notificationId
+                    (
+                      currentNotification
+                    ) =>
+                      currentNotification
+                        .notificationId ===
+                      notification
+                        .notificationId
                   );
 
                 if (alreadyExists) {
@@ -93,11 +107,16 @@ export function useNotifications() {
         );
     };
 
-    connectWebSocket(handleConnected);
+    connectWebSocket(
+      handleConnected
+    );
 
     return () => {
-      subscriptionRef.current?.unsubscribe();
-      subscriptionRef.current = null;
+      subscriptionRef.current
+        ?.unsubscribe();
+
+      subscriptionRef.current =
+        null;
 
       removeWebSocketConnectionListener(
         handleConnected
@@ -113,15 +132,19 @@ export function useNotifications() {
   ) => {
     try {
       const response =
-        await notificationApi.markAsRead(
-          notificationId
-        );
+        await notificationApi
+          .markAsRead(
+            notificationId
+          );
 
       setNotifications(
-        (currentNotifications) =>
+        (
+          currentNotifications
+        ) =>
           currentNotifications.map(
             (notification) =>
-              notification.notificationId ===
+              notification
+                .notificationId ===
               notificationId
                 ? response.data
                 : notification
@@ -137,29 +160,34 @@ export function useNotifications() {
   /**
    * Mark all notifications as read.
    */
-  const markAllAsRead = async () => {
-    try {
-      await notificationApi.markAllAsRead();
+  const markAllAsRead =
+    async () => {
+      try {
+        await notificationApi
+          .markAllAsRead();
 
-      setNotifications(
-        (currentNotifications) =>
-          currentNotifications.map(
-            (notification) => ({
-              ...notification,
-              read: true,
-            })
-          )
-      );
-    } catch {
-      setError(
-        "Failed to mark notifications as read."
-      );
-    }
-  };
+        setNotifications(
+          (
+            currentNotifications
+          ) =>
+            currentNotifications.map(
+              (notification) => ({
+                ...notification,
+                read: true,
+              })
+            )
+        );
+      } catch {
+        setError(
+          "Failed to mark notifications as read."
+        );
+      }
+    };
 
   const unreadCount =
     notifications.filter(
-      (notification) => !notification.read
+      (notification) =>
+        !notification.read
     ).length;
 
   return {
@@ -167,7 +195,8 @@ export function useNotifications() {
     unreadCount,
     loading,
     error,
-    refresh: fetchNotifications,
+    refresh:
+      fetchNotifications,
     markAsRead,
     markAllAsRead,
   };

@@ -1,0 +1,1 @@
+export { default as CustomerClosureNotice } from "./components/CustomerClosureNotice";

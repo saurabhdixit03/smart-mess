@@ -1,5 +1,9 @@
 export type NotificationType =
-  | "MENU_PUBLISHED";
+  | "MENU_PUBLISHED"
+  | "MESS_CLOSURE"
+  | "WEEKLY_SCHEDULE"
+  | "RESPONSE_WINDOW"
+  | "MEAL_PRICING";
 
 export interface Notification {
   notificationId: number;

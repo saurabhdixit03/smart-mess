@@ -5,35 +5,48 @@ import type {
   Notification,
 } from "../types/notification.types";
 
-const NOTIFICATION_ENDPOINT = "/notifications";
+const NOTIFICATION_ENDPOINT =
+  "/notifications";
 
 export const notificationApi = {
   getNotifications() {
-    return api.get<ApiResponse<Notification[]>>(
+    return api.get<
+      ApiResponse<Notification[]>
+    >(
       NOTIFICATION_ENDPOINT
     );
   },
 
   getUnreadNotifications() {
-    return api.get<ApiResponse<Notification[]>>(
+    return api.get<
+      ApiResponse<Notification[]>
+    >(
       `${NOTIFICATION_ENDPOINT}/unread`
     );
   },
 
   getUnreadCount() {
-    return api.get<ApiResponse<number>>(
+    return api.get<
+      ApiResponse<number>
+    >(
       `${NOTIFICATION_ENDPOINT}/unread-count`
     );
   },
 
-  markAsRead(notificationId: number) {
-    return api.patch<ApiResponse<Notification>>(
+  markAsRead(
+    notificationId: number
+  ) {
+    return api.patch<
+      ApiResponse<Notification>
+    >(
       `${NOTIFICATION_ENDPOINT}/${notificationId}/read`
     );
   },
 
   markAllAsRead() {
-    return api.patch<ApiResponse<null>>(
+    return api.patch<
+      ApiResponse<null>
+    >(
       `${NOTIFICATION_ENDPOINT}/read-all`
     );
   },

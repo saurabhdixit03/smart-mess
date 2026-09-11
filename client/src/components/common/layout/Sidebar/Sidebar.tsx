@@ -1,4 +1,10 @@
-import type { LucideIcon } from "lucide-react";
+import type {
+  LucideIcon,
+} from "lucide-react";
+
+import type {
+  ReactNode,
+} from "react";
 
 import SidebarItem from "./SidebarItem";
 
@@ -19,6 +25,7 @@ type SidebarProps = {
   subtitle: string;
   navigation: NavigationItem[];
   account: SidebarAccount;
+  bottomContent?: ReactNode;
 };
 
 export default function Sidebar({
@@ -26,20 +33,20 @@ export default function Sidebar({
   subtitle,
   navigation,
   account,
+  bottomContent,
 }: SidebarProps) {
   return (
     <aside
-  className="
-    flex
-    h-screen
-    w-72
-    flex-col
-    overflow-hidden
-    border-r
-    border-[var(--color-border)]
-    bg-[var(--color-surface)]
-  "
-
+      className="
+        flex
+        h-screen
+        w-72
+        flex-col
+        overflow-hidden
+        border-r
+        border-[var(--color-border)]
+        bg-[var(--color-surface)]
+      "
     >
       {/* Branding */}
       <div className="px-6 py-5">
@@ -62,6 +69,13 @@ export default function Sidebar({
         ))}
       </nav>
 
+      {/* Optional contextual content */}
+      {bottomContent && (
+        <div className="px-4 pb-4">
+          {bottomContent}
+        </div>
+      )}
+
       {/* Account */}
       <div className="border-t border-[var(--color-border)] p-4">
         <div className="flex items-center gap-3 rounded-xl px-3 py-3">
@@ -80,7 +94,9 @@ export default function Sidebar({
               text-white
             "
           >
-            {account.name.charAt(0).toUpperCase()}
+            {account.name
+              .charAt(0)
+              .toUpperCase()}
           </div>
 
           <div className="min-w-0 flex-1">

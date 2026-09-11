@@ -2,6 +2,9 @@ import {
   Bell,
   CalendarDays,
   CalendarOff,
+  CheckCheck,
+  Clock3,
+  IndianRupee,
   Utensils,
 } from "lucide-react";
 
@@ -15,11 +18,18 @@ import { useNavigate } from "react-router-dom";
 
 import { useNotifications } from "../hooks";
 
+import type {
+  NotificationType,
+} from "../types";
+
 const CUSTOMER_MENU_PATH =
   "/customer/menu";
 
+const MAX_VISIBLE_NOTIFICATIONS =
+  10;
+
 function getNotificationIcon(
-  notificationType: string
+  notificationType: NotificationType
 ) {
   switch (notificationType) {
     case "MENU_PUBLISHED":
@@ -30,6 +40,12 @@ function getNotificationIcon(
 
     case "WEEKLY_SCHEDULE":
       return <CalendarDays size={17} />;
+
+    case "RESPONSE_WINDOW":
+      return <Clock3 size={17} />;
+
+    case "MEAL_PRICING":
+      return <IndianRupee size={17} />;
 
     default:
       return <Bell size={17} />;
@@ -109,10 +125,16 @@ export default function NotificationBell() {
     unreadCount,
     loading,
     markAsRead,
+    markAllAsRead,
   } = useNotifications();
 
   const [open, setOpen] =
     useState(false);
+
+  const [
+    markingAllAsRead,
+    setMarkingAllAsRead,
+  ] = useState(false);
 
   const containerRef =
     useRef<HTMLDivElement | null>(
@@ -148,7 +170,7 @@ export default function NotificationBell() {
 
   async function handleNotificationClick(
     notificationId: number,
-    notificationType: string,
+    notificationType: NotificationType,
     read: boolean
   ) {
     if (!read) {
@@ -168,6 +190,39 @@ export default function NotificationBell() {
       );
     }
   }
+
+  async function handleMarkAllAsRead() {
+    if (
+      unreadCount === 0 ||
+      markingAllAsRead
+    ) {
+      return;
+    }
+
+    try {
+      setMarkingAllAsRead(true);
+
+      await markAllAsRead();
+    } finally {
+      setMarkingAllAsRead(false);
+    }
+  }
+
+  const visibleNotifications =
+    [...notifications]
+      .sort(
+        (first, second) =>
+          new Date(
+            second.createdAt
+          ).getTime() -
+          new Date(
+            first.createdAt
+          ).getTime()
+      )
+      .slice(
+        0,
+        MAX_VISIBLE_NOTIFICATIONS
+      );
 
   return (
     <div
@@ -252,33 +307,73 @@ export default function NotificationBell() {
           {/* Header */}
           <div
             className="
+              flex
+              items-center
+              justify-between
+              gap-4
               border-b
               border-[var(--color-border)]
               px-4
               py-3.5
             "
           >
-            <h3
-              className="
-                text-sm
-                font-semibold
-                text-[var(--color-text)]
-              "
-            >
-              Notifications
-            </h3>
+            <div>
+              <h3
+                className="
+                  text-sm
+                  font-semibold
+                  text-[var(--color-text)]
+                "
+              >
+                Notifications
+              </h3>
 
-            <p
-              className="
-                mt-0.5
-                text-xs
-                text-[var(--color-text-secondary)]
-              "
-            >
-              {unreadCount > 0
-                ? `${unreadCount} unread`
-                : "You're all caught up"}
-            </p>
+              <p
+                className="
+                  mt-0.5
+                  text-xs
+                  text-[var(--color-text-secondary)]
+                "
+              >
+                {unreadCount > 0
+                  ? `${unreadCount} unread`
+                  : "You're all caught up"}
+              </p>
+            </div>
+
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                title="Mark all as read"
+                aria-label="Mark all notifications as read"
+                disabled={
+                  markingAllAsRead
+                }
+                onClick={
+                  handleMarkAllAsRead
+                }
+                className="
+                  flex
+                  h-8
+                  w-8
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-lg
+                  text-[var(--color-text-secondary)]
+                  transition-colors
+                  hover:bg-[var(--color-surface-hover)]
+                  hover:text-[var(--color-primary)]
+                  focus:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-[var(--color-primary)]/20
+                  disabled:cursor-not-allowed
+                  disabled:opacity-50
+                "
+              >
+                <CheckCheck size={17} />
+              </button>
+            )}
           </div>
 
           {/* Notification List */}
@@ -349,7 +444,7 @@ export default function NotificationBell() {
                 </p>
               </div>
             ) : (
-              notifications.map(
+              visibleNotifications.map(
                 (notification) => (
                   <button
                     key={
