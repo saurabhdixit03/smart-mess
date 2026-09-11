@@ -9,6 +9,7 @@ export default function MenuPage() {
 
   const {
     todayMenus,
+    availability,
     loading,
     error,
     fetchTodayMenus,
@@ -25,6 +26,7 @@ export default function MenuPage() {
 
       <TodayMenus
         todayMenus={todayMenus}
+        availability={availability}
         loading={loading}
         error={error}
         onRefresh={fetchTodayMenus}

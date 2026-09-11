@@ -1,6 +1,8 @@
 package com.smartmess.backend.security;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,9 +23,14 @@ import io.jsonwebtoken.security.Keys;
 public class JwtService {
 
     private final JwtProperties jwtProperties;
+    private final Clock clock;
 
-    public JwtService(JwtProperties jwtProperties) {
+    public JwtService(
+            JwtProperties jwtProperties,
+            Clock clock) {
+
         this.jwtProperties = jwtProperties;
+        this.clock = clock;
     }
 
     private SecretKey getSigningKey() {
@@ -46,13 +53,17 @@ public class JwtService {
                 role.name()
         );
 
+        Instant nowInstant =
+                clock.instant();
+
         Date now =
-                new Date();
+                Date.from(nowInstant);
 
         Date expiration =
-                new Date(
-                        now.getTime()
-                                + jwtProperties.getExpiration()
+                Date.from(
+                        nowInstant.plusMillis(
+                                jwtProperties.getExpiration()
+                        )
                 );
 
         return Jwts.builder()
@@ -125,7 +136,9 @@ public class JwtService {
         return extractExpiration(
                 token
         ).before(
-                new Date()
+                Date.from(
+                        clock.instant()
+                )
         );
     }
 

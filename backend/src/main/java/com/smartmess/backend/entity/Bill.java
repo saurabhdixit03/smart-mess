@@ -3,9 +3,21 @@ package com.smartmess.backend.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.smartmess.backend.common.BaseEntity;
 import com.smartmess.backend.enums.BillStatus;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
@@ -21,7 +33,7 @@ import jakarta.validation.constraints.NotNull;
                 )
         }
 )
-public class Bill {
+public class Bill extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -62,19 +74,6 @@ public class Bill {
 
     @Column(nullable = false)
     private LocalDateTime generatedAt;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-
-        LocalDateTime now = LocalDateTime.now();
-
-        createdAt = now;
-        generatedAt = now;
-
-    }
 
     public Bill() {
     }
@@ -142,13 +141,4 @@ public class Bill {
     public void setGeneratedAt(LocalDateTime generatedAt) {
         this.generatedAt = generatedAt;
     }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
 }

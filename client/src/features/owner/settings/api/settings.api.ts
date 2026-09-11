@@ -6,13 +6,16 @@ import type {
   ApiResponse,
   CreateMessSettingsRequest,
   MessSettingsResponse,
-  UpdateMessSettingsRequest,
+  UpdatePaymentSettingsRequest,
+  UpdateResponseWindowRequest,
+  UpdateWeeklyScheduleRequest,
 } from "../types";
 
 export const settingsApi = {
-
   getSettings() {
-    return api.get<ApiResponse<MessSettingsResponse>>(
+    return api.get<
+      ApiResponse<MessSettingsResponse>
+    >(
       SETTINGS_API_ENDPOINT
     );
   },
@@ -20,19 +23,44 @@ export const settingsApi = {
   createSettings(
     payload: CreateMessSettingsRequest
   ) {
-    return api.post<ApiResponse<MessSettingsResponse>>(
+    return api.post<
+      ApiResponse<MessSettingsResponse>
+    >(
       SETTINGS_API_ENDPOINT,
       payload
     );
   },
 
-  updateSettings(
-    payload: UpdateMessSettingsRequest
+  updatePaymentSettings(
+    payload: UpdatePaymentSettingsRequest
   ) {
-    return api.put<ApiResponse<MessSettingsResponse>>(
-      SETTINGS_API_ENDPOINT,
+    return api.put<
+      ApiResponse<MessSettingsResponse>
+    >(
+      `${SETTINGS_API_ENDPOINT}/payment`,
       payload
     );
   },
 
+  updateResponseWindow(
+    payload: UpdateResponseWindowRequest
+  ) {
+    return api.put<
+      ApiResponse<MessSettingsResponse>
+    >(
+      `${SETTINGS_API_ENDPOINT}/response-window`,
+      payload
+    );
+  },
+
+  updateWeeklySchedule(
+    payload: UpdateWeeklyScheduleRequest
+  ) {
+    return api.put<
+      ApiResponse<MessSettingsResponse>
+    >(
+      `${SETTINGS_API_ENDPOINT}/weekly-schedule`,
+      payload
+    );
+  },
 };

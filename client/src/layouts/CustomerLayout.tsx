@@ -7,12 +7,24 @@ import Topbar from "@/components/common/layout/Topbar";
 import { getCustomer } from "@/features/auth/utils/auth.utils";
 import { useCustomerLogout } from "@/features/auth/hooks";
 
+import { useNotifications } from "@/features/customer/notifications/hooks";
+
 import { customerNavigation } from "@/config/navigation";
+import NotificationBell from "@/features/customer/notifications/components/NotificationBell";
 
 export default function CustomerLayout() {
   const { logout } = useCustomerLogout();
 
   const customer = getCustomer();
+
+  /**
+   * Initializes customer notifications.
+   *
+   * For now this establishes the REST +
+   * WebSocket notification flow.
+   * Visual notification UI will be added next.
+   */
+  useNotifications();
 
   return (
     <AppShell
@@ -30,8 +42,9 @@ export default function CustomerLayout() {
       }
       topbar={
         <Topbar
-          title="Smart Mess"
-        />
+  title="Smart Mess"
+  actions={<NotificationBell />}
+/>
       }
     >
       <Outlet />

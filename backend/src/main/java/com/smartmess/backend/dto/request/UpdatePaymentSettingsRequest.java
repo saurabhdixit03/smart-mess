@@ -2,7 +2,7 @@ package com.smartmess.backend.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record UpdateMessSettingsRequest(
+public record UpdatePaymentSettingsRequest(
 
         @NotBlank(message = "UPI ID is required.")
         String upiId,
@@ -11,4 +11,5 @@ public record UpdateMessSettingsRequest(
         String receiverName
 
 ) {
+
 }

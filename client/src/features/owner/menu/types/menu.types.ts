@@ -23,6 +23,12 @@ export interface MenuResponse {
   updatedAt: string;
 }
 
+export interface MenuAvailabilityResponse {
+  mealSession: MealSession;
+  canPublish: boolean;
+  reason: string | null;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;

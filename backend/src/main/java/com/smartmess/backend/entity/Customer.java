@@ -51,15 +51,12 @@ public class Customer extends BaseEntity {
 
     @Column(name = "password", nullable = false, length = 255)
     private String password;
-    
+
     @PrePersist
     private void initializeDefaults() {
+
         if (status == null) {
             status = CustomerStatus.ACTIVE;
-        }
-
-        if (joiningDate == null) {
-            joiningDate = LocalDate.now();
         }
     }
 }

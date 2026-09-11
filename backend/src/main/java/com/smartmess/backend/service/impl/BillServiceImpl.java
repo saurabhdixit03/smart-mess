@@ -1,7 +1,7 @@
-
 package com.smartmess.backend.service.impl;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -45,13 +45,16 @@ public class BillServiceImpl implements BillService {
 
     private final CustomerSecurity customerSecurity;
 
+    private final Clock clock;
+
     public BillServiceImpl(
             BillRepository billRepository,
             CustomerRepository customerRepository,
             MealRecordRepository mealRecordRepository,
             BillMapper billMapper,
             MealRecordMapper mealRecordMapper,
-            CustomerSecurity customerSecurity) {
+            CustomerSecurity customerSecurity,
+            Clock clock) {
 
         this.billRepository = billRepository;
         this.customerRepository = customerRepository;
@@ -59,6 +62,7 @@ public class BillServiceImpl implements BillService {
         this.billMapper = billMapper;
         this.mealRecordMapper = mealRecordMapper;
         this.customerSecurity = customerSecurity;
+        this.clock = clock;
     }
 
     /*
@@ -165,6 +169,10 @@ public class BillServiceImpl implements BillService {
 
             bill.setBillStatus(
                     BillStatus.UNPAID
+            );
+
+            bill.setGeneratedAt(
+                    LocalDateTime.now(clock)
             );
 
             Bill savedBill =

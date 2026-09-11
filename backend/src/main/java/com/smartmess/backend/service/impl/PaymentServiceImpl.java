@@ -1,9 +1,9 @@
-
 package com.smartmess.backend.service.impl;
 
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -45,13 +45,16 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final CustomerSecurity customerSecurity;
 
+    private final Clock clock;
+
     public PaymentServiceImpl(
             PaymentRepository paymentRepository,
             BillRepository billRepository,
             PaymentMapper paymentMapper,
             MessSettingsRepository messSettingsRepository,
             BillMapper billMapper,
-            CustomerSecurity customerSecurity) {
+            CustomerSecurity customerSecurity,
+            Clock clock) {
 
         this.paymentRepository = paymentRepository;
         this.billRepository = billRepository;
@@ -59,6 +62,7 @@ public class PaymentServiceImpl implements PaymentService {
         this.messSettingsRepository = messSettingsRepository;
         this.billMapper = billMapper;
         this.customerSecurity = customerSecurity;
+        this.clock = clock;
     }
 
     /*
@@ -124,7 +128,7 @@ public class PaymentServiceImpl implements PaymentService {
         );
 
         payment.setPaidAt(
-                LocalDateTime.now()
+                LocalDateTime.now(clock)
         );
 
         /*

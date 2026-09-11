@@ -11,4 +11,5 @@ public record CreateMessSettingsRequest(
         String receiverName
 
 ) {
+
 }

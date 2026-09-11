@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
@@ -48,6 +49,8 @@ public class PasswordResetServiceImpl
     private final EmailService
             emailService;
 
+    private final Clock clock;
+
     @Value("${app.password-reset.expiration-minutes:30}")
     private long tokenExpirationMinutes;
 
@@ -56,7 +59,8 @@ public class PasswordResetServiceImpl
             MessOwnerRepository messOwnerRepository,
             CustomerRepository customerRepository,
             PasswordEncoder passwordEncoder,
-            EmailService emailService) {
+            EmailService emailService,
+            Clock clock) {
 
         this.passwordResetTokenRepository =
                 passwordResetTokenRepository;
@@ -72,6 +76,9 @@ public class PasswordResetServiceImpl
 
         this.emailService =
                 emailService;
+
+        this.clock =
+                clock;
     }
 
     @Override
@@ -160,7 +167,7 @@ public class PasswordResetServiceImpl
         );
 
         resetToken.setExpiresAt(
-                LocalDateTime.now()
+                LocalDateTime.now(clock)
                         .plusMinutes(
                                 tokenExpirationMinutes
                         )
@@ -220,7 +227,7 @@ public class PasswordResetServiceImpl
         if (resetToken
                 .getExpiresAt()
                 .isBefore(
-                        LocalDateTime.now()
+                        LocalDateTime.now(clock)
                 )) {
 
             throw new BusinessException(
@@ -314,7 +321,7 @@ public class PasswordResetServiceImpl
         }
 
         LocalDateTime now =
-                LocalDateTime.now();
+                LocalDateTime.now(clock);
 
         activeTokens.forEach(
                 token ->

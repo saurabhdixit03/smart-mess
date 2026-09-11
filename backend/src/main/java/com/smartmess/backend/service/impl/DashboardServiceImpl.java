@@ -1,10 +1,15 @@
 package com.smartmess.backend.service.impl;
 
+import java.time.Clock;
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.smartmess.backend.dto.response.DashboardCustomerResponse;
 import com.smartmess.backend.dto.response.DashboardSummaryResponse;
+import com.smartmess.backend.entity.MealResponse;
 import com.smartmess.backend.entity.Menu;
 import com.smartmess.backend.enums.CustomerStatus;
 import com.smartmess.backend.enums.MealOption;
@@ -17,12 +22,6 @@ import com.smartmess.backend.repository.MealResponseRepository;
 import com.smartmess.backend.repository.MenuRepository;
 import com.smartmess.backend.service.DashboardService;
 
-import java.util.Comparator;
-import java.util.List;
-
-import com.smartmess.backend.dto.response.DashboardCustomerResponse;
-import com.smartmess.backend.entity.MealResponse;
-
 @Service
 public class DashboardServiceImpl implements DashboardService {
 
@@ -30,27 +29,28 @@ public class DashboardServiceImpl implements DashboardService {
     private final MenuRepository menuRepository;
     private final MealResponseRepository mealResponseRepository;
     private final MealRecordRepository mealRecordRepository;
+    private final Clock clock;
 
     public DashboardServiceImpl(
             CustomerRepository customerRepository,
             MenuRepository menuRepository,
             MealResponseRepository mealResponseRepository,
-            MealRecordRepository mealRecordRepository) {
+            MealRecordRepository mealRecordRepository,
+            Clock clock) {
 
         this.customerRepository = customerRepository;
         this.menuRepository = menuRepository;
         this.mealResponseRepository = mealResponseRepository;
         this.mealRecordRepository = mealRecordRepository;
+        this.clock = clock;
     }
-    
-    
 
     @Override
     public DashboardSummaryResponse getDashboardSummary(MealSession mealSession) {
 
         Menu menu = menuRepository
                 .findByMenuDateAndMealSession(
-                        LocalDate.now(),
+                        LocalDate.now(clock),
                         mealSession
                 )
                 .orElseThrow(() ->
@@ -92,18 +92,19 @@ public class DashboardServiceImpl implements DashboardService {
 
         Long expectedExtraRotis =
                 mealResponseRepository.getTotalExtraRotis(menu);
-        
+
         long acceptedMeals =
                 expectedFullMeals + expectedHalfMeals;
-        
+
         long baseRotisRequired =
                 acceptedMeals * 3;
 
         long totalRotisRequired =
                 baseRotisRequired
-                + (expectedExtraRotis == null ? 0L : expectedExtraRotis);
-        
-        List<MealResponse> responses = mealResponseRepository.findByMenu(menu);
+                        + (expectedExtraRotis == null ? 0L : expectedExtraRotis);
+
+        List<MealResponse> responses =
+                mealResponseRepository.findByMenu(menu);
 
         DashboardSummaryResponse response =
                 new DashboardSummaryResponse();
@@ -120,7 +121,7 @@ public class DashboardServiceImpl implements DashboardService {
 
         response.setExpectedFullMeals(expectedFullMeals);
         response.setExpectedHalfMeals(expectedHalfMeals);
-        
+
         response.setBaseRotisRequired(baseRotisRequired);
 
         response.setExpectedExtraRotis(
@@ -182,7 +183,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .toList();
 
         response.setCollectionQueue(customerQueue);
-        
+
         List<DashboardCustomerResponse> recentActivities = responses.stream()
 
                 .sorted(
@@ -240,7 +241,6 @@ public class DashboardServiceImpl implements DashboardService {
                 recentActivities
         );
 
-        return response;    
+        return response;
     }
-
 }

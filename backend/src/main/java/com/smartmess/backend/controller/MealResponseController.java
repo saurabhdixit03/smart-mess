@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.smartmess.backend.dto.request.SubmitMealResponseRequest;
 import com.smartmess.backend.dto.response.ApiResponse;
+import com.smartmess.backend.dto.response.MealResponseAvailabilityResponse;
 import com.smartmess.backend.dto.response.MealResponseResponse;
 import com.smartmess.backend.security.CustomerSecurity;
 import com.smartmess.backend.service.MealResponseService;
@@ -46,7 +47,8 @@ public class MealResponseController {
         MealResponseResponse response =
                 mealResponseService.submitMealResponse(
                         customerId,
-                        request);
+                        request
+                );
 
         return ApiResponse.success(
                 "Meal response submitted successfully.",
@@ -62,7 +64,9 @@ public class MealResponseController {
             HttpServletRequest httpRequest) {
 
         List<MealResponseResponse> responses =
-                mealResponseService.getResponsesByMenu(menuId);
+                mealResponseService.getResponsesByMenu(
+                        menuId
+                );
 
         return ApiResponse.success(
                 "Meal responses retrieved successfully.",
@@ -81,10 +85,36 @@ public class MealResponseController {
         MealResponseResponse response =
                 mealResponseService.getCustomerResponse(
                         customerId,
-                        menuId);
+                        menuId
+                );
 
         return ApiResponse.success(
                 "Meal response retrieved successfully.",
+                httpRequest.getRequestURI(),
+                response
+        );
+    }
+
+    /*
+     * CUSTOMER ONLY
+     *
+     * Returns whether the customer can currently
+     * submit or update a response for the given menu.
+     */
+    @GetMapping("/menu/{menuId}/availability")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ApiResponse<MealResponseAvailabilityResponse>
+            getResponseAvailability(
+                    @PathVariable Long menuId,
+                    HttpServletRequest httpRequest) {
+
+        MealResponseAvailabilityResponse response =
+                mealResponseService.getResponseAvailability(
+                        menuId
+                );
+
+        return ApiResponse.success(
+                "Meal response availability fetched successfully.",
                 httpRequest.getRequestURI(),
                 response
         );
