@@ -15,7 +15,6 @@ import com.smartmess.backend.dto.response.MessSettingsResponse;
 import com.smartmess.backend.entity.MessSettings;
 import com.smartmess.backend.enums.NotificationType;
 import com.smartmess.backend.exception.BusinessException;
-import com.smartmess.backend.exception.ResourceNotFoundException;
 import com.smartmess.backend.mapper.MessSettingsMapper;
 import com.smartmess.backend.repository.MessSettingsRepository;
 import com.smartmess.backend.service.MessSettingsService;
@@ -70,7 +69,9 @@ public class MessSettingsServiceImpl
     public MessSettingsResponse getSettings() {
 
         MessSettings settings =
-                getMessSettings();
+                messSettingsRepository
+                        .findTopByOrderBySettingsIdAsc()
+                        .orElseGet(MessSettings::new);
 
         return messSettingsMapper.toResponse(
                 settings
@@ -82,7 +83,7 @@ public class MessSettingsServiceImpl
             UpdatePaymentSettingsRequest request) {
 
         MessSettings settings =
-                getMessSettings();
+                getOrCreateSettings();
 
         messSettingsMapper.updateEntityFromRequest(
                 request,
@@ -104,7 +105,7 @@ public class MessSettingsServiceImpl
             UpdateResponseWindowRequest request) {
 
         MessSettings settings =
-                getMessSettings();
+                getOrCreateSettings();
 
         boolean changed =
                 !Objects.equals(
@@ -163,7 +164,7 @@ public class MessSettingsServiceImpl
         );
 
         MessSettings settings =
-                getMessSettings();
+                getOrCreateSettings();
 
         boolean changed =
                 !Objects.equals(
@@ -215,15 +216,11 @@ public class MessSettingsServiceImpl
         );
     }
 
-    private MessSettings getMessSettings() {
+    private MessSettings getOrCreateSettings() {
 
         return messSettingsRepository
                 .findTopByOrderBySettingsIdAsc()
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Mess settings not found."
-                        )
-                );
+                .orElseGet(MessSettings::new);
     }
 
     private void validateWeeklySchedule(

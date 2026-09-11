@@ -24,12 +24,15 @@ public class MessSettings extends BaseEntity {
 
     /*
      * Payment Settings
+     *
+     * Payment details are optional until the owner
+     * configures UPI payment settings.
      */
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String upiId;
 
-    @Column(nullable = false)
+    @Column
     private String receiverName;
 
     /*
