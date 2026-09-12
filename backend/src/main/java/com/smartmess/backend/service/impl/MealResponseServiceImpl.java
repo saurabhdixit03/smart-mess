@@ -22,6 +22,7 @@ import com.smartmess.backend.exception.BusinessException;
 import com.smartmess.backend.exception.ResourceNotFoundException;
 import com.smartmess.backend.mapper.MealResponseMapper;
 import com.smartmess.backend.repository.CustomerRepository;
+import com.smartmess.backend.repository.MealRecordRepository;
 import com.smartmess.backend.repository.MealResponseRepository;
 import com.smartmess.backend.repository.MenuRepository;
 import com.smartmess.backend.repository.MessSettingsRepository;
@@ -37,6 +38,7 @@ public class MealResponseServiceImpl
             DateTimeFormatter.ofPattern("h:mm a");
 
     private final MealResponseRepository mealResponseRepository;
+    private final MealRecordRepository mealRecordRepository;
     private final CustomerRepository customerRepository;
     private final MenuRepository menuRepository;
     private final MessSettingsRepository messSettingsRepository;
@@ -47,6 +49,7 @@ public class MealResponseServiceImpl
 
     public MealResponseServiceImpl(
             MealResponseRepository mealResponseRepository,
+            MealRecordRepository mealRecordRepository,
             CustomerRepository customerRepository,
             MenuRepository menuRepository,
             MessSettingsRepository messSettingsRepository,
@@ -56,6 +59,7 @@ public class MealResponseServiceImpl
             Clock clock) {
 
         this.mealResponseRepository = mealResponseRepository;
+        this.mealRecordRepository = mealRecordRepository;
         this.customerRepository = customerRepository;
         this.menuRepository = menuRepository;
         this.messSettingsRepository = messSettingsRepository;
@@ -96,6 +100,15 @@ public class MealResponseServiceImpl
                                                 + request.getMenuId()
                                 )
                         );
+
+        if (mealRecordRepository.existsByCustomerAndMenu(
+                customer,
+                menu
+        )) {
+            throw new BusinessException(
+                    "Meal response cannot be changed because the meal has already been recorded."
+            );
+        }
 
         validateResponseWindow(menu);
 
@@ -231,6 +244,30 @@ public class MealResponseServiceImpl
                                                 + menuId
                                 )
                         );
+
+        Long customerId =
+                customerSecurity.getCurrentUserId();
+
+        Customer customer =
+                customerRepository.findById(customerId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Customer not found with ID: "
+                                                + customerId
+                                )
+                        );
+
+        if (mealRecordRepository.existsByCustomerAndMenu(
+                customer,
+                menu
+        )) {
+            return new MealResponseAvailabilityResponse(
+                    menu.getMenuId(),
+                    menu.getMealSession(),
+                    false,
+                    "Meal already recorded."
+            );
+        }
 
         LocalDate today =
                 LocalDate.now(clock);
