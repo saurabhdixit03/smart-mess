@@ -1,5 +1,8 @@
 package com.smartmess.backend.service.impl;
 
+import java.time.Clock;
+import java.time.LocalDate;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +36,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
+    private final Clock clock;
 
     public AuthServiceImpl(
             MessOwnerRepository messOwnerRepository,
@@ -40,7 +44,8 @@ public class AuthServiceImpl implements AuthService {
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             CustomerRepository customerRepository,
-            CustomerMapper customerMapper) {
+            CustomerMapper customerMapper,
+            Clock clock) {
 
         this.messOwnerRepository = messOwnerRepository;
         this.messOwnerMapper = messOwnerMapper;
@@ -48,6 +53,7 @@ public class AuthServiceImpl implements AuthService {
         this.jwtService = jwtService;
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;
+        this.clock = clock;
     }
 
     private OwnerLoginResponse buildLoginResponse(
@@ -186,6 +192,10 @@ public class AuthServiceImpl implements AuthService {
 
         Customer customer =
                 customerMapper.toEntity(request);
+
+        customer.setJoiningDate(
+                LocalDate.now(clock)
+        );
 
         customer.setPassword(
                 passwordEncoder.encode(
