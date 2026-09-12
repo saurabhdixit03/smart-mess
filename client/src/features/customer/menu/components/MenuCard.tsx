@@ -71,6 +71,7 @@ export default function MenuCard({
     availability,
     loading: availabilityLoading,
     error: availabilityError,
+    refetch: refetchAvailability,
   } = useMealResponseAvailability(
     menu.menuId
   );
@@ -111,8 +112,12 @@ export default function MenuCard({
 
       console.error(error);
 
+      await refetchAvailability();
+
       toast.error(
-        "Unable to save your response. Please try again."
+        error instanceof Error
+          ? error.message
+          : "Unable to save your response. Please try again."
       );
 
     }
