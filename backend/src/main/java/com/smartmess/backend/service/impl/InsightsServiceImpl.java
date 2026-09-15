@@ -18,6 +18,8 @@ import com.smartmess.backend.service.InsightsService;
 
 import lombok.RequiredArgsConstructor;
 
+import com.smartmess.backend.exception.BusinessException;
+
 @Service
 @RequiredArgsConstructor
 public class InsightsServiceImpl
@@ -31,6 +33,8 @@ public class InsightsServiceImpl
     public MonthlyInsightsResponse getMonthlyInsights(
             Integer month,
             Integer year) {
+    	
+        validateMonth(month);
 
         List<Object[]> financialRows =
                 billRepository.getMonthlyFinancialInsights(month, year);
@@ -119,6 +123,19 @@ public class InsightsServiceImpl
                 customerInsights,
                 mealInsights
         );
+    }
+    
+    private void validateMonth(
+            Integer month) {
+
+        if (month == null
+                || month < 1
+                || month > 12) {
+
+            throw new BusinessException(
+                    "Month must be between 1 and 12."
+            );
+        }
     }
     
     private Long getLong(Object value) {
