@@ -1,4 +1,3 @@
-
 package com.smartmess.backend.controller;
 
 import java.util.List;
@@ -6,7 +5,6 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,7 +29,9 @@ public class BillController {
 
     private final BillService billService;
 
-    public BillController(BillService billService) {
+    public BillController(
+            BillService billService) {
+
         this.billService = billService;
     }
 
@@ -43,11 +43,7 @@ public class BillController {
     @PostMapping("/generate")
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<List<BillResponse>>> generateBills(
-
-            @Valid
-            @RequestBody
-            GenerateBillRequest request,
-
+            @Valid @RequestBody GenerateBillRequest request,
             HttpServletRequest httpRequest) {
 
         List<BillResponse> bills =
@@ -73,11 +69,9 @@ public class BillController {
      * Owner can request bills for any customer.
      */
     @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
+    @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<List<BillResponse>>> getCustomerBills(
-
             @PathVariable Long customerId,
-
             HttpServletRequest request) {
 
         List<BillResponse> bills =
@@ -104,7 +98,6 @@ public class BillController {
     @GetMapping("/me")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<List<BillResponse>>> getMyBills(
-
             HttpServletRequest request) {
 
         List<BillResponse> bills =
@@ -134,9 +127,7 @@ public class BillController {
     @GetMapping("/{billId}")
     @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
     public ResponseEntity<ApiResponse<BillDetailResponse>> getBillDetails(
-
             @PathVariable Long billId,
-
             HttpServletRequest request) {
 
         BillDetailResponse bill =
@@ -160,11 +151,8 @@ public class BillController {
     @GetMapping("/overview")
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<BillingOverviewResponse>> getBillingOverview(
-
             @RequestParam Integer billingMonth,
-
             @RequestParam Integer billingYear,
-
             HttpServletRequest request) {
 
         BillingOverviewResponse overview =
