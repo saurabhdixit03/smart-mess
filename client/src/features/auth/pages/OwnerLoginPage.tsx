@@ -129,7 +129,7 @@ export default function OwnerLoginPage() {
 
                 <p className="text-sm text-red-500">
                   {accountNotFound
-                    ? "No owner account found with this mobile number."
+                    ? "No owner account found with this email address."
                     : error}
                 </p>
 

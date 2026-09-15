@@ -94,9 +94,9 @@ public class PasswordResetServiceImpl
 
             MessOwner owner =
                     messOwnerRepository
-                    .findByEmail(
-                            request.email()
-                    )
+                            .findByEmail(
+                                    request.email()
+                            )
                             .orElse(null);
 
             /*
@@ -113,9 +113,9 @@ public class PasswordResetServiceImpl
 
             Customer customer =
                     customerRepository
-                    .findByEmail(
-                            request.email()
-                    )
+                            .findByEmail(
+                                    request.email()
+                            )
                             .orElse(null);
 
             /*
@@ -274,6 +274,11 @@ public class PasswordResetServiceImpl
                                 )
                         );
 
+        validateNewPassword(
+                newPassword,
+                owner.getPassword()
+        );
+
         owner.setPassword(
                 passwordEncoder.encode(
                         newPassword
@@ -296,6 +301,11 @@ public class PasswordResetServiceImpl
                                 )
                         );
 
+        validateNewPassword(
+                newPassword,
+                customer.getPassword()
+        );
+
         customer.setPassword(
                 passwordEncoder.encode(
                         newPassword
@@ -303,6 +313,21 @@ public class PasswordResetServiceImpl
         );
 
         customerRepository.save(customer);
+    }
+
+    private void validateNewPassword(
+            String newPassword,
+            String currentPasswordHash) {
+
+        if (passwordEncoder.matches(
+                newPassword,
+                currentPasswordHash
+        )) {
+
+            throw new BusinessException(
+                    "New password must be different from your current password."
+            );
+        }
     }
 
     private void invalidateExistingTokens(

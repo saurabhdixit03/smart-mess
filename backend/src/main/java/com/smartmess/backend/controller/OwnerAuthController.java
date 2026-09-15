@@ -3,19 +3,23 @@ package com.smartmess.backend.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.smartmess.backend.dto.request.ForgotPasswordRequest;
 import com.smartmess.backend.dto.request.OwnerLoginRequest;
 import com.smartmess.backend.dto.request.OwnerRegistrationRequest;
 import com.smartmess.backend.dto.response.ApiResponse;
 import com.smartmess.backend.dto.response.OwnerLoginResponse;
+import com.smartmess.backend.enums.UserRole;
 import com.smartmess.backend.service.AuthService;
+import com.smartmess.backend.service.PasswordResetService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import com.smartmess.backend.dto.request.ForgotPasswordRequest;
-import com.smartmess.backend.enums.UserRole;
-import com.smartmess.backend.service.PasswordResetService;
+
 @RestController
 @RequestMapping("/api/auth/owner")
 @Validated
@@ -69,7 +73,7 @@ public class OwnerAuthController {
 
         return ResponseEntity.ok(apiResponse);
     }
-    
+
     @PostMapping("/forgot-password")
     public ResponseEntity<ApiResponse<Void>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request,
@@ -82,11 +86,10 @@ public class OwnerAuthController {
 
         return ResponseEntity.ok(
                 ApiResponse.success(
-                        "If an account exists with this mobile number, a password reset link has been sent to the registered email address.",
+                        "If an account exists with this email address, a password reset link has been sent.",
                         httpRequest.getRequestURI(),
                         null
                 )
         );
     }
-   
 }
