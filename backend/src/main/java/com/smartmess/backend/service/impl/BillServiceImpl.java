@@ -330,6 +330,10 @@ public class BillServiceImpl implements BillService {
             Integer billingMonth,
             Integer billingYear) {
 
+        validateBillingMonth(
+                billingMonth
+        );
+
         List<Bill> bills =
                 billRepository
                         .findByBillingMonthAndBillingYearOrderByGeneratedAtDesc(
@@ -397,5 +401,18 @@ public class BillServiceImpl implements BillService {
         );
 
         return response;
+    }
+
+    private void validateBillingMonth(
+            Integer billingMonth) {
+
+        if (billingMonth == null
+                || billingMonth < 1
+                || billingMonth > 12) {
+
+            throw new BusinessException(
+                    "Billing month must be between 1 and 12."
+            );
+        }
     }
 }

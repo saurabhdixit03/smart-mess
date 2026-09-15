@@ -18,6 +18,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import java.util.Arrays;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+
 @ControllerAdvice
 public class GlobalExceptionHandler {
 	@ExceptionHandler(ResourceNotFoundException.class)
@@ -74,6 +77,43 @@ public class GlobalExceptionHandler {
 	            .status(HttpStatus.BAD_REQUEST)
 	            .body(response);
 	}
+	
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingRequestParameter(
+            MissingServletRequestParameterException exception,
+            HttpServletRequest request) {
+
+        String message =
+                "Required parameter '"
+                        + exception.getParameterName()
+                        + "' is missing.";
+
+        ApiResponse<Void> response = ApiResponse.failure(
+                message,
+                request.getRequestURI(),
+                null
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException exception,
+            HttpServletRequest request) {
+
+        ApiResponse<Void> response = ApiResponse.failure(
+                "Malformed JSON request or invalid field value.",
+                request.getRequestURI(),
+                null
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
 	
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiResponse<String>> handleException(
