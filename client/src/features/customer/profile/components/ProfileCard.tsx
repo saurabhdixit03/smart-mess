@@ -1,7 +1,11 @@
-import { Mail, Phone, Calendar } from "lucide-react";
+import {
+  Calendar,
+  Mail,
+  Phone,
+  UserRound,
+} from "lucide-react";
 
 import {
-  Button,
   Card,
   StatusBadge,
 } from "@/components/common/ui";
@@ -10,59 +14,68 @@ import type { CustomerProfile } from "../types";
 
 interface ProfileCardProps {
   profile: CustomerProfile;
-
-  onEdit: () => void;
 }
 
 export default function ProfileCard({
   profile,
-  onEdit,
 }: ProfileCardProps) {
   return (
-    <Card>
+    <Card
+      className="
+        w-full
+        max-w-md
+        transition-all
+        duration-200
+        hover:-translate-y-1
+        hover:shadow-md
+      "
+    >
 
       <Card.Body className="space-y-6">
 
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-4">
 
-          <div>
+          <div className="flex min-w-0 items-center gap-3">
 
-            <h2 className="text-2xl font-semibold">
+            <div
+              className="
+                flex
+                h-10
+                w-10
+                shrink-0
+                items-center
+                justify-center
+                rounded-lg
+                bg-[var(--color-primary)]/10
+                text-[var(--color-primary)]
+              "
+            >
+              <UserRound size={20} />
+            </div>
+
+            <h2 className="break-words text-xl font-semibold">
               {profile.fullName}
             </h2>
-
-            <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-              Customer Profile
-            </p>
 
           </div>
 
           <StatusBadge
-  label={profile.status}
-  variant="success"
-/>
+            label={profile.status}
+            variant="success"
+          />
 
         </div>
 
-        <div
-          className="
-            grid
-            gap-5
-
-            sm:grid-cols-2
-
-            lg:grid-cols-4
-          "
-        >
+        <div className="grid gap-5">
 
           <div className="flex items-center gap-3">
 
             <Phone
               size={18}
-              className="text-[var(--color-primary)]"
+              className="shrink-0 text-[var(--color-primary)]"
             />
 
-            <div>
+            <div className="min-w-0">
 
               <p className="text-xs text-[var(--color-text-secondary)]">
                 Mobile
@@ -80,16 +93,16 @@ export default function ProfileCard({
 
             <Mail
               size={18}
-              className="text-[var(--color-primary)]"
+              className="shrink-0 text-[var(--color-primary)]"
             />
 
-            <div>
+            <div className="min-w-0">
 
               <p className="text-xs text-[var(--color-text-secondary)]">
                 Email
               </p>
 
-              <p className="font-medium">
+              <p className="break-all font-medium">
                 {profile.email || "-"}
               </p>
 
@@ -101,10 +114,10 @@ export default function ProfileCard({
 
             <Calendar
               size={18}
-              className="text-[var(--color-primary)]"
+              className="shrink-0 text-[var(--color-primary)]"
             />
 
-            <div>
+            <div className="min-w-0">
 
               <p className="text-xs text-[var(--color-text-secondary)]">
                 Joined
@@ -113,20 +126,17 @@ export default function ProfileCard({
               <p className="font-medium">
                 {new Date(
                   profile.joiningDate
-                ).toLocaleDateString()}
+                ).toLocaleDateString(
+                  "en-IN",
+                  {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  }
+                )}
               </p>
 
             </div>
-
-          </div>
-
-          <div className="flex items-center justify-end">
-
-            <Button
-              onClick={onEdit}
-            >
-              Edit Profile
-            </Button>
 
           </div>
 

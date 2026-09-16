@@ -41,7 +41,17 @@ export default function BillCard({
   onPay,
 }: BillCardProps) {
   return (
-    <Card className="flex h-full flex-col">
+    <Card
+      className="
+        flex
+        h-full
+        flex-col
+        transition-all
+        duration-200
+        hover:-translate-y-1
+        hover:shadow-md
+      "
+    >
 
       <Card.Body className="flex flex-1 flex-col">
 
@@ -61,7 +71,11 @@ export default function BillCard({
             <div>
 
               <h2 className="text-lg font-semibold">
-                {MONTHS[bill.billingMonth - 1]}{" "}
+                {
+                  MONTHS[
+                    bill.billingMonth - 1
+                  ]
+                }{" "}
                 {bill.billingYear}
               </h2>
 
@@ -107,7 +121,9 @@ export default function BillCard({
             <span className="text-sm">
               {new Date(
                 bill.generatedAt
-              ).toLocaleDateString()}
+              ).toLocaleDateString(
+                "en-IN"
+              )}
             </span>
 
           </div>
@@ -139,7 +155,8 @@ export default function BillCard({
           </Button>
         )}
 
-        {bill.billStatus === "PAYMENT_PENDING" && (
+        {bill.billStatus ===
+          "PAYMENT_PENDING" && (
           <Button
             fullWidth
             disabled

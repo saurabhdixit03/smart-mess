@@ -30,10 +30,11 @@ function formatTime(
   );
 
   return date.toLocaleTimeString(
-    undefined,
+    "en-IN",
     {
-      hour: "numeric",
+      hour: "2-digit",
       minute: "2-digit",
+      hour12: true,
     }
   );
 }
@@ -118,9 +119,15 @@ function DetailCard({
         border-[var(--color-border)]
         bg-[var(--color-surface)]
         p-5
+        shadow-sm
+        transition-all
+        duration-200
+        hover:-translate-y-1
+        hover:shadow-md
       "
     >
       <div className="flex items-start gap-3">
+
         <div
           className="
             flex
@@ -138,6 +145,7 @@ function DetailCard({
         </div>
 
         <div>
+
           <h2
             className="
               text-base
@@ -158,7 +166,9 @@ function DetailCard({
           >
             {description}
           </p>
+
         </div>
+
       </div>
 
       <div
@@ -170,6 +180,7 @@ function DetailCard({
       >
         {children}
       </div>
+
     </section>
   );
 }
@@ -193,9 +204,11 @@ export default function MessDetailsPage() {
   if (error) {
     return (
       <div className="p-6">
+
         <p className="text-sm text-[var(--color-danger)]">
           {error}
         </p>
+
       </div>
     );
   }
@@ -217,6 +230,7 @@ export default function MessDetailsPage() {
 
   return (
     <div className="space-y-5">
+
       <PageHeader
         title="Mess Details"
         description="View meal response timings, weekly schedule, and current meal pricing."
@@ -230,6 +244,7 @@ export default function MessDetailsPage() {
           xl:grid-cols-3
         "
       >
+
         <DetailCard
           icon={<Clock3 size={18} />}
           title="Response Window"
@@ -303,7 +318,9 @@ export default function MessDetailsPage() {
             }
           />
         </DetailCard>
+
       </div>
+
     </div>
   );
 }

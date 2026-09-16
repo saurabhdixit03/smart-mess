@@ -8,11 +8,12 @@ import {
   Wallet,
   BarChart3,
   Settings,
-  User,
   Building2,
 } from "lucide-react";
 
 import type { LucideIcon } from "lucide-react";
+
+import { ROUTES } from "@/constants/routes";
 
 export type NavigationItem = {
   label: string;
@@ -20,8 +21,6 @@ export type NavigationItem = {
   path: string;
   icon: LucideIcon;
 };
-
-import { ROUTES } from "@/constants/routes";
 
 export const ownerNavigation: NavigationItem[] = [
   {
@@ -106,11 +105,5 @@ export const customerNavigation: NavigationItem[] = [
     title: "Mess Details",
     path: ROUTES.MESS_DETAILS,
     icon: Building2,
-  },
-  {
-    label: "Profile",
-    title: "My Profile",
-    path: ROUTES.PROFILE,
-    icon: User,
   },
 ];

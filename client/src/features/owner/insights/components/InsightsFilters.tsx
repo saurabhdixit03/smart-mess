@@ -3,10 +3,12 @@ import Button from "@/components/common/ui/Button/Button";
 type InsightsFiltersProps = {
   month: number;
   year: number;
-
-  onMonthChange: (month: number) => void;
-  onYearChange: (year: number) => void;
-
+  onMonthChange: (
+    month: number
+  ) => void;
+  onYearChange: (
+    year: number
+  ) => void;
   onSearch: () => void;
 };
 
@@ -38,6 +40,7 @@ export default function InsightsFilters({
   return (
     <div
       className="
+        interactive-surface
         flex
         flex-wrap
         items-end
@@ -45,7 +48,7 @@ export default function InsightsFilters({
         rounded-2xl
         border
         border-[var(--color-border)]
-        bg-white
+        bg-[var(--color-surface)]
         p-6
       "
     >
@@ -57,9 +60,11 @@ export default function InsightsFilters({
 
         <select
           value={month}
-          onChange={(e) =>
+          onChange={(event) =>
             onMonthChange(
-              Number(e.target.value)
+              Number(
+                event.target.value
+              )
             )
           }
           className="
@@ -67,11 +72,15 @@ export default function InsightsFilters({
             rounded-xl
             border
             border-[var(--color-border)]
+            bg-[var(--color-surface)]
             px-4
           "
         >
           {months.map(
-            (monthName, index) => (
+            (
+              monthName,
+              index
+            ) => (
               <option
                 key={monthName}
                 value={index + 1}
@@ -92,9 +101,11 @@ export default function InsightsFilters({
 
         <select
           value={year}
-          onChange={(e) =>
+          onChange={(event) =>
             onYearChange(
-              Number(e.target.value)
+              Number(
+                event.target.value
+              )
             )
           }
           className="
@@ -102,12 +113,16 @@ export default function InsightsFilters({
             rounded-xl
             border
             border-[var(--color-border)]
+            bg-[var(--color-surface)]
             px-4
           "
         >
           {Array.from(
-            { length: 5 },
-            (_, index) => currentYear - index
+            {
+              length: 5,
+            },
+            (_, index) =>
+              currentYear - index
           ).map((value) => (
             <option
               key={value}
@@ -120,9 +135,7 @@ export default function InsightsFilters({
 
       </div>
 
-      <Button
-        onClick={onSearch}
-      >
+      <Button onClick={onSearch}>
         View Insights
       </Button>
 

@@ -1,34 +1,51 @@
-import { useEffect, useState, useMemo } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-import MealSessionSelector from "@/components/common/business/MealSessionSelector/MealSessionSelector";
-import { useMenus } from "@/features/owner/menu/hooks/useMenus";
+import {
+  useNavigate,
+} from "react-router-dom";
 
-import { useRecordQueue } from "../hooks";
+import {
+  Search,
+} from "lucide-react";
 
-import MealRecordQueue from "../components/MealRecordQueue";
-import RecordMealDialog from "../components/RecordMealDialog";
-
-import MealRecordSummary from "../components/MealRecordSummary";
-
-import type { CollectionQueueItem } from "../types";
-
-import { useTodayMealRecords } from "../hooks";
-
-import MealRecordTable from "../components/MealRecordTable";
-
+import Button from "@/components/common/ui/Button/Button";
 import Input from "@/components/common/ui/Input/Input";
-import SearchToolbar from "@/components/common/ui/SearchToolbar/SearchToolbar";
-import { Search } from "lucide-react";
-
+import PageHeader from "@/components/common/ui/PageHeader";
 import Pagination from "@/components/common/ui/Pagination/Pagination";
+import SearchToolbar from "@/components/common/ui/SearchToolbar/SearchToolbar";
 import Select from "@/components/common/ui/Select/Select";
 
-import { useNavigate } from "react-router-dom";
-import Button from "@/components/common/ui/Button/Button";
+import { useMenus } from "@/features/owner/menu/hooks/useMenus";
+
+import MealRecordQueue from "../components/MealRecordQueue";
+import MealRecordSummary from "../components/MealRecordSummary";
+import MealRecordTable from "../components/MealRecordTable";
+import RecordMealDialog from "../components/RecordMealDialog";
+
+import {
+  useRecordQueue,
+  useTodayMealRecords,
+} from "../hooks";
+
+import type {
+  CollectionQueueItem,
+} from "../types";
+
+type MealSession =
+  | "LUNCH"
+  | "DINNER";
+
+const MEAL_SESSIONS: MealSession[] = [
+  "LUNCH",
+  "DINNER",
+];
 
 export default function MealRecordPage() {
-
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const {
     todayMenus,
@@ -37,69 +54,88 @@ const navigate = useNavigate();
   } = useMenus();
 
   const [
-  selectedSession,
-  setSelectedSession,
-] = useState<"LUNCH" | "DINNER">(() => {
+    selectedSession,
+    setSelectedSession,
+  ] = useState<MealSession>(
+    "LUNCH"
+  );
 
-  const savedSession =
-    localStorage.getItem(
-      "meal-record-session"
+  const [
+    rowsPerPage,
+    setRowsPerPage,
+  ] = useState(10);
+
+  const [
+    currentPage,
+    setCurrentPage,
+  ] = useState(1);
+
+  const [
+    selectedCustomer,
+    setSelectedCustomer,
+  ] =
+    useState<CollectionQueueItem | null>(
+      null
     );
 
-  return savedSession === "DINNER"
-    ? "DINNER"
-    : "LUNCH";
+  const [
+    search,
+    setSearch,
+  ] = useState("");
 
-});
+  const availableSessions =
+    MEAL_SESSIONS.filter(
+      (session) =>
+        todayMenus.some(
+          (menu) =>
+            menu.mealSession ===
+            session
+        )
+    );
 
-useEffect(() => {
-  if (todayMenus.length === 0) {
-    return;
-  }
+  useEffect(() => {
+    if (todayMenus.length === 0) {
+      return;
+    }
 
-  const selectedMenuExists =
+    const selectedMenuExists =
+      todayMenus.some(
+        (menu) =>
+          menu.mealSession ===
+          selectedSession
+      );
+
+    if (selectedMenuExists) {
+      return;
+    }
+
+    const lunchAvailable =
+      todayMenus.some(
+        (menu) =>
+          menu.mealSession ===
+          "LUNCH"
+      );
+
+    setSelectedSession(
+      lunchAvailable
+        ? "LUNCH"
+        : "DINNER"
+    );
+  }, [
+    todayMenus,
+    selectedSession,
+  ]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedSession]);
+
+  const hasSelectedMenu =
     todayMenus.some(
       (menu) =>
         menu.mealSession ===
         selectedSession
     );
-
-  if (!selectedMenuExists) {
-    const lunchMenu =
-      todayMenus.find(
-        (menu) =>
-          menu.mealSession === "LUNCH"
-      );
-
-    setSelectedSession(
-      lunchMenu
-        ? "LUNCH"
-        : todayMenus[0].mealSession
-    );
-  }
-}, [todayMenus, selectedSession]);
-
-const hasSelectedMenu =
-  todayMenus.some(
-    (menu) =>
-      menu.mealSession ===
-      selectedSession
-  );
-
-const [rowsPerPage, setRowsPerPage] =
-  useState(10);
-
-const [currentPage, setCurrentPage] =
-  useState(1);
-
-useEffect(() => {
-
-  localStorage.setItem(
-    "meal-record-session",
-    selectedSession
-  );
-
-}, [selectedSession]);
 
   const {
     recordQueue,
@@ -107,251 +143,344 @@ useEffect(() => {
     error,
     refetch,
   } = useRecordQueue(
-  selectedSession,
-  hasSelectedMenu && !menusLoading
-);
-
-  const [
-    selectedCustomer,
-    setSelectedCustomer,
-  ] = useState<CollectionQueueItem | null>(null);
-
-  const [
-  search,
-  setSearch,
-] = useState("");
-
-  const pendingMeals = recordQueue.length;
-
-const fullMeals = recordQueue.filter(
-  (item) => item.mealOption === "FULL"
-).length;
-
-const halfMeals = recordQueue.filter(
-  (item) => item.mealOption === "HALF"
-).length;
-
-const filteredQueue = useMemo(() => {
-
-  return recordQueue.filter((item) =>
-    item.customerName
-      .toLowerCase()
-      .includes(search.toLowerCase())
+    selectedSession,
+    hasSelectedMenu &&
+      !menusLoading
   );
 
-}, [recordQueue, search]);
-
-const {
-  mealRecords,
-  loading: historyLoading,
-  error: historyError,
-  refetch: refetchHistory,
-} = useTodayMealRecords(
-  selectedSession,
-  hasSelectedMenu && !menusLoading
-);
-
-const totalPages = Math.max(
-  1,
-  Math.ceil(
-    mealRecords.length / rowsPerPage
-  )
-);
-
-const paginatedRecords =
-  mealRecords.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
+  const {
+    mealRecords,
+    loading: historyLoading,
+    error: historyError,
+    refetch: refetchHistory,
+  } = useTodayMealRecords(
+    selectedSession,
+    hasSelectedMenu &&
+      !menusLoading
   );
+
+  const pendingMeals =
+    recordQueue.length;
+
+  const fullMeals =
+    recordQueue.filter(
+      (item) =>
+        item.mealOption === "FULL"
+    ).length;
+
+  const halfMeals =
+    recordQueue.filter(
+      (item) =>
+        item.mealOption === "HALF"
+    ).length;
+
+  const filteredQueue =
+    useMemo(() => {
+      const query =
+        search
+          .trim()
+          .toLowerCase();
+
+      if (!query) {
+        return recordQueue;
+      }
+
+      return recordQueue.filter(
+        (item) =>
+          item.customerName
+            .toLowerCase()
+            .includes(query)
+      );
+    }, [
+      recordQueue,
+      search,
+    ]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(
+      mealRecords.length /
+        rowsPerPage
+    )
+  );
+
+  const paginatedRecords =
+    mealRecords.slice(
+      (currentPage - 1) *
+        rowsPerPage,
+      currentPage * rowsPerPage
+    );
 
   if (
-  menusLoading ||
-  loading ||
-  historyLoading
-) {
-
+    menusLoading ||
+    loading ||
+    historyLoading
+  ) {
     return (
       <div className="py-12 text-center">
         Loading meal records...
       </div>
     );
+  }
 
+  if (
+    menusError ||
+    error ||
+    historyError
+  ) {
+    return (
+      <div className="py-12 text-center text-red-500">
+        {
+          menusError ??
+          error ??
+          historyError
+        }
+      </div>
+    );
   }
 
   if (todayMenus.length === 0) {
-  return (
-    <section className="space-y-6">
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center">
-        <h2 className="text-lg font-semibold text-[var(--color-text)]">
-          No menu published for today
-        </h2>
-
-        <p className="mx-auto mt-2 max-w-md text-sm text-[var(--color-text-secondary)]">
-          Publish today's menu before starting meal collection.
-        </p>
-
-        <Button
-          type="button"
-          className="mt-6"
-          onClick={() => navigate("/owner/menu")}
-        >
-          Go to Menu
-        </Button>
-      </div>
-    </section>
-  );
-}
-
-  if (
-  menusError ||
-  error ||
-  historyError
-) {
-
     return (
-      <div className="py-12 text-center text-red-500">
-        {menusError ?? error ?? historyError}
-      </div>
-    );
+      <section className="space-y-6">
 
+        <PageHeader
+          title="Meal Collection"
+          description="Record customer meal collections and review today's activity."
+        />
+
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center">
+
+          <h2 className="text-lg font-semibold text-[var(--color-text)]">
+            No menu published for today
+          </h2>
+
+          <p className="mx-auto mt-2 max-w-md text-sm text-[var(--color-text-secondary)]">
+            Publish today's menu before starting meal collection.
+          </p>
+
+          <Button
+            type="button"
+            className="mt-6"
+            onClick={() =>
+              navigate("/owner/menu")
+            }
+          >
+            Go to Menu
+          </Button>
+
+        </div>
+
+      </section>
+    );
   }
 
   return (
-
     <section className="space-y-6">
 
-      <MealSessionSelector
-        menus={todayMenus}
-        selectedSession={selectedSession}
-        onSelect={setSelectedSession}
-        title="Meal Collection"
-        variant="toggle"
+      <div
+        className="
+          flex
+          flex-col
+          gap-4
+          sm:flex-row
+          sm:items-center
+          sm:justify-between
+        "
+      >
+        <PageHeader
+          title="Meal Collection"
+          description="Record customer meal collections and review today's activity."
+        />
+
+        <div
+          className="
+            inline-flex
+            self-end
+            rounded-lg
+            border
+            border-[var(--color-border)]
+            bg-[var(--color-surface)]
+            p-1
+            sm:self-auto
+          "
+        >
+          {availableSessions.map(
+            (session) => {
+              const selected =
+                session ===
+                selectedSession;
+
+              return (
+                <button
+                  key={session}
+                  type="button"
+                  onClick={() =>
+                    setSelectedSession(
+                      session
+                    )
+                  }
+                  className={`
+                    rounded-md
+                    px-5
+                    py-2
+                    text-sm
+                    font-medium
+                    transition-all
+                    duration-200
+                    ${
+                      selected
+                        ? "bg-[var(--color-primary)] text-white shadow-sm"
+                        : "text-[var(--color-text-secondary)] hover:bg-[var(--color-background)]"
+                    }
+                  `}
+                >
+                  {session === "LUNCH"
+                    ? "Lunch"
+                    : "Dinner"}
+                </button>
+              );
+            }
+          )}
+        </div>
+
+      </div>
+
+      <MealRecordSummary
+        pendingMeals={pendingMeals}
+        fullMeals={fullMeals}
+        halfMeals={halfMeals}
       />
 
-  
+      <SearchToolbar>
 
-<MealRecordSummary
-  pendingMeals={pendingMeals}
-  fullMeals={fullMeals}
-  halfMeals={halfMeals}
-/>
+        <SearchToolbar.Left>
 
-{/* ---------- Search Card ---------- */}
+          <Input
+            fullWidth
+            inputSize="md"
+            placeholder="Search pending customer..."
+            value={search}
+            onChange={(event) =>
+              setSearch(
+                event.target.value
+              )
+            }
+            leftIcon={
+              <Search size={18} />
+            }
+          />
 
-<SearchToolbar>
+        </SearchToolbar.Left>
 
-  <SearchToolbar.Left>
+        <SearchToolbar.Right>
 
-    <Input
-      fullWidth
-      inputSize="md"
-      placeholder="Search pending customer..."
-      value={search}
-      onChange={(event) =>
-        setSearch(event.target.value)
-      }
-      leftIcon={<Search size={18} />}
-    />
+          <div className="flex items-center gap-2">
 
-  </SearchToolbar.Left>
+            <span className="text-sm text-[var(--color-text-secondary)]">
+              Rows
+            </span>
 
-  <SearchToolbar.Right>
+            <Select
+              value={String(
+                rowsPerPage
+              )}
+              onChange={(event) => {
+                setRowsPerPage(
+                  Number(
+                    event.target.value
+                  )
+                );
 
-    <div className="flex items-center gap-2">
+                setCurrentPage(1);
+              }}
+            >
+              <option value="5">
+                5
+              </option>
 
-      <span className="text-sm text-[var(--color-text-secondary)]">
-        Rows
-      </span>
+              <option value="10">
+                10
+              </option>
 
-      <Select
-        value={String(rowsPerPage)}
-        onChange={(event) => {
+              <option value="20">
+                20
+              </option>
+            </Select>
 
-          setRowsPerPage(
-            Number(event.target.value)
-          );
+          </div>
 
-          setCurrentPage(1);
+        </SearchToolbar.Right>
 
-        }}
-      >
+      </SearchToolbar>
 
-        <option value="5">5</option>
+      <p className="text-sm text-[var(--color-text-secondary)]">
 
-        <option value="10">10</option>
+        Showing{" "}
 
-        <option value="20">20</option>
+        <span className="font-semibold text-[var(--color-text)]">
+          {filteredQueue.length}
+        </span>{" "}
 
-      </Select>
+        customers waiting for meal collection
+        {filteredQueue.length !== 1
+          ? "s"
+          : ""}
 
-    </div>
+      </p>
 
-  </SearchToolbar.Right>
+      <MealRecordQueue
+        items={filteredQueue}
+        onRecord={
+          setSelectedCustomer
+        }
+      />
 
-</SearchToolbar>
+      <MealRecordTable
+        records={paginatedRecords}
+      />
 
-<p className="mt-3 text-sm text-[var(--color-text-secondary)]">
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPrevious={() =>
+          setCurrentPage(
+            (page) =>
+              Math.max(
+                1,
+                page - 1
+              )
+          )
+        }
+        onNext={() =>
+          setCurrentPage(
+            (page) =>
+              Math.min(
+                totalPages,
+                page + 1
+              )
+          )
+        }
+      />
 
-  Showing{" "}
-
-  <span className="font-semibold text-[var(--color-text)]">
-    {filteredQueue.length}
-  </span>{" "}
-
-  customers waiting for meal collection
-  {filteredQueue.length !== 1 ? "s" : ""}
-
-</p>
-
-{/* ---------- Pending Queue ---------- */}
-
-<MealRecordQueue
-  items={filteredQueue}
-  onRecord={setSelectedCustomer}
-/>
-
-{/* ---------- Today's Meal Records ---------- */}
-
-<MealRecordTable
-  records={paginatedRecords}
-/>
-
-<Pagination
-  currentPage={currentPage}
-  totalPages={totalPages}
-  onPrevious={() =>
-    setCurrentPage((page) =>
-      Math.max(1, page - 1)
-    )
-  }
-  onNext={() =>
-    setCurrentPage((page) =>
-      Math.min(
-        totalPages,
-        page + 1
-      )
-    )
-  }
-/>
       <RecordMealDialog
-  open={selectedCustomer !== null}
-  customer={selectedCustomer}
-  onClose={() =>
-    setSelectedCustomer(null)
-  }
-  onSuccess={() => {
+        open={
+          selectedCustomer !== null
+        }
+        customer={
+          selectedCustomer
+        }
+        onClose={() =>
+          setSelectedCustomer(null)
+        }
+        onSuccess={() => {
+          refetch();
 
-    refetch();
+          refetchHistory();
 
-    refetchHistory();
-
-    setSelectedCustomer(null);
-
-  }}
-/>
+          setSelectedCustomer(null);
+        }}
+      />
 
     </section>
-
   );
-
 }

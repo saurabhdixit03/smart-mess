@@ -1,15 +1,37 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-import { useTodayMenus } from "../hooks/useTodayMenus";
-import { useDashboard } from "../hooks/useDashboard";
+import {
+  useNavigate,
+} from "react-router-dom";
+
+import {
+  Button,
+  Card,
+  PageHeader,
+} from "@/components/common/ui";
 
 import MealResponseSummary from "../components/MealResponseSummary/MealResponseSummary";
 
-import MealSessionSelector from "@/components/common/business/MealSessionSelector/MealSessionSelector";
-import { Button, Card } from "@/components/common/ui";
+import {
+  useDashboard,
+} from "../hooks/useDashboard";
 
-import type { MealSession } from "../types/dashboard.types";
+import {
+  useTodayMenus,
+} from "../hooks/useTodayMenus";
+
+import type {
+  MealSession,
+} from "../types/dashboard.types";
+
+const MEAL_SESSIONS: MealSession[] = [
+  "LUNCH",
+  "DINNER",
+];
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -20,39 +42,68 @@ export default function DashboardPage() {
     error: menusError,
   } = useTodayMenus();
 
-  const [selectedSession, setSelectedSession] =
-    useState<MealSession>("LUNCH");
+  const [
+    selectedSession,
+    setSelectedSession,
+  ] = useState<MealSession>(
+    "LUNCH"
+  );
 
-  /*
-   * If the currently selected session has no menu,
-   * automatically select the first available session.
-   *
-   * Example:
-   * Lunch not published
-   * Dinner published
-   * → Dinner becomes selected.
-   */
+  const availableSessions =
+    useMemo(
+      () =>
+        new Set(
+          todayMenus.map(
+            (menu) =>
+              menu.mealSession
+          )
+        ),
+      [todayMenus]
+    );
+
+  const selectedMenu =
+    useMemo(
+      () =>
+        todayMenus.find(
+          (menu) =>
+            menu.mealSession ===
+            selectedSession
+        ),
+      [
+        todayMenus,
+        selectedSession,
+      ]
+    );
+
   useEffect(() => {
     if (todayMenus.length === 0) {
       return;
     }
 
-    const selectedMenuExists = todayMenus.some(
-      (menu) =>
-        menu.mealSession === selectedSession
-    );
-
-    if (!selectedMenuExists) {
-      setSelectedSession(
-        todayMenus[0].mealSession
-      );
+    if (
+      availableSessions.has(
+        selectedSession
+      )
+    ) {
+      return;
     }
-  }, [todayMenus, selectedSession]);
 
-  const hasSelectedMenu = todayMenus.some(
-    (menu) =>
-      menu.mealSession === selectedSession
-  );
+    const fallbackSession =
+      availableSessions.has("LUNCH")
+        ? "LUNCH"
+        : "DINNER";
+
+    setSelectedSession(
+      fallbackSession
+    );
+  }, [
+    todayMenus,
+    availableSessions,
+    selectedSession,
+  ]);
+
+  const hasSelectedMenu =
+    selectedMenu !== undefined;
 
   const {
     dashboard,
@@ -60,112 +111,161 @@ export default function DashboardPage() {
     error,
   } = useDashboard(
     selectedSession,
-    hasSelectedMenu && !menusLoading
+    hasSelectedMenu &&
+      !menusLoading
   );
 
   if (menusLoading) {
     return (
-      <div className="py-12 text-center">
+      <div className="py-12 text-center text-[var(--color-text-secondary)]">
         Loading dashboard...
       </div>
     );
   }
 
-  /*
-   * Failure while loading today's menus is a real
-   * application/API failure.
-   */
   if (menusError) {
     return (
-      <div className="py-12 text-center text-red-500">
+      <div className="py-12 text-center text-[var(--color-danger)]">
         {menusError}
       </div>
     );
   }
 
-  /*
-   * No menu is a valid operational state,
-   * not an application error.
-   */
   if (todayMenus.length === 0) {
     return (
       <section className="space-y-6">
+
+        <PageHeader
+          title="Dashboard"
+          description="Monitor today's live mess operations."
+        />
+
         <Card>
+
           <Card.Body className="py-12 text-center">
+
             <h2 className="text-lg font-semibold text-[var(--color-text)]">
               No menu published for today
             </h2>
 
             <p className="mx-auto mt-2 max-w-md text-sm text-[var(--color-text-secondary)]">
-              Publish today's menu to start collecting
-              customer responses and view the live
-              dashboard.
+              Publish today's menu to start collecting customer responses and view the live dashboard.
             </p>
 
             <Button
               type="button"
               className="mt-6"
               onClick={() =>
-                navigate("/owner/menu")
+                navigate(
+                  "/owner/menu"
+                )
               }
             >
               Go to Menu
             </Button>
+
           </Card.Body>
+
         </Card>
+
       </section>
     );
   }
 
   if (loading) {
     return (
-      <div className="py-12 text-center">
+      <div className="py-12 text-center text-[var(--color-text-secondary)]">
         Loading dashboard...
       </div>
     );
   }
 
-  /*
-   * At this point a menu exists, so a dashboard
-   * request failure represents an actual problem.
-   */
   if (error) {
     return (
-      <div className="py-12 text-center text-red-500">
+      <div className="py-12 text-center text-[var(--color-danger)]">
         {error}
       </div>
     );
   }
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-5">
 
-      {/* Today's Menu */}
-      <div className="space-y-3">
-        <MealSessionSelector
-          menus={todayMenus}
-          selectedSession={selectedSession}
-          onSelect={setSelectedSession}
-        />
-      </div>
+      <PageHeader
+        title="Dashboard"
+        description="Monitor today's live mess operations."
+        action={
+          <div
+            className="
+              inline-flex
+              rounded-lg
+              border
+              border-[var(--color-border)]
+              bg-[var(--color-surface)]
+              p-1
+            "
+          >
+            {MEAL_SESSIONS.map(
+              (session) => {
+                const available =
+                  availableSessions.has(
+                    session
+                  );
 
-      {/* Today's Overview */}
-      {dashboard && (
-        <div className="space-y-3">
+                const selected =
+                  session ===
+                  selectedSession;
+
+                return (
+                  <button
+                    key={session}
+                    type="button"
+                    disabled={
+                      !available
+                    }
+                    onClick={() =>
+                      setSelectedSession(
+                        session
+                      )
+                    }
+                    className={`
+                      rounded-md
+                      px-5
+                      py-2
+                      text-sm
+                      font-medium
+                      transition-all
+                      duration-200
+                      ${
+                        selected
+                          ? "bg-[var(--color-primary)] text-white shadow-sm"
+                          : available
+                            ? "text-[var(--color-text-secondary)] hover:bg-[var(--color-background)] hover:text-[var(--color-text)]"
+                            : "cursor-not-allowed text-[var(--color-text-secondary)] opacity-40"
+                      }
+                    `}
+                  >
+                    {session ===
+                    "LUNCH"
+                      ? "Lunch"
+                      : "Dinner"}
+                  </button>
+                );
+              }
+            )}
+          </div>
+        }
+      />
+
+      {dashboard &&
+        selectedMenu && (
           <MealResponseSummary
-            dashboard={dashboard}
+            dashboard={
+              dashboard
+            }
+            menu={selectedMenu}
           />
-        </div>
-      )}
-
-      {/* Future Dashboard Widgets */}
-
-      {/*
-        Collection Queue
-        Customer Alerts
-        Daily Analytics
-        Reports
-      */}
+        )}
 
     </section>
   );

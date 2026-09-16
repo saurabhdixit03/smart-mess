@@ -51,7 +51,8 @@ export default function MenuCard({
 
   const customerId = customer.customerId;
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] =
+    useState(false);
 
   const {
     loading,
@@ -107,9 +108,7 @@ export default function MenuCard({
       );
 
       setOpen(false);
-
     } catch (error) {
-
       console.error(error);
 
       await refetchAvailability();
@@ -119,13 +118,22 @@ export default function MenuCard({
           ? error.message
           : "Unable to save your response. Please try again."
       );
-
     }
   }
 
   return (
     <>
-      <Card className="flex h-full flex-col">
+      <Card
+        className="
+          flex
+          h-full
+          flex-col
+          transition-all
+          duration-200
+          hover:-translate-y-1
+          hover:shadow-md
+        "
+      >
 
         <Card.Body className="flex flex-1 flex-col">
 
@@ -134,16 +142,20 @@ export default function MenuCard({
             <div className="flex items-center gap-4">
 
               <div className="rounded-xl bg-orange-100 p-3">
+
                 <UtensilsCrossed
                   size={22}
                   className="text-orange-600"
                 />
+
               </div>
 
               <div>
 
                 <h2 className="text-xl font-semibold">
-                  {MEAL_SESSION_LABELS[menu.mealSession]}
+                  {MEAL_SESSION_LABELS[
+                    menu.mealSession
+                  ]}
                 </h2>
 
                 <p className="text-sm text-[var(--color-text-secondary)]">
@@ -157,11 +169,14 @@ export default function MenuCard({
             {mealResponse && (
               <StatusBadge
                 label={
-                  mealResponse.responseStatus === "ACCEPTED"
+                  mealResponse.responseStatus ===
+                  "ACCEPTED"
                     ? `Accepted • ${mealResponse.mealOption}${
-                        mealResponse.extraRotiCount > 0
+                        mealResponse.extraRotiCount >
+                        0
                           ? ` • +${mealResponse.extraRotiCount} Roti${
-                              mealResponse.extraRotiCount > 1
+                              mealResponse.extraRotiCount >
+                              1
                                 ? "s"
                                 : ""
                             }`
@@ -197,7 +212,9 @@ export default function MenuCard({
               availabilityLoading ||
               !canRespond
             }
-            onClick={() => setOpen(true)}
+            onClick={() =>
+              setOpen(true)
+            }
           >
             {mealResponse
               ? "Update Response"
@@ -208,11 +225,13 @@ export default function MenuCard({
             !canRespond &&
             responseUnavailableReason && (
 
-            <p className="text-center text-sm text-[var(--color-text-secondary)]">
-              {responseUnavailableReason}
-            </p>
+              <p className="text-center text-sm text-[var(--color-text-secondary)]">
+                {
+                  responseUnavailableReason
+                }
+              </p>
 
-          )}
+            )}
 
         </Card.Footer>
 
@@ -222,7 +241,9 @@ export default function MenuCard({
         open={open}
         loading={loading}
         existingResponse={mealResponse}
-        onClose={() => setOpen(false)}
+        onClose={() =>
+          setOpen(false)
+        }
         onSubmit={handleSubmit}
       />
     </>

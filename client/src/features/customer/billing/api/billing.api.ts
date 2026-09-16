@@ -15,11 +15,9 @@ const PAYMENT_API_ENDPOINT =
   "/payments";
 
 export const billingApi = {
-  getCustomerBills(
-    customerId: number
-  ) {
+  getCustomerBills() {
     return api.get<ApiResponse<Bill[]>>(
-      `${BILL_API_ENDPOINT}/customer/${customerId}`
+      `${BILL_API_ENDPOINT}/me`
     );
   },
 

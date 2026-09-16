@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import { billingApi } from "../api";
 
 import type { Bill } from "../types";
 
-export function useBills(
-  customerId: number
-) {
-  const [bills, setBills] = useState<Bill[]>([]);
+export function useBills() {
+  const [bills, setBills] =
+    useState<Bill[]>([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -15,35 +18,29 @@ export function useBills(
   const [error, setError] =
     useState<string | null>(null);
 
-  const fetchBills = async () => {
-    try {
-      setLoading(true);
+  const fetchBills =
+    useCallback(async () => {
+      try {
+        setLoading(true);
 
-      setError(null);
+        setError(null);
 
-      const response =
-        await billingApi.getCustomerBills(
-          customerId
+        const response =
+          await billingApi.getCustomerBills();
+
+        setBills(response.data);
+      } catch {
+        setError(
+          "Failed to load bills."
         );
-
-      setBills(response.data);
-
-    } catch {
-
-      setError(
-        "Failed to load bills."
-      );
-
-    } finally {
-
-      setLoading(false);
-
-    }
-  };
+      } finally {
+        setLoading(false);
+      }
+    }, []);
 
   useEffect(() => {
-    fetchBills();
-  }, [customerId]);
+    void fetchBills();
+  }, [fetchBills]);
 
   return {
     bills,

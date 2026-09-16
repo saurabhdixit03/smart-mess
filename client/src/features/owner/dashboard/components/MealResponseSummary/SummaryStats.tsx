@@ -1,188 +1,183 @@
-
 import RollingCounter from "@/components/common/business/RollingCounter";
 
-import {
-  CheckCheck,
-  Clock3,
-  XCircle,
-  UtensilsCrossed,
-  Soup,
-  PlusCircle,
-  DiameterIcon,
-} from "lucide-react";
+import type {
+  DashboardSummary,
+} from "../../types/dashboard.types";
 
-import type { DashboardSummary } from "../../types/dashboard.types";
-
-type Props = {
+type SummaryStatsProps = {
   dashboard: DashboardSummary;
 };
 
 export default function SummaryStats({
   dashboard,
-}: Props) {
-
+}: SummaryStatsProps) {
   const responseStats = [
-
     {
-      icon: CheckCheck,
       label: "Accepted",
-      value: dashboard.acceptedResponses,
-      color: "text-green-600",
+      value:
+        dashboard.acceptedResponses,
+      className:
+        "border-[var(--color-primary)]/20 bg-[var(--color-primary)]/10 text-[var(--color-primary)]",
     },
-
     {
-      icon: Clock3,
       label: "Pending",
-      value: dashboard.pendingResponses,
-      color: "text-amber-500",
+      value:
+        dashboard.pendingResponses,
+      className:
+        "border-amber-200 bg-amber-50 text-amber-700",
     },
-
     {
-      icon: XCircle,
       label: "Declined",
-      value: dashboard.declinedResponses,
-      color: "text-red-500",
+      value:
+        dashboard.declinedResponses,
+      className:
+        "border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 text-[var(--color-danger)]",
     },
-
   ];
 
   const preparationStats = [
-
     {
-      icon: UtensilsCrossed,
       label: "Full",
-      value: dashboard.expectedFullMeals,
-      color: "text-orange-500",
+      value:
+        dashboard.expectedFullMeals,
     },
-
     {
-      icon: Soup,
       label: "Half",
-      value: dashboard.expectedHalfMeals,
-      color: "text-blue-600",
+      value:
+        dashboard.expectedHalfMeals,
     },
-
     {
-      icon: DiameterIcon,
       label: "Base Rotis",
-      value: dashboard.baseRotisRequired,
-      color: "text-amber-500",
+      value:
+        dashboard.baseRotisRequired,
     },
-
     {
-      icon: PlusCircle,
       label: "Extra Rotis",
-      value: dashboard.expectedExtraRotis,
-      color: "text-blue-600",
+      value:
+        dashboard.expectedExtraRotis,
     },
-
     {
-      icon: DiameterIcon,
       label: "Total Rotis",
-      value: dashboard.totalRotisRequired,
-      color: "text-orange-500",
+      value:
+        dashboard.totalRotisRequired,
     },
-
   ];
 
   return (
+    <div className="space-y-4">
 
-    <div className="space-y-2">
+      {/* Response metrics */}
+      <section className="space-y-2">
 
-      {/* Response Metrics */}
+        <h3
+          className="
+            text-xs
+            font-semibold
+            uppercase
+            tracking-wide
+            text-[var(--color-text-secondary)]
+          "
+        >
+          Customer Responses
+        </h3>
 
-      <div>
+        <div className="grid grid-cols-3 gap-3">
 
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
+          {responseStats.map(
+            ({
+              label,
+              value,
+              className,
+            }) => (
+              <div
+                key={label}
+                className={`
+                  min-w-0
+                  rounded-xl
+                  border
+                  px-3
+                  py-3
+                  text-center
+                  ${className}
+                `}
+              >
+                <p className="text-2xl font-bold leading-none">
+                  <RollingCounter
+                    value={value}
+                  />
+                </p>
 
-          Responses
-
-        </p>
-
-        <div className="grid grid-cols-3">
-
-          {responseStats.map((item) => (
-
-            <div
-              key={item.label}
-              className="text-center"
-            >
-
-              <item.icon
-                size={20}
-                strokeWidth={2}
-                className={`mx-auto ${item.color}`}
-              />
-
-              <div className="mt-1 text-xl font-bold text-[var(--color-primary)]">
-
-                <RollingCounter value={item.value} />
-
+                <p className="mt-1.5 truncate text-xs font-medium">
+                  {label}
+                </p>
               </div>
-
-              <div className="mt-1 text-[11px] text-[var(--color-text-secondary)]">
-
-                {item.label}
-
-              </div>
-
-            </div>
-
-          ))}
+            )
+          )}
 
         </div>
 
-      </div>
+      </section>
 
-      <div className="border-t border-[var(--color-border)]" />
+      {/* Kitchen preparation metrics */}
+      <section className="space-y-2">
 
-      {/* Kitchen Preparation */}
-
-      <div>
-
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]">
-
+        <h3
+          className="
+            text-xs
+            font-semibold
+            uppercase
+            tracking-wide
+            text-[var(--color-text-secondary)]
+          "
+        >
           Kitchen Preparation
+        </h3>
 
-        </p>
+        <div
+          className="
+            grid
+            grid-cols-2
+            gap-3
+            sm:grid-cols-3
+            xl:grid-cols-5
+          "
+        >
+          {preparationStats.map(
+            ({
+              label,
+              value,
+            }) => (
+              <div
+                key={label}
+                className="
+                  min-w-0
+                  rounded-xl
+                  border
+                  border-[var(--color-primary)]/15
+                  bg-[var(--color-primary)]/5
+                  px-3
+                  py-3
+                  text-center
+                  text-[var(--color-primary)]
+                "
+              >
+                <p className="text-xl font-semibold leading-none">
+                  <RollingCounter
+                    value={value}
+                  />
+                </p>
 
-        <div className="grid grid-cols-5">
-
-          {preparationStats.map((item) => (
-
-            <div
-              key={item.label}
-              className="text-center"
-            >
-
-              <item.icon
-                size={18}
-                strokeWidth={2}
-                className={`mx-auto ${item.color}`}
-              />
-
-              <div className="mt-1 text-xl font-semibold text-[var(--color-primary)]">
-
-                <RollingCounter value={item.value} />
-
+                <p className="mt-1.5 truncate text-[11px] font-medium">
+                  {label}
+                </p>
               </div>
-
-              <div className="mt-1 text-[11px] text-[var(--color-text-secondary)]">
-
-                {item.label}
-
-              </div>
-
-            </div>
-
-          ))}
+            )
+          )}
 
         </div>
 
-      </div>
+      </section>
 
     </div>
-
   );
-
 }
