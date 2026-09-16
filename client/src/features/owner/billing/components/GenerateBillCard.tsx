@@ -45,7 +45,7 @@ export default function GenerateBillCard({
   loading,
 }: GenerateBillCardProps) {
   return (
-    <Card className="p-6">
+    <Card className="interactive-surface p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
         <div className="flex-1">
   <label className="mb-2 block text-sm font-medium text-[var(--color-text)]">

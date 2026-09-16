@@ -1,155 +1,193 @@
-import type { DashboardCustomer } from "../../types/dashboard.types";
+import type {
+  DashboardCustomer,
+} from "../../types/dashboard.types";
 
-type Props = {
+type LiveResponseListProps = {
   responses: DashboardCustomer[];
 };
 
 export default function LiveResponseList({
   responses,
-}: Props) {
+}: LiveResponseListProps) {
+  const latestResponses =
+    responses.slice(0, 3);
 
-  const recentResponses =
-    responses.slice(0, 5);
-
-  function getRelativeTime(date: string) {
-
-    const now = new Date();
-
+  function getRelativeTime(
+    value: string
+  ) {
     const respondedAt =
-      new Date(date);
+      new Date(value);
 
-    const diff =
-      Math.floor(
-        (now.getTime() -
-          respondedAt.getTime()) /
-          1000
+    const elapsedSeconds =
+      Math.max(
+        0,
+        Math.floor(
+          (Date.now() -
+            respondedAt.getTime()) /
+            1000
+        )
       );
 
-    if (diff < 60) {
+    if (elapsedSeconds < 60) {
       return "Just now";
     }
 
-    if (diff < 3600) {
-      return `${Math.floor(diff / 60)} min ago`;
+    const elapsedMinutes =
+      Math.floor(
+        elapsedSeconds / 60
+      );
+
+    if (elapsedMinutes < 60) {
+      return `${elapsedMinutes} min ago`;
     }
 
-    return `${Math.floor(diff / 3600)} hr ago`;
+    const elapsedHours =
+      Math.floor(
+        elapsedMinutes / 60
+      );
 
-  }
-
-  if (recentResponses.length === 0) {
-
-    return (
-
-      <div className="flex h-full items-center justify-center text-sm text-[var(--color-text-secondary)]">
-
-        Waiting for customer responses...
-
-      </div>
-
-    );
-
+    return `${elapsedHours} ${
+      elapsedHours === 1
+        ? "hr"
+        : "hrs"
+    } ago`;
   }
 
   return (
+    <section className="h-full">
 
-    <div className="space-y-3">
+      <h3 className="text-sm font-semibold text-[var(--color-text)]">
+        Latest Responses
+      </h3>
 
-      <div className="flex items-center justify-between">
-
-        <h4 className="text-sm font-semibold">
-
-          Live Responses
-
-        </h4>
-
-        <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
-
-          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-
-          Live
-
+      {latestResponses.length === 0 ? (
+        <div
+          className="
+            mt-4
+            flex
+            min-h-32
+            items-center
+            justify-center
+            rounded-xl
+            border
+            border-dashed
+            border-[var(--color-border)]
+            px-4
+            text-center
+            text-sm
+            text-[var(--color-text-secondary)]
+          "
+        >
+          Waiting for customer responses...
         </div>
+      ) : (
+        <div className="mt-3 space-y-2">
 
-      </div>
+          {latestResponses.map(
+            (response) => {
+              const accepted =
+                response.responseStatus ===
+                "ACCEPTED";
 
-      <div className="space-y-2">
+              const responseLabel =
+                accepted
+                  ? response.mealOption ===
+                    "FULL"
+                    ? "Full"
+                    : "Half"
+                  : "Declined";
 
-        {recentResponses.map((response) => {
-
-          const accepted =
-            response.responseStatus ===
-            "ACCEPTED";
-
-          return (
-
-            <div
-              key={response.mealResponseId}
-              className="flex items-start gap-3 rounded-lg border border-[var(--color-border)] px-2.5 py-2 transition-colors hover:bg-[var(--color-surface-hover)]"
-            >
-
-              <span
-                className={`mt-1 h-2.5 w-2.5 rounded-full ${
-                  accepted
-                    ? "bg-green-500"
-                    : "bg-red-500"
-                }`}
-              />
-
-              <div className="min-w-0 flex-1">
-
-                <div className="flex items-center justify-between gap-3">
-
-                  <span className="truncate font-medium">
-
-                    {response.customerName}
-
-                  </span>
-
+              return (
+                <div
+                  key={
+                    response.mealResponseId
+                  }
+                  className="
+                    flex
+                    items-center
+                    gap-3
+                    rounded-xl
+                    border
+                    border-[var(--color-border)]
+                    px-3
+                    py-2.5
+                    transition-colors
+                    duration-200
+                    hover:bg-[var(--color-surface-hover)]
+                  "
+                >
                   <span
-                    className={`shrink-0 text-xs font-medium ${
-                      accepted
-                        ? "text-green-600"
-                        : "text-red-500"
-                    }`}
-                  >
+                    className={`
+                      h-2.5
+                      w-2.5
+                      shrink-0
+                      rounded-full
+                      ${
+                        accepted
+                          ? "bg-[var(--color-success)]"
+                          : "bg-[var(--color-danger)]"
+                      }
+                    `}
+                  />
 
-                    {accepted
-                      ? response.mealOption ===
-                        "FULL"
-                        ? "Full"
-                        : "Half"
-                      : "Declined"}
+                  <div className="min-w-0 flex-1">
+
+                    <p className="truncate text-sm font-medium text-[var(--color-text)]">
+                      {
+                        response.customerName
+                      }
+                    </p>
+
+                    <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
+                      {getRelativeTime(
+                        response.respondedAt
+                      )}
+                    </p>
+
+                  </div>
+
+                  <div className="shrink-0 text-right">
+
+                    <p
+                      className={`
+                        text-xs
+                        font-semibold
+                        ${
+                          accepted
+                            ? "text-[var(--color-success)]"
+                            : "text-[var(--color-danger)]"
+                        }
+                      `}
+                    >
+                      {responseLabel}
+                    </p>
 
                     {accepted &&
                       response.extraRotiCount >
-                        0 &&
-                      ` (+${response.extraRotiCount})`}
+                        0 && (
+                        <p className="mt-0.5 text-[11px] text-[var(--color-text-secondary)]">
+                          +
+                          {
+                            response.extraRotiCount
+                          }{" "}
+                          Roti
+                          {response.extraRotiCount >
+                          1
+                            ? "s"
+                            : ""}
+                        </p>
+                      )}
 
-                  </span>
+                  </div>
 
                 </div>
+              );
+            }
+          )}
 
-                <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
+        </div>
+      )}
 
-                  {getRelativeTime(
-                    response.respondedAt
-                  )}
-
-                </p>
-
-              </div>
-
-            </div>
-
-          );
-
-        })}
-
-      </div>
-
-    </div>
-
+    </section>
   );
-
 }

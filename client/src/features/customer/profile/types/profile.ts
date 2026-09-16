@@ -16,14 +16,6 @@ export type CustomerProfile = {
   updatedAt: string;
 };
 
-export type UpdateProfileRequest = {
-  fullName: string;
-
-  mobileNumber: string;
-
-  email: string;
-};
-
 export type ApiResponse<T> = {
   success: boolean;
 

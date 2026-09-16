@@ -1,15 +1,8 @@
-import { useState } from "react";
-
 import { PageHeader } from "@/components/common/ui";
 
-import {
-  EditProfileModal,
-  ProfileCard,
-} from "../components";
+import { ProfileCard } from "../components";
 
 import { useProfile } from "../hooks";
-
-import type { CustomerProfile } from "../types";
 
 import { getCustomer } from "@/features/auth/utils/auth.utils";
 
@@ -28,30 +21,7 @@ export default function ProfilePage() {
     profile,
     loading,
     error,
-    fetchProfile,
   } = useProfile(customer.customerId);
-
-  const [modalOpen, setModalOpen] =
-    useState(false);
-
-  const [currentProfile, setCurrentProfile] =
-    useState<CustomerProfile | null>(null);
-
-  function handleEdit() {
-    setCurrentProfile(profile);
-
-    setModalOpen(true);
-  }
-
-  function handleUpdated(
-    updatedProfile: CustomerProfile
-  ) {
-    setCurrentProfile(updatedProfile);
-
-    fetchProfile();
-
-    setModalOpen(false);
-  }
 
   if (loading) {
     return (
@@ -82,22 +52,10 @@ export default function ProfilePage() {
 
       <PageHeader
         title="My Profile"
-        description="View and update your account information."
+        description="View your account information."
       />
 
-      <ProfileCard
-        profile={profile}
-        onEdit={handleEdit}
-      />
-
-      <EditProfileModal
-        open={modalOpen}
-        profile={currentProfile}
-        onClose={() =>
-          setModalOpen(false)
-        }
-        onUpdated={handleUpdated}
-      />
+      <ProfileCard profile={profile} />
 
     </div>
   );

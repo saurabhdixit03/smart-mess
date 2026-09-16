@@ -63,6 +63,7 @@ function SettingsCard({
   return (
     <section
       className="
+        interactive-surface
         flex
         min-h-[190px]
         flex-col
@@ -568,6 +569,7 @@ export default function SettingsPage() {
       {/* Temporary Closures */}
       <section
         className="
+          interactive-surface
           rounded-xl
           border
           border-[var(--color-border)]

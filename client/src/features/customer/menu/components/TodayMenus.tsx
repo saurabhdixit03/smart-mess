@@ -1,4 +1,7 @@
-import { Button, Card } from "@/components/common/ui";
+import {
+  Button,
+  Card,
+} from "@/components/common/ui";
 
 import { MenuCard } from ".";
 
@@ -20,9 +23,11 @@ export default function TodayMenus({
   if (loading) {
     return (
       <Card>
+
         <Card.Body className="py-10 text-center text-[var(--color-text-secondary)]">
           Loading today's menu...
         </Card.Body>
+
       </Card>
     );
   }
@@ -30,7 +35,9 @@ export default function TodayMenus({
   if (error) {
     return (
       <Card>
+
         <Card.Body className="space-y-4 text-center">
+
           <p className="text-[var(--color-danger)]">
             {error}
           </p>
@@ -41,7 +48,9 @@ export default function TodayMenus({
           >
             Retry
           </Button>
+
         </Card.Body>
+
       </Card>
     );
   }
@@ -49,30 +58,38 @@ export default function TodayMenus({
   if (todayMenus.length === 0) {
     return (
       <Card>
+
         <Card.Body className="py-10 text-center text-[var(--color-text-secondary)]">
           No menu has been published for today.
         </Card.Body>
+
       </Card>
     );
   }
 
-  const lunchMenu = todayMenus.find(
-    (menu) => menu.mealSession === "LUNCH"
-  );
+  const lunchMenu =
+    todayMenus.find(
+      (menu) =>
+        menu.mealSession === "LUNCH"
+    );
 
-  const dinnerMenu = todayMenus.find(
-    (menu) => menu.mealSession === "DINNER"
-  );
+  const dinnerMenu =
+    todayMenus.find(
+      (menu) =>
+        menu.mealSession === "DINNER"
+    );
 
   return (
-  <div className="grid gap-6 lg:grid-cols-2">
-    {lunchMenu && (
-      <MenuCard menu={lunchMenu} />
-    )}
+    <div className="grid gap-6 lg:grid-cols-2">
 
-    {dinnerMenu && (
-      <MenuCard menu={dinnerMenu} />
-    )}
-  </div>
-);
+      {lunchMenu && (
+        <MenuCard menu={lunchMenu} />
+      )}
+
+      {dinnerMenu && (
+        <MenuCard menu={dinnerMenu} />
+      )}
+
+    </div>
+  );
 }

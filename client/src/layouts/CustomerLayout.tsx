@@ -5,6 +5,7 @@ import Sidebar from "@/components/common/layout/Sidebar";
 import Topbar from "@/components/common/layout/Topbar";
 
 import { customerNavigation } from "@/config/navigation";
+import { ROUTES } from "@/constants/routes";
 
 import { useCustomerLogout } from "@/features/auth/hooks";
 import { getCustomer } from "@/features/auth/utils/auth.utils";
@@ -38,8 +39,10 @@ export default function CustomerLayout() {
             <CustomerClosureNotice />
           }
           account={{
-            name: customer?.fullName ?? "Customer",
-            role: "Customer",
+            name:
+              customer?.fullName ??
+              "Customer",
+            profilePath: ROUTES.PROFILE,
             onLogout: logout,
           }}
         />
@@ -47,7 +50,9 @@ export default function CustomerLayout() {
       topbar={
         <Topbar
           title="Smart Mess"
-          actions={<NotificationBell />}
+          actions={
+            <NotificationBell />
+          }
         />
       }
     >
