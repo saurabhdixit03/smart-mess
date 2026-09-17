@@ -12,6 +12,8 @@ public enum NotificationType {
 
     MEAL_PRICING,
 
+    BILL_GENERATED,
+
     GENERAL
 
 }

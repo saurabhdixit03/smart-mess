@@ -55,33 +55,57 @@ public class NotificationServiceImpl
 
         for (Customer customer : activeCustomers) {
 
-            Notification notification =
-                    new Notification();
-
-            notification.setCustomer(customer);
-            notification.setNotificationType(
-                    notificationType
-            );
-            notification.setTitle(title);
-            notification.setMessage(message);
-            notification.setRead(false);
-
-            Notification savedNotification =
-                    notificationRepository.save(
-                            notification
-                    );
-
-            NotificationResponse response =
-                    notificationMapper.toResponse(
-                            savedNotification
-                    );
-
-            messagingTemplate.convertAndSendToUser(
-                    customer.getEmail(),
-                    "/queue/notifications",
-                    response
+            notifyCustomer(
+                    customer,
+                    notificationType,
+                    title,
+                    message
             );
         }
+    }
+
+    /*
+     * Notify one specific active customer.
+     */
+    @Override
+    public void notifyCustomer(
+            Customer customer,
+            NotificationType notificationType,
+            String title,
+            String message) {
+
+        if (customer.getStatus()
+                != CustomerStatus.ACTIVE) {
+
+            return;
+        }
+
+        Notification notification =
+                new Notification();
+
+        notification.setCustomer(customer);
+        notification.setNotificationType(
+                notificationType
+        );
+        notification.setTitle(title);
+        notification.setMessage(message);
+        notification.setRead(false);
+
+        Notification savedNotification =
+                notificationRepository.save(
+                        notification
+                );
+
+        NotificationResponse response =
+                notificationMapper.toResponse(
+                        savedNotification
+                );
+
+        messagingTemplate.convertAndSendToUser(
+                customer.getEmail(),
+                "/queue/notifications",
+                response
+        );
     }
 
     @Override

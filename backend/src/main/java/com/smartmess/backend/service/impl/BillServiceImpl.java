@@ -1,14 +1,19 @@
 package com.smartmess.backend.service.impl;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Month;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.smartmess.backend.dto.request.GenerateBillRequest;
 import com.smartmess.backend.dto.response.BillDetailResponse;
@@ -20,6 +25,7 @@ import com.smartmess.backend.entity.Customer;
 import com.smartmess.backend.entity.MealRecord;
 import com.smartmess.backend.enums.BillStatus;
 import com.smartmess.backend.enums.CustomerStatus;
+import com.smartmess.backend.enums.NotificationType;
 import com.smartmess.backend.exception.BusinessException;
 import com.smartmess.backend.exception.ResourceNotFoundException;
 import com.smartmess.backend.mapper.BillMapper;
@@ -29,9 +35,13 @@ import com.smartmess.backend.repository.CustomerRepository;
 import com.smartmess.backend.repository.MealRecordRepository;
 import com.smartmess.backend.security.CustomerSecurity;
 import com.smartmess.backend.service.BillService;
+import com.smartmess.backend.service.NotificationService;
 
 @Service
 public class BillServiceImpl implements BillService {
+
+    private static final Locale INDIA_LOCALE =
+            Locale.forLanguageTag("en-IN");
 
     private final BillRepository billRepository;
 
@@ -45,6 +55,8 @@ public class BillServiceImpl implements BillService {
 
     private final CustomerSecurity customerSecurity;
 
+    private final NotificationService notificationService;
+
     private final Clock clock;
 
     public BillServiceImpl(
@@ -54,6 +66,7 @@ public class BillServiceImpl implements BillService {
             BillMapper billMapper,
             MealRecordMapper mealRecordMapper,
             CustomerSecurity customerSecurity,
+            NotificationService notificationService,
             Clock clock) {
 
         this.billRepository = billRepository;
@@ -62,6 +75,7 @@ public class BillServiceImpl implements BillService {
         this.billMapper = billMapper;
         this.mealRecordMapper = mealRecordMapper;
         this.customerSecurity = customerSecurity;
+        this.notificationService = notificationService;
         this.clock = clock;
     }
 
@@ -70,6 +84,7 @@ public class BillServiceImpl implements BillService {
      *
      * Owner only.
      */
+    @Transactional
     @Override
     public List<BillResponse> generateBills(
             GenerateBillRequest request) {
@@ -81,6 +96,10 @@ public class BillServiceImpl implements BillService {
 
         List<BillResponse> generatedBills =
                 new ArrayList<>();
+
+        int existingBillCount = 0;
+
+        int noMealRecordCount = 0;
 
         LocalDate startDate =
                 LocalDate.of(
@@ -116,6 +135,9 @@ public class BillServiceImpl implements BillService {
                             );
 
             if (billExists) {
+
+                existingBillCount++;
+
                 continue;
             }
 
@@ -135,6 +157,9 @@ public class BillServiceImpl implements BillService {
              * Skip customers having no meal records.
              */
             if (mealRecords.isEmpty()) {
+
+                noMealRecordCount++;
+
                 continue;
             }
 
@@ -184,10 +209,24 @@ public class BillServiceImpl implements BillService {
             for (MealRecord mealRecord : mealRecords) {
 
                 mealRecord.setBill(savedBill);
-
             }
 
-            mealRecordRepository.saveAll(mealRecords);
+            mealRecordRepository.saveAll(
+                    mealRecords
+            );
+
+            /*
+             * Notify the customer only after the bill
+             * and its meal records have been saved.
+             */
+            notificationService.notifyCustomer(
+                    customer,
+                    NotificationType.BILL_GENERATED,
+                    "New Bill Generated",
+                    buildBillNotificationMessage(
+                            savedBill
+                    )
+            );
 
             generatedBills.add(
                     billMapper.toResponse(savedBill)
@@ -197,7 +236,12 @@ public class BillServiceImpl implements BillService {
         if (generatedBills.isEmpty()) {
 
             throw new BusinessException(
-                    "No bills were generated for the selected billing period."
+                    buildNoBillsGeneratedMessage(
+                            request,
+                            customers.size(),
+                            existingBillCount,
+                            noMealRecordCount
+                    )
             );
         }
 
@@ -401,6 +445,105 @@ public class BillServiceImpl implements BillService {
         );
 
         return response;
+    }
+
+    /*
+     * Build the customer-facing bill notification.
+     */
+    private String buildBillNotificationMessage(
+            Bill bill) {
+
+        String billingPeriod =
+                buildBillingPeriod(
+                        bill.getBillingMonth(),
+                        bill.getBillingYear()
+                );
+
+        String formattedAmount =
+                NumberFormat
+                        .getCurrencyInstance(
+                                INDIA_LOCALE
+                        )
+                        .format(
+                                bill.getTotalAmount()
+                        );
+
+        return "Your bill for "
+                + billingPeriod
+                + " has been generated. Amount due: "
+                + formattedAmount
+                + ".";
+    }
+
+    /*
+     * Explain why no new bills were generated.
+     */
+    private String buildNoBillsGeneratedMessage(
+            GenerateBillRequest request,
+            int activeCustomerCount,
+            int existingBillCount,
+            int noMealRecordCount) {
+
+        String billingPeriod =
+                buildBillingPeriod(
+                        request.billingMonth(),
+                        request.billingYear()
+                );
+
+        if (activeCustomerCount == 0) {
+
+            return "No active customers were found.";
+        }
+
+        if (existingBillCount
+                == activeCustomerCount) {
+
+            return "Bills have already been generated for all active customers for "
+                    + billingPeriod
+                    + ".";
+        }
+
+        if (noMealRecordCount
+                == activeCustomerCount) {
+
+            return "No meal records were found for active customers for "
+                    + billingPeriod
+                    + ".";
+        }
+
+        return "No new bills were generated for "
+                + billingPeriod
+                + ". Bills already exist for "
+                + existingBillCount
+                + (existingBillCount == 1
+                        ? " customer"
+                        : " customers")
+                + ", and "
+                + noMealRecordCount
+                + (noMealRecordCount == 1
+                        ? " customer has"
+                        : " customers have")
+                + " no meal records.";
+    }
+
+    /*
+     * Format a billing period for customer-facing messages.
+     */
+    private String buildBillingPeriod(
+            Integer billingMonth,
+            Integer billingYear) {
+
+        String monthName =
+                Month.of(
+                        billingMonth
+                ).getDisplayName(
+                        TextStyle.FULL,
+                        Locale.ENGLISH
+                );
+
+        return monthName
+                + " "
+                + billingYear;
     }
 
     private void validateBillingMonth(
