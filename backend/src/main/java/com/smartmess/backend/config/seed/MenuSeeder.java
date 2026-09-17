@@ -17,20 +17,29 @@ import com.smartmess.backend.repository.MenuRepository;
 public class MenuSeeder {
 
     private static final Logger log =
-            LoggerFactory.getLogger(MenuSeeder.class);
+            LoggerFactory.getLogger(
+                    MenuSeeder.class
+            );
+
+    private static final int HISTORICAL_DAY_COUNT =
+            43;
+
+    private static final long RANDOM_SEED =
+            20260917L;
 
     private final MenuRepository menuRepository;
 
     private final Clock clock;
 
-    private final Random random = new Random();
-
     public MenuSeeder(
             MenuRepository menuRepository,
             Clock clock) {
 
-        this.menuRepository = menuRepository;
-        this.clock = clock;
+        this.menuRepository =
+                menuRepository;
+
+        this.clock =
+                clock;
     }
 
     private record MenuTemplate(
@@ -45,48 +54,55 @@ public class MenuSeeder {
     public void seed() {
 
         if (menuRepository.count() > 0) {
+
+            log.info(
+                    "Menus already exist. Skipping demo seeding."
+            );
+
             return;
         }
 
         List<MenuTemplate> templates =
                 buildMenuTemplates();
 
+        Random random =
+                new Random(
+                        RANDOM_SEED
+                );
+
         LocalDate today =
                 LocalDate.now(clock);
 
-        LocalDate startDate =
-                today.minusDays(43);
+        LocalDate historicalStartDate =
+                today.minusDays(
+                        HISTORICAL_DAY_COUNT
+                );
 
-        LocalDate endDate =
-                today;
+        LocalDate historicalEndDate =
+                today.minusDays(1);
 
-        for (LocalDate date = startDate;
-             !date.isAfter(endDate);
+        int menuCount = 0;
+
+        /*
+         * Seed lunch and dinner menus for the
+         * historical period.
+         */
+        for (LocalDate date = historicalStartDate;
+             !date.isAfter(historicalEndDate);
              date = date.plusDays(1)) {
 
             MenuTemplate lunchTemplate =
-                    templates.get(
-                            random.nextInt(
-                                    templates.size()
-                            )
+                    getRandomTemplate(
+                            templates,
+                            random
                     );
 
             MenuTemplate dinnerTemplate =
-                    templates.get(
-                            random.nextInt(
-                                    templates.size()
-                            )
+                    getDifferentTemplate(
+                            templates,
+                            lunchTemplate,
+                            random
                     );
-
-            // Avoid identical lunch and dinner menus on the same day.
-            while (dinnerTemplate == lunchTemplate) {
-                dinnerTemplate =
-                        templates.get(
-                                random.nextInt(
-                                        templates.size()
-                                )
-                        );
-            }
 
             saveMenu(
                     date,
@@ -99,13 +115,70 @@ public class MenuSeeder {
                     MealSession.DINNER,
                     dinnerTemplate
             );
+
+            menuCount += 2;
         }
 
-        log.info(
-                "Demo Menus seeded successfully for {} days ({} menus).",
-                44,
-                88
+        /*
+         * Seed only today's lunch menu.
+         *
+         * Today's dinner remains unpublished so that
+         * the owner can test the menu-publishing flow.
+         */
+        MenuTemplate todayLunchTemplate =
+                getRandomTemplate(
+                        templates,
+                        random
+                );
+
+        saveMenu(
+                today,
+                MealSession.LUNCH,
+                todayLunchTemplate
         );
+
+        menuCount++;
+
+        log.info(
+                "Demo Menus seeded successfully. "
+                        + "Historical days: {}, Total menus: {}.",
+                HISTORICAL_DAY_COUNT,
+                menuCount
+        );
+    }
+
+    private MenuTemplate getRandomTemplate(
+            List<MenuTemplate> templates,
+            Random random) {
+
+        return templates.get(
+                random.nextInt(
+                        templates.size()
+                )
+        );
+    }
+
+    private MenuTemplate getDifferentTemplate(
+            List<MenuTemplate> templates,
+            MenuTemplate existingTemplate,
+            Random random) {
+
+        MenuTemplate template =
+                getRandomTemplate(
+                        templates,
+                        random
+                );
+
+        while (template.equals(existingTemplate)) {
+
+            template =
+                    getRandomTemplate(
+                            templates,
+                            random
+                    );
+        }
+
+        return template;
     }
 
     private void saveMenu(
