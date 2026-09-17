@@ -1,6 +1,7 @@
 package com.smartmess.backend.config.seed;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -29,38 +30,51 @@ import com.smartmess.backend.repository.MenuRepository;
 public class MealRecordSeeder {
 
     private static final Logger log =
-            LoggerFactory.getLogger(MealRecordSeeder.class);
+            LoggerFactory.getLogger(
+                    MealRecordSeeder.class
+            );
 
     private final MealRecordRepository mealRecordRepository;
     private final CustomerRepository customerRepository;
     private final MenuRepository menuRepository;
     private final MealResponseRepository mealResponseRepository;
     private final MealPricingRepository mealPricingRepository;
+    private final Clock clock;
 
     public MealRecordSeeder(
             MealRecordRepository mealRecordRepository,
             CustomerRepository customerRepository,
             MenuRepository menuRepository,
             MealResponseRepository mealResponseRepository,
-            MealPricingRepository mealPricingRepository) {
+            MealPricingRepository mealPricingRepository,
+            Clock clock) {
 
-        this.mealRecordRepository = mealRecordRepository;
-        this.customerRepository = customerRepository;
-        this.menuRepository = menuRepository;
-        this.mealResponseRepository = mealResponseRepository;
-        this.mealPricingRepository = mealPricingRepository;
-    }
+        this.mealRecordRepository =
+                mealRecordRepository;
 
-    public void seedDemoData() {
+        this.customerRepository =
+                customerRepository;
 
-        seedMealRecords();
+        this.menuRepository =
+                menuRepository;
+
+        this.mealResponseRepository =
+                mealResponseRepository;
+
+        this.mealPricingRepository =
+                mealPricingRepository;
+
+        this.clock =
+                clock;
     }
 
     public void seedMealRecords() {
 
         if (mealRecordRepository.count() > 0) {
 
-            log.info("Meal Records already exist. Skipping demo seeding.");
+            log.info(
+                    "Meal Records already exist. Skipping demo seeding."
+            );
 
             return;
         }
@@ -73,19 +87,20 @@ public class MealRecordSeeder {
         if (customers.isEmpty()) {
 
             log.warn(
-                    "Skipping MealRecord seeding because no active customers are available."
+                    "Skipping Meal Record seeding because no active customers are available."
             );
 
             return;
         }
 
         List<Menu> menus =
-                menuRepository.findAllByOrderByMenuDateAscMealSessionAsc();
+                menuRepository
+                        .findAllByOrderByMenuDateAscMealSessionAsc();
 
         if (menus.isEmpty()) {
 
             log.warn(
-                    "Skipping MealRecord seeding because no menus are available."
+                    "Skipping Meal Record seeding because no menus are available."
             );
 
             return;
@@ -96,34 +111,39 @@ public class MealRecordSeeder {
                         .findTopByOrderByUpdatedAtDesc()
                         .orElseThrow(() ->
                                 new IllegalStateException(
-                                        "Meal pricing missing."
-                                ));
+                                        "Meal pricing is missing."
+                                )
+                        );
+
+        LocalDate today =
+                LocalDate.now(clock);
 
         int recordsCreated = 0;
-        int walkInRecords = 0;
         int responseBasedRecords = 0;
+        int walkInRecords = 0;
 
-        /*
-         * Process every historical menu.
-         *
-         * Example:
-         *
-         * July 1 Lunch
-         * July 1 Dinner
-         * July 2 Lunch
-         * July 2 Dinner
-         * ...
-         * August 13 Lunch
-         * August 13 Dinner
-         */
         for (Menu menu : menus) {
+
+            /*
+             * Today's meal records are intentionally
+             * not seeded.
+             *
+             * This keeps today's accepted customers in
+             * the collection queue so the owner can test
+             * meal recording manually.
+             */
+            if (!menu.getMenuDate().isBefore(today)) {
+                continue;
+            }
 
             for (int customerIndex = 0;
                  customerIndex < customers.size();
                  customerIndex++) {
 
                 Customer customer =
-                        customers.get(customerIndex);
+                        customers.get(
+                                customerIndex
+                        );
 
                 MealResponse mealResponse =
                         mealResponseRepository
@@ -134,40 +154,33 @@ public class MealRecordSeeder {
                                 .orElse(null);
 
                 /*
-                 * No response means there is nothing to seed
-                 * for this customer/menu combination.
+                 * No response means there is no
+                 * response-based record to process.
                  */
                 if (mealResponse == null) {
                     continue;
                 }
 
                 /*
-                 * Generate a deterministic collection decision.
-                 *
-                 * This avoids using random values, so restarting
-                 * the application produces the same demo dataset.
+                 * A deterministic pattern makes the seeded
+                 * collection history reproducible.
                  */
                 int pattern =
-                        (menu.getMenuId().intValue()
-                                + customerIndex) % 10;
+                        (
+                                menu.getMenuId().intValue()
+                                        + customerIndex
+                        ) % 10;
 
-                /*
-                 * ACCEPTED responses:
-                 *
-                 * Most accepted responses are collected.
-                 *
-                 * Some are intentionally left uncollected to
-                 * represent customers who responded but didn't
-                 * actually take the meal.
-                 */
                 if (mealResponse.getResponseStatus()
                         == MealResponseStatus.ACCEPTED) {
 
                     /*
-                     * 0 and 1 = not collected
-                     * 2-9 = collected
+                     * Approximately 80% of accepted responses
+                     * become collected meal records.
                      *
-                     * Roughly 80% collection rate.
+                     * The remaining responses represent
+                     * customers who accepted but did not
+                     * collect their meal.
                      */
                     if (pattern <= 1) {
                         continue;
@@ -196,7 +209,9 @@ public class MealRecordSeeder {
                                     customerIndex
                             );
 
-                    mealRecordRepository.save(mealRecord);
+                    mealRecordRepository.save(
+                            mealRecord
+                    );
 
                     recordsCreated++;
                     responseBasedRecords++;
@@ -205,25 +220,15 @@ public class MealRecordSeeder {
                 }
 
                 /*
-                 * DECLINED responses:
+                 * A small number of declined responses
+                 * become walk-in meal records.
                  *
-                 * Occasionally simulate a walk-in customer.
-                 *
-                 * The customer declined the menu beforehand but
-                 * still came and took a meal.
-                 *
-                 * No MealResponse is attached to that MealRecord.
+                 * The record is intentionally not connected
+                 * to the declined response.
                  */
                 if (mealResponse.getResponseStatus()
-                        == MealResponseStatus.DECLINED) {
-
-                    /*
-                     * Only a small percentage of declined
-                     * responses become walk-ins.
-                     */
-                    if (pattern != 7) {
-                        continue;
-                    }
+                        == MealResponseStatus.DECLINED
+                        && pattern == 7) {
 
                     MealOption servedMeal =
                             customerIndex % 3 == 0
@@ -246,7 +251,9 @@ public class MealRecordSeeder {
                                     customerIndex
                             );
 
-                    mealRecordRepository.save(mealRecord);
+                    mealRecordRepository.save(
+                            mealRecord
+                    );
 
                     recordsCreated++;
                     walkInRecords++;
@@ -255,26 +262,14 @@ public class MealRecordSeeder {
         }
 
         log.info(
-                "Demo Meal Records seeded successfully. " +
-                "Total: {}, Response-based: {}, Walk-ins: {}",
+                "Demo Meal Records seeded successfully. "
+                        + "Total: {}, Response-based: {}, Walk-ins: {}.",
                 recordsCreated,
                 responseBasedRecords,
                 walkInRecords
         );
     }
 
-    /*
-     * Occasionally simulate the owner changing the served
-     * meal from what the customer originally requested.
-     *
-     * This gives us realistic examples such as:
-     *
-     * Response: FULL
-     * Served:   HALF
-     *
-     * Response: HALF
-     * Served:   FULL
-     */
     private MealOption getServedMeal(
             MealResponse mealResponse,
             int pattern) {
@@ -283,8 +278,8 @@ public class MealRecordSeeder {
                 mealResponse.getMealOption();
 
         /*
-         * Pattern 3:
-         * Occasionally serve the opposite meal option.
+         * Occasionally serve the opposite meal option
+         * to represent an owner-side adjustment.
          */
         if (pattern == 3) {
 
@@ -300,12 +295,6 @@ public class MealRecordSeeder {
         return requestedMeal;
     }
 
-    /*
-     * Mostly preserve the customer's requested extra rotis.
-     *
-     * Occasionally add one extra roti to represent
-     * an owner-side adjustment during collection.
-     */
     private int getExtraRotiCount(
             MealResponse mealResponse,
             int pattern) {
@@ -314,21 +303,16 @@ public class MealRecordSeeder {
                 mealResponse.getExtraRotiCount();
 
         /*
-         * Pattern 5:
-         * Occasionally add one extra roti.
+         * Occasionally add one extra roti during
+         * meal collection.
          */
         if (pattern == 5) {
-
             return requestedRotis + 1;
         }
 
         return requestedRotis;
     }
 
-    /*
-     * Creates a MealRecord while keeping the actual
-     * collection timestamp aligned with the menu date.
-     */
     private MealRecord createMealRecord(
             Customer customer,
             Menu menu,
@@ -355,68 +339,49 @@ public class MealRecordSeeder {
                         )
                 );
 
-        LocalDate menuDate =
-                menu.getMenuDate();
-
-        /*
-         * Lunch collections happen around lunch time.
-         * Dinner collections happen around dinner time.
-         *
-         * Customer index is used only to slightly vary
-         * the collection timestamp.
-         */
-        LocalTime collectionTime;
-
-        if (menu.getMealSession() == MealSession.LUNCH) {
-
-            collectionTime =
-                    LocalTime.of(
-                            12,
-                            30 + (customerIndex % 30)
-                    );
-
-        } else {
-
-            collectionTime =
-                    LocalTime.of(
-                            19,
-                            30 + (customerIndex % 30)
-                    );
-        }
+        LocalTime collectionTime =
+                getCollectionTime(
+                        menu.getMealSession(),
+                        customerIndex
+                );
 
         LocalDateTime collectedAt =
                 LocalDateTime.of(
-                        menuDate,
+                        menu.getMenuDate(),
                         collectionTime
                 );
 
         return MealRecord.builder()
-
                 .customer(customer)
-
                 .menu(menu)
-
-                /*
-                 * Response-based collection:
-                 * response is linked.
-                 *
-                 * Walk-in:
-                 * response is null.
-                 */
                 .mealResponse(mealResponse)
-
                 .mealOption(servedMeal)
-
                 .mealPrice(mealPrice)
-
                 .extraRotiCount(extraRotis)
-
                 .extraRotiPrice(extraRotiPrice)
-
                 .totalAmount(totalAmount)
-
                 .collectedAt(collectedAt)
-
                 .build();
+    }
+
+    private LocalTime getCollectionTime(
+            MealSession mealSession,
+            int customerIndex) {
+
+        int minute =
+                30 + (customerIndex % 30);
+
+        if (mealSession == MealSession.LUNCH) {
+
+            return LocalTime.of(
+                    12,
+                    minute
+            );
+        }
+
+        return LocalTime.of(
+                19,
+                minute
+        );
     }
 }

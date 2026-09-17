@@ -25,21 +25,17 @@ import com.smartmess.backend.repository.MenuRepository;
 public class MealResponseSeeder {
 
     private static final Logger log =
-            LoggerFactory.getLogger(MealResponseSeeder.class);
+            LoggerFactory.getLogger(
+                    MealResponseSeeder.class
+            );
+
+    private static final long RANDOM_SEED =
+            20260917L;
 
     private final MealResponseRepository mealResponseRepository;
     private final CustomerRepository customerRepository;
     private final MenuRepository menuRepository;
     private final Clock clock;
-
-    /*
-     * Fixed seed keeps demo data reproducible.
-     *
-     * Every fresh database reset will generate
-     * the same response distribution instead of
-     * producing different data on every run.
-     */
-    private final Random random = new Random(20260813L);
 
     public MealResponseSeeder(
             MealResponseRepository mealResponseRepository,
@@ -47,15 +43,27 @@ public class MealResponseSeeder {
             MenuRepository menuRepository,
             Clock clock) {
 
-        this.mealResponseRepository = mealResponseRepository;
-        this.customerRepository = customerRepository;
-        this.menuRepository = menuRepository;
-        this.clock = clock;
+        this.mealResponseRepository =
+                mealResponseRepository;
+
+        this.customerRepository =
+                customerRepository;
+
+        this.menuRepository =
+                menuRepository;
+
+        this.clock =
+                clock;
     }
 
     public void seed() {
 
         if (mealResponseRepository.count() > 0) {
+
+            log.info(
+                    "Meal Responses already exist. Skipping demo seeding."
+            );
+
             return;
         }
 
@@ -67,96 +75,206 @@ public class MealResponseSeeder {
         if (customers.isEmpty()) {
 
             log.warn(
-                    "Skipping MealResponse seeding because no active customers are available."
+                    "Skipping Meal Response seeding because no active customers are available."
             );
 
             return;
         }
 
         List<Menu> menus =
-                menuRepository.findAllByOrderByMenuDateAscMealSessionAsc();
+                menuRepository
+                        .findAllByOrderByMenuDateAscMealSessionAsc();
 
         if (menus.isEmpty()) {
 
             log.warn(
-                    "Skipping MealResponse seeding because no menus are available."
+                    "Skipping Meal Response seeding because no menus are available."
             );
 
             return;
         }
 
-        int responseCount = 0;
+        Random random =
+                new Random(
+                        RANDOM_SEED
+                );
+
+        LocalDate today =
+                LocalDate.now(clock);
+
+        int historicalResponseCount = 0;
+        int todayResponseCount = 0;
 
         for (Menu menu : menus) {
 
-            /*
-             * Today's responses are intentionally limited.
-             *
-             * This keeps today's customer-response flow
-             * available for manual testing.
-             */
             boolean isToday =
-                    menu.getMenuDate().equals(
-                            LocalDate.now(clock)
-                    );
+                    menu.getMenuDate()
+                            .equals(today);
 
-            for (Customer customer : customers) {
+            for (int customerIndex = 0;
+                 customerIndex < customers.size();
+                 customerIndex++) {
+
+                Customer customer =
+                        customers.get(
+                                customerIndex
+                        );
 
                 /*
-                 * Do not automatically create a response
-                 * for every customer.
+                 * Only half of the active customers receive
+                 * a seeded response for today's lunch.
                  *
-                 * Historical customers may or may not
-                 * respond to a particular menu.
+                 * The remaining customers can submit their
+                 * responses manually.
                  */
-                if (!shouldCustomerRespond(isToday)) {
+                if (isToday) {
+
+                    if (!shouldSeedTodayResponse(
+                            customerIndex
+                    )) {
+                        continue;
+                    }
+
+                    MealResponse response =
+                            createTodayResponse(
+                                    customer,
+                                    menu,
+                                    customerIndex
+                            );
+
+                    mealResponseRepository.save(
+                            response
+                    );
+
+                    todayResponseCount++;
+
+                    continue;
+                }
+
+                /*
+                 * Approximately 75% of customers respond
+                 * to each historical menu.
+                 */
+                if (!shouldSeedHistoricalResponse(
+                        random
+                )) {
                     continue;
                 }
 
                 MealResponse response =
-                        createMealResponse(
+                        createHistoricalResponse(
                                 customer,
-                                menu
+                                menu,
+                                random
                         );
 
                 mealResponseRepository.save(
                         response
                 );
 
-                responseCount++;
+                historicalResponseCount++;
             }
         }
 
         log.info(
-                "Demo Meal Responses seeded successfully. Total responses: {}",
-                responseCount
+                "Demo Meal Responses seeded successfully. "
+                        + "Historical: {}, Today: {}, Total: {}.",
+                historicalResponseCount,
+                todayResponseCount,
+                historicalResponseCount
+                        + todayResponseCount
         );
     }
 
-    private boolean shouldCustomerRespond(
-            boolean isToday) {
+    private boolean shouldSeedTodayResponse(
+            int customerIndex) {
 
         /*
-         * Today's responses:
-         * Keep enough customers without completely
-         * occupying the current-day testing flow.
+         * With eight active demo customers, indexes
+         * 0, 2, 4 and 6 receive a response.
          *
-         * Approximately 50% respond.
+         * This leaves four customers available for
+         * manual response testing.
          */
-        if (isToday) {
-            return random.nextDouble() < 0.50;
-        }
+        return customerIndex % 2 == 0;
+    }
 
-        /*
-         * Historical menus:
-         * Approximately 75% of customers respond.
-         */
+    private boolean shouldSeedHistoricalResponse(
+            Random random) {
+
         return random.nextDouble() < 0.75;
     }
 
-    private MealResponse createMealResponse(
+    private MealResponse createTodayResponse(
             Customer customer,
-            Menu menu) {
+            Menu menu,
+            int customerIndex) {
+
+        MealResponse response =
+                new MealResponse();
+
+        response.setCustomer(
+                customer
+        );
+
+        response.setMenu(
+                menu
+        );
+
+        /*
+         * Customer index 4 represents a declined response.
+         *
+         * The other seeded customers accept today's lunch,
+         * giving the dashboard both accepted and declined
+         * response examples.
+         */
+        if (customerIndex == 4) {
+
+            response.setResponseStatus(
+                    MealResponseStatus.DECLINED
+            );
+
+            response.setMealOption(
+                    null
+            );
+
+            response.setExtraRotiCount(
+                    0
+            );
+
+        } else {
+
+            response.setResponseStatus(
+                    MealResponseStatus.ACCEPTED
+            );
+
+            MealOption mealOption =
+                    customerIndex % 3 == 0
+                            ? MealOption.FULL
+                            : MealOption.HALF;
+
+            response.setMealOption(
+                    mealOption
+            );
+
+            response.setExtraRotiCount(
+                    customerIndex == 6
+                            ? 1
+                            : 0
+            );
+        }
+
+        response.setRespondedAt(
+                LocalDateTime.now(clock)
+        );
+
+        return response;
+    }
+
+    private MealResponse createHistoricalResponse(
+            Customer customer,
+            Menu menu,
+            Random random) {
 
         MealResponse response =
                 new MealResponse();
@@ -171,6 +289,7 @@ public class MealResponseSeeder {
 
         /*
          * Approximately:
+         *
          * 75% ACCEPTED
          * 25% DECLINED
          */
@@ -185,6 +304,7 @@ public class MealResponseSeeder {
 
             /*
              * Approximately:
+             *
              * 65% FULL
              * 35% HALF
              */
@@ -198,7 +318,9 @@ public class MealResponseSeeder {
             );
 
             response.setExtraRotiCount(
-                    generateExtraRotiCount()
+                    generateExtraRotiCount(
+                            random
+                    )
             );
 
         } else {
@@ -207,10 +329,6 @@ public class MealResponseSeeder {
                     MealResponseStatus.DECLINED
             );
 
-            /*
-             * Declined response must not have
-             * a meal option or extra rotis.
-             */
             response.setMealOption(
                     null
             );
@@ -220,31 +338,28 @@ public class MealResponseSeeder {
             );
         }
 
-        /*
-         * Historical response should look like it
-         * was submitted on the actual menu date.
-         *
-         * We generate a realistic response time
-         * between approximately 7:00 AM and 10:00 PM.
-         */
         response.setRespondedAt(
-                generateResponseTime(
-                        menu.getMenuDate()
+                generateHistoricalResponseTime(
+                        menu.getMenuDate(),
+                        random
                 )
         );
 
         return response;
     }
 
-    private int generateExtraRotiCount() {
+    private int generateExtraRotiCount(
+            Random random) {
 
         double value =
                 random.nextDouble();
 
         /*
-         * ~75% → no extra roti
-         * ~20% → 1 extra roti
-         * ~5%  → 2 extra rotis
+         * Approximately:
+         *
+         * 75% no extra roti
+         * 20% one extra roti
+         * 5% two extra rotis
          */
         if (value < 0.75) {
             return 0;
@@ -257,12 +372,13 @@ public class MealResponseSeeder {
         return 2;
     }
 
-    private LocalDateTime generateResponseTime(
-            LocalDate menuDate) {
+    private LocalDateTime generateHistoricalResponseTime(
+            LocalDate menuDate,
+            Random random) {
 
         /*
          * Generate a response between 7:00 AM
-         * and 10:00 PM on the menu date.
+         * and 10:59 PM on the menu date.
          */
         int hour =
                 7 + random.nextInt(16);
