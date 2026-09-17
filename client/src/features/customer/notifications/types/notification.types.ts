@@ -3,7 +3,8 @@ export type NotificationType =
   | "MESS_CLOSURE"
   | "WEEKLY_SCHEDULE"
   | "RESPONSE_WINDOW"
-  | "MEAL_PRICING";
+  | "MEAL_PRICING"
+  | "BILL_GENERATED";
 
 export interface Notification {
   notificationId: number;

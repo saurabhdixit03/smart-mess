@@ -5,6 +5,7 @@ import {
   CheckCheck,
   Clock3,
   IndianRupee,
+  Receipt,
   Utensils,
 } from "lucide-react";
 
@@ -24,6 +25,9 @@ import type {
 
 const CUSTOMER_MENU_PATH =
   "/customer/menu";
+
+const CUSTOMER_BILLS_PATH =
+  "/customer/my-bills";
 
 const MAX_VISIBLE_NOTIFICATIONS =
   10;
@@ -46,6 +50,9 @@ function getNotificationIcon(
 
     case "MEAL_PRICING":
       return <IndianRupee size={17} />;
+
+    case "BILL_GENERATED":
+      return <Receipt size={17} />;
 
     default:
       return <Bell size={17} />;
@@ -187,6 +194,19 @@ export default function NotificationBell() {
 
       navigate(
         CUSTOMER_MENU_PATH
+      );
+
+      return;
+    }
+
+    if (
+      notificationType ===
+      "BILL_GENERATED"
+    ) {
+      setOpen(false);
+
+      navigate(
+        CUSTOMER_BILLS_PATH
       );
     }
   }
