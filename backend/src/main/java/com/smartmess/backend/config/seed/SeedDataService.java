@@ -15,27 +15,29 @@ public class SeedDataService {
     private final MealResponseSeeder mealResponseSeeder;
     private final MealRecordSeeder mealRecordSeeder;
 
-    public void seedDemoData() {
+    /*
+     * Required application configuration.
+     *
+     * These records are initialized in every environment
+     * when they do not already exist.
+     */
+    public void initializeRequiredConfiguration() {
 
-        /*
-         * Seed foundational configuration first.
-         */
         mealPricingSeeder.seed();
 
         messSettingsSeeder.seed();
+    }
 
-        /*
-         * Seed customers before operational data.
-         */
+    /*
+     * Optional demo operational data.
+     *
+     * This method runs only when
+     * app.seed-demo-data is enabled.
+     */
+    public void seedDemoData() {
+
         customerSeeder.seed();
 
-        /*
-         * Seed data in dependency order:
-         *
-         * Menu
-         * Meal Response
-         * Meal Record
-         */
         menuSeeder.seed();
 
         mealResponseSeeder.seed();
