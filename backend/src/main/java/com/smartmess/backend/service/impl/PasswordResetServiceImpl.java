@@ -8,11 +8,17 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.concurrent.Executor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.smartmess.backend.dto.request.ForgotPasswordRequest;
 import com.smartmess.backend.dto.request.ResetPasswordRequest;
@@ -31,25 +37,19 @@ import com.smartmess.backend.service.PasswordResetService;
 public class PasswordResetServiceImpl
         implements PasswordResetService {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(PasswordResetServiceImpl.class);
+
     private static final SecureRandom SECURE_RANDOM =
             new SecureRandom();
 
-    private final PasswordResetTokenRepository
-            passwordResetTokenRepository;
-
-    private final MessOwnerRepository
-            messOwnerRepository;
-
-    private final CustomerRepository
-            customerRepository;
-
-    private final PasswordEncoder
-            passwordEncoder;
-
-    private final EmailService
-            emailService;
-
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final MessOwnerRepository messOwnerRepository;
+    private final CustomerRepository customerRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
     private final Clock clock;
+    private final Executor emailExecutor;
 
     @Value("${app.password-reset.expiration-minutes:30}")
     private long tokenExpirationMinutes;
@@ -60,25 +60,17 @@ public class PasswordResetServiceImpl
             CustomerRepository customerRepository,
             PasswordEncoder passwordEncoder,
             EmailService emailService,
-            Clock clock) {
+            Clock clock,
+            @Qualifier("emailExecutor") Executor emailExecutor) {
 
         this.passwordResetTokenRepository =
                 passwordResetTokenRepository;
-
-        this.messOwnerRepository =
-                messOwnerRepository;
-
-        this.customerRepository =
-                customerRepository;
-
-        this.passwordEncoder =
-                passwordEncoder;
-
-        this.emailService =
-                emailService;
-
-        this.clock =
-                clock;
+        this.messOwnerRepository = messOwnerRepository;
+        this.customerRepository = customerRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
+        this.clock = clock;
+        this.emailExecutor = emailExecutor;
     }
 
     @Override
@@ -92,16 +84,11 @@ public class PasswordResetServiceImpl
 
         if (userRole == UserRole.OWNER) {
 
-            MessOwner owner =
-                    messOwnerRepository
-                            .findByEmail(
-                                    request.email()
-                            )
-                            .orElse(null);
+            MessOwner owner = messOwnerRepository
+                    .findByEmail(request.email())
+                    .orElse(null);
 
-            /*
-             * Do not reveal whether the account exists.
-             */
+            // Keep the response the same for unknown accounts.
             if (owner == null) {
                 return;
             }
@@ -111,16 +98,10 @@ public class PasswordResetServiceImpl
 
         } else {
 
-            Customer customer =
-                    customerRepository
-                            .findByEmail(
-                                    request.email()
-                            )
-                            .orElse(null);
+            Customer customer = customerRepository
+                    .findByEmail(request.email())
+                    .orElse(null);
 
-            /*
-             * Do not reveal whether the account exists.
-             */
             if (customer == null) {
                 return;
             }
@@ -129,69 +110,113 @@ public class PasswordResetServiceImpl
             email = customer.getEmail();
         }
 
-        /*
-         * Defensive check during migration.
-         *
-         * Customer email is now required,
-         * but this avoids exposing account state
-         * if legacy data ever exists.
-         */
         if (email == null || email.isBlank()) {
             return;
         }
 
-        invalidateExistingTokens(
-                userId,
-                userRole
-        );
+        invalidateExistingTokens(userId, userRole);
 
-        String rawToken =
-                generateSecureToken();
-
-        String tokenHash =
-                hashToken(rawToken);
+        String rawToken = generateSecureToken();
 
         PasswordResetToken resetToken =
                 new PasswordResetToken();
 
-        resetToken.setTokenHash(
-                tokenHash
-        );
-
-        resetToken.setUserId(
-                userId
-        );
-
-        resetToken.setUserRole(
-                userRole
-        );
-
+        resetToken.setTokenHash(hashToken(rawToken));
+        resetToken.setUserId(userId);
+        resetToken.setUserRole(userRole);
         resetToken.setExpiresAt(
                 LocalDateTime.now(clock)
-                        .plusMinutes(
-                                tokenExpirationMinutes
-                        )
+                        .plusMinutes(tokenExpirationMinutes)
         );
 
-        passwordResetTokenRepository.save(
-                resetToken
-        );
+        passwordResetTokenRepository.save(resetToken);
 
         /*
-         * Raw token is never stored.
-         * It exists only in the reset email.
+         * Only the token hash is stored in the database.
+         * Queue the email after the transaction commits.
          */
-        emailService.sendPasswordResetEmail(
+        schedulePasswordResetEmail(
+                userId,
                 email,
                 rawToken,
                 userRole
         );
     }
 
+    private void schedulePasswordResetEmail(
+            Long userId,
+            String email,
+            String rawToken,
+            UserRole userRole) {
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+
+                    @Override
+                    public void afterCommit() {
+
+                        try {
+                            emailExecutor.execute(() ->
+                                    sendPasswordResetEmail(
+                                            userId,
+                                            email,
+                                            rawToken,
+                                            userRole
+                                    )
+                            );
+
+                        } catch (RuntimeException exception) {
+                            /*
+                             * Avoid logging email content or raw tokens.
+                             * A queue failure must not fail the committed request.
+                             */
+                            log.error(
+                                    "Password reset email could not be queued. "
+                                            + "User ID: {}, Role: {}, Error type: {}.",
+                                    userId,
+                                    userRole,
+                                    exception.getClass().getSimpleName()
+                            );
+                        }
+                    }
+                }
+        );
+    }
+
+    private void sendPasswordResetEmail(
+            Long userId,
+            String email,
+            String rawToken,
+            UserRole userRole) {
+
+        try {
+            emailService.sendPasswordResetEmail(
+                    email,
+                    rawToken,
+                    userRole
+            );
+
+            log.info(
+                    "Brevo accepted the password reset email. "
+                            + "User ID: {}, Role: {}.",
+                    userId,
+                    userRole
+            );
+
+        } catch (RuntimeException exception) {
+            log.error(
+                    "Password reset email could not be sent. "
+                            + "User ID: {}, Role: {}, Error type: {}.",
+                    userId,
+                    userRole,
+                    exception.getClass().getSimpleName()
+            );
+        }
+    }
+
     @Override
     @Transactional
-    public void resetPassword(
-            ResetPasswordRequest request) {
+    public void resetPassword(ResetPasswordRequest request) {
 
         if (!request.newPassword()
                 .equals(request.confirmPassword())) {
@@ -201,42 +226,31 @@ public class PasswordResetServiceImpl
             );
         }
 
-        String tokenHash =
-                hashToken(
-                        request.token()
-                );
+        String tokenHash = hashToken(request.token());
 
         PasswordResetToken resetToken =
                 passwordResetTokenRepository
-                        .findByTokenHash(
-                                tokenHash
-                        )
+                        .findByTokenHash(tokenHash)
                         .orElseThrow(() ->
                                 new BusinessException(
                                         "Invalid or expired password reset token."
-                                )
-                        );
+                                ));
 
         if (resetToken.getUsedAt() != null) {
+            throw new BusinessException(
+                    "Invalid or expired password reset token."
+            );
+        }
+
+        if (resetToken.getExpiresAt()
+                .isBefore(LocalDateTime.now(clock))) {
 
             throw new BusinessException(
                     "Invalid or expired password reset token."
             );
         }
 
-        if (resetToken
-                .getExpiresAt()
-                .isBefore(
-                        LocalDateTime.now(clock)
-                )) {
-
-            throw new BusinessException(
-                    "Invalid or expired password reset token."
-            );
-        }
-
-        if (resetToken.getUserRole()
-                == UserRole.OWNER) {
+        if (resetToken.getUserRole() == UserRole.OWNER) {
 
             resetOwnerPassword(
                     resetToken.getUserId(),
@@ -251,10 +265,7 @@ public class PasswordResetServiceImpl
             );
         }
 
-        /*
-         * Invalidate every outstanding reset link
-         * for this account after successful reset.
-         */
+        // Invalidate all outstanding reset links after a successful reset.
         invalidateExistingTokens(
                 resetToken.getUserId(),
                 resetToken.getUserRole()
@@ -265,14 +276,12 @@ public class PasswordResetServiceImpl
             Long ownerId,
             String newPassword) {
 
-        MessOwner owner =
-                messOwnerRepository
-                        .findById(ownerId)
-                        .orElseThrow(() ->
-                                new BusinessException(
-                                        "Invalid or expired password reset token."
-                                )
-                        );
+        MessOwner owner = messOwnerRepository
+                .findById(ownerId)
+                .orElseThrow(() ->
+                        new BusinessException(
+                                "Invalid or expired password reset token."
+                        ));
 
         validateNewPassword(
                 newPassword,
@@ -280,9 +289,7 @@ public class PasswordResetServiceImpl
         );
 
         owner.setPassword(
-                passwordEncoder.encode(
-                        newPassword
-                )
+                passwordEncoder.encode(newPassword)
         );
 
         messOwnerRepository.save(owner);
@@ -292,14 +299,12 @@ public class PasswordResetServiceImpl
             Long customerId,
             String newPassword) {
 
-        Customer customer =
-                customerRepository
-                        .findById(customerId)
-                        .orElseThrow(() ->
-                                new BusinessException(
-                                        "Invalid or expired password reset token."
-                                )
-                        );
+        Customer customer = customerRepository
+                .findById(customerId)
+                .orElseThrow(() ->
+                        new BusinessException(
+                                "Invalid or expired password reset token."
+                        ));
 
         validateNewPassword(
                 newPassword,
@@ -307,9 +312,7 @@ public class PasswordResetServiceImpl
         );
 
         customer.setPassword(
-                passwordEncoder.encode(
-                        newPassword
-                )
+                passwordEncoder.encode(newPassword)
         );
 
         customerRepository.save(customer);
@@ -321,8 +324,7 @@ public class PasswordResetServiceImpl
 
         if (passwordEncoder.matches(
                 newPassword,
-                currentPasswordHash
-        )) {
+                currentPasswordHash)) {
 
             throw new BusinessException(
                     "New password must be different from your current password."
@@ -345,52 +347,35 @@ public class PasswordResetServiceImpl
             return;
         }
 
-        LocalDateTime now =
-                LocalDateTime.now(clock);
+        LocalDateTime now = LocalDateTime.now(clock);
 
-        activeTokens.forEach(
-                token ->
-                        token.setUsedAt(now)
+        activeTokens.forEach(token ->
+                token.setUsedAt(now)
         );
 
-        passwordResetTokenRepository.saveAll(
-                activeTokens
-        );
+        passwordResetTokenRepository.saveAll(activeTokens);
     }
 
     private String generateSecureToken() {
 
-        byte[] randomBytes =
-                new byte[32];
+        byte[] randomBytes = new byte[32];
 
-        SECURE_RANDOM.nextBytes(
-                randomBytes
-        );
+        SECURE_RANDOM.nextBytes(randomBytes);
 
-        return Base64
-                .getUrlEncoder()
+        return Base64.getUrlEncoder()
                 .withoutPadding()
-                .encodeToString(
-                        randomBytes
-                );
+                .encodeToString(randomBytes);
     }
 
-    private String hashToken(
-            String rawToken) {
+    private String hashToken(String rawToken) {
 
         try {
-
             MessageDigest digest =
-                    MessageDigest.getInstance(
-                            "SHA-256"
-                    );
+                    MessageDigest.getInstance("SHA-256");
 
-            byte[] hash =
-                    digest.digest(
-                            rawToken.getBytes(
-                                    StandardCharsets.UTF_8
-                            )
-                    );
+            byte[] hash = digest.digest(
+                    rawToken.getBytes(StandardCharsets.UTF_8)
+            );
 
             return bytesToHex(hash);
 
@@ -403,20 +388,12 @@ public class PasswordResetServiceImpl
         }
     }
 
-    private String bytesToHex(
-            byte[] bytes) {
+    private String bytesToHex(byte[] bytes) {
 
-        StringBuilder result =
-                new StringBuilder();
+        StringBuilder result = new StringBuilder();
 
         for (byte value : bytes) {
-
-            result.append(
-                    String.format(
-                            "%02x",
-                            value
-                    )
-            );
+            result.append(String.format("%02x", value));
         }
 
         return result.toString();
