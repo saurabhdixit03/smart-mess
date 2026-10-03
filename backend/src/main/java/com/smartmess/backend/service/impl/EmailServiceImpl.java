@@ -20,6 +20,7 @@ public class EmailServiceImpl implements EmailService {
     private String frontendUrl;
 
     public EmailServiceImpl(JavaMailSender mailSender) {
+
         this.mailSender = mailSender;
     }
 
@@ -41,6 +42,7 @@ public class EmailServiceImpl implements EmailService {
 
         message.setFrom(mailFrom);
         message.setTo(recipientEmail);
+
         message.setSubject(
                 "Reset your Smart Mess password"
         );
@@ -59,6 +61,53 @@ public class EmailServiceImpl implements EmailService {
 
                 Smart Mess
                 """.formatted(resetUrl)
+        );
+
+        mailSender.send(message);
+    }
+
+    @Override
+    public void sendCustomerApprovalEmail(
+            String recipientEmail,
+            String customerName,
+            String messName) {
+
+        String loginUrl =
+                frontendUrl.replaceAll("/+$", "")
+                        + "/customer/login";
+
+        SimpleMailMessage message =
+                new SimpleMailMessage();
+
+        message.setFrom(mailFrom);
+        message.setTo(recipientEmail);
+
+        message.setSubject(
+                "Your Smart Mess registration is approved"
+        );
+
+        message.setText(
+                """
+                Hi %s,
+
+                Your registration with %s has been approved.
+
+                You can now sign in to view menus, respond to meals,
+                and access your meal history and bills.
+
+                Sign in here:
+                %s
+
+                Use the email address and password you chose during registration.
+
+                Welcome aboard!
+
+                Smart Mess
+                """.formatted(
+                        customerName,
+                        messName,
+                        loginUrl
+                )
         );
 
         mailSender.send(message);

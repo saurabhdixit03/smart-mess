@@ -4,9 +4,15 @@ import com.smartmess.backend.enums.UserRole;
 
 public interface EmailService {
 
-	void sendPasswordResetEmail(
-	        String recipientEmail,
-	        String resetToken,
-	        UserRole userRole
-	);
+    void sendPasswordResetEmail(
+            String recipientEmail,
+            String resetToken,
+            UserRole userRole
+    );
+
+    void sendCustomerApprovalEmail(
+            String recipientEmail,
+            String customerName,
+            String messName
+    );
 }

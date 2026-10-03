@@ -1,6 +1,11 @@
 import { Menu } from "lucide-react";
 import type { ReactNode } from "react";
 
+import {
+  getAuthRole,
+  getOwner,
+} from "@/features/auth/utils/auth.utils";
+
 import { useMobileNavigation } from "../MobileNavigation/MobileNavigationContext";
 
 type TopbarProps = {
@@ -14,6 +19,13 @@ export default function Topbar({
 }: TopbarProps) {
   const { open } = useMobileNavigation();
 
+  const messName =
+    getAuthRole() === "OWNER"
+      ? getOwner()?.messName?.trim()
+      : undefined;
+
+  const displayTitle = messName || title || "Smart Mess";
+
   return (
     <header
       className="
@@ -22,6 +34,7 @@ export default function Topbar({
         shrink-0
         items-center
         justify-between
+        gap-3
         border-b
         border-[var(--color-border)]
         bg-[var(--color-surface)]
@@ -30,7 +43,6 @@ export default function Topbar({
       "
     >
       <div className="flex min-w-0 items-center gap-3">
-        {/* Mobile Menu */}
         <button
           type="button"
           onClick={open}
@@ -56,11 +68,12 @@ export default function Topbar({
           <Menu size={22} />
         </button>
 
-        {title && (
-          <span className="truncate text-sm font-medium text-[var(--color-text-secondary)]">
-            {title}
-          </span>
-        )}
+        <span
+          title={displayTitle}
+          className="truncate text-sm font-semibold text-[var(--color-text)]"
+        >
+          {displayTitle}
+        </span>
       </div>
 
       {actions && (

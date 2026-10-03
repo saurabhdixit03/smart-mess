@@ -11,6 +11,8 @@ import com.smartmess.backend.enums.NotificationType;
 import com.smartmess.backend.exception.ResourceNotFoundException;
 import com.smartmess.backend.mapper.MealPricingMapper;
 import com.smartmess.backend.repository.MealPricingRepository;
+import com.smartmess.backend.repository.MessRepository;
+import com.smartmess.backend.security.CustomerSecurity;
 import com.smartmess.backend.service.MealPricingService;
 import com.smartmess.backend.service.NotificationService;
 
@@ -21,23 +23,32 @@ public class MealPricingServiceImpl
     private final MealPricingRepository mealPricingRepository;
     private final MealPricingMapper mealPricingMapper;
     private final NotificationService notificationService;
+    private final MessRepository messRepository;
+    private final CustomerSecurity customerSecurity;
 
     public MealPricingServiceImpl(
             MealPricingRepository mealPricingRepository,
             MealPricingMapper mealPricingMapper,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            MessRepository messRepository,
+            CustomerSecurity customerSecurity) {
 
         this.mealPricingRepository = mealPricingRepository;
         this.mealPricingMapper = mealPricingMapper;
         this.notificationService = notificationService;
+        this.messRepository = messRepository;
+        this.customerSecurity = customerSecurity;
     }
 
     @Override
     public MealPricingResponse getCurrentPricing() {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         MealPricing mealPricing =
                 mealPricingRepository
-                        .findTopByOrderByUpdatedAtDesc()
+                        .findByMess_MessId(messId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Meal pricing not configured."
@@ -53,10 +64,29 @@ public class MealPricingServiceImpl
     public MealPricingResponse updatePricing(
             UpdateMealPricingRequest request) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         MealPricing mealPricing =
                 mealPricingRepository
-                        .findTopByOrderByUpdatedAtDesc()
-                        .orElseGet(MealPricing::new);
+                        .findByMess_MessId(messId)
+                        .orElseGet(() -> {
+
+                            MealPricing newPricing =
+                                    new MealPricing();
+
+                            newPricing.setMess(
+                                    messRepository
+                                            .findById(messId)
+                                            .orElseThrow(() ->
+                                                    new ResourceNotFoundException(
+                                                            "Mess not found."
+                                                    )
+                                            )
+                            );
+
+                            return newPricing;
+                        });
 
         boolean changed =
                 hasPriceChanged(
@@ -91,6 +121,8 @@ public class MealPricingServiceImpl
         /*
          * Notify active customers only after
          * the meal pricing has actually changed.
+         *
+         * Recipients are restricted to the authenticated mess.
          */
         notificationService.notifyActiveCustomers(
                 NotificationType.MEAL_PRICING,

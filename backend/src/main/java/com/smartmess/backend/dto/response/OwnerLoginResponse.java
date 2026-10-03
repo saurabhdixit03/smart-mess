@@ -10,7 +10,9 @@ public record OwnerLoginResponse(
 
         String fullName,
 
-        String messName
+        String messName,
+
+        Long messId
 
 ) {
 }

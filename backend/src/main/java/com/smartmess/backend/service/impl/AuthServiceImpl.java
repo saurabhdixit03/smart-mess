@@ -2,9 +2,11 @@ package com.smartmess.backend.service.impl;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.smartmess.backend.constant.AppConstants;
 import com.smartmess.backend.dto.request.CustomerLoginRequest;
@@ -12,8 +14,10 @@ import com.smartmess.backend.dto.request.CustomerRegistrationRequest;
 import com.smartmess.backend.dto.request.OwnerLoginRequest;
 import com.smartmess.backend.dto.request.OwnerRegistrationRequest;
 import com.smartmess.backend.dto.response.CustomerLoginResponse;
+import com.smartmess.backend.dto.response.CustomerRegistrationResponse;
 import com.smartmess.backend.dto.response.OwnerLoginResponse;
 import com.smartmess.backend.entity.Customer;
+import com.smartmess.backend.entity.Mess;
 import com.smartmess.backend.entity.MessOwner;
 import com.smartmess.backend.enums.CustomerStatus;
 import com.smartmess.backend.enums.MessOwnerStatus;
@@ -23,8 +27,10 @@ import com.smartmess.backend.mapper.CustomerMapper;
 import com.smartmess.backend.mapper.MessOwnerMapper;
 import com.smartmess.backend.repository.CustomerRepository;
 import com.smartmess.backend.repository.MessOwnerRepository;
+import com.smartmess.backend.repository.MessRepository;
 import com.smartmess.backend.security.JwtService;
 import com.smartmess.backend.service.AuthService;
+import com.smartmess.backend.service.MessConfigurationInitializer;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -33,10 +39,11 @@ public class AuthServiceImpl implements AuthService {
     private final MessOwnerMapper messOwnerMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
     private final Clock clock;
+    private final MessRepository messRepository;
+    private final MessConfigurationInitializer messConfigurationInitializer;
 
     public AuthServiceImpl(
             MessOwnerRepository messOwnerRepository,
@@ -45,7 +52,9 @@ public class AuthServiceImpl implements AuthService {
             JwtService jwtService,
             CustomerRepository customerRepository,
             CustomerMapper customerMapper,
-            Clock clock) {
+            Clock clock,
+            MessRepository messRepository,
+            MessConfigurationInitializer messConfigurationInitializer) {
 
         this.messOwnerRepository = messOwnerRepository;
         this.messOwnerMapper = messOwnerMapper;
@@ -54,6 +63,8 @@ public class AuthServiceImpl implements AuthService {
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;
         this.clock = clock;
+        this.messRepository = messRepository;
+        this.messConfigurationInitializer = messConfigurationInitializer;
     }
 
     private OwnerLoginResponse buildLoginResponse(
@@ -65,7 +76,8 @@ public class AuthServiceImpl implements AuthService {
                 AppConstants.TOKEN_TYPE_BEARER,
                 owner.getMessOwnerId(),
                 owner.getFullName(),
-                owner.getMessName()
+                owner.getMess().getMessName(),
+                owner.getMess().getMessId()
         );
     }
 
@@ -78,10 +90,12 @@ public class AuthServiceImpl implements AuthService {
                 AppConstants.TOKEN_TYPE_BEARER,
                 customer.getCustomerId(),
                 customer.getFullName(),
-                customer.getMobileNumber()
+                customer.getMobileNumber(),
+                customer.getMess().getMessName()
         );
     }
 
+    @Transactional
     @Override
     public OwnerLoginResponse registerOwner(
             OwnerRegistrationRequest request) {
@@ -106,13 +120,31 @@ public class AuthServiceImpl implements AuthService {
                 messOwnerMapper.toEntity(request);
 
         owner.setPassword(
-                passwordEncoder.encode(
-                        request.password()
-                )
+                passwordEncoder.encode(request.password())
         );
+
+        Mess mess = new Mess();
+
+        mess.setMessName(request.messName());
+        mess.setRegistrationCode(UUID.randomUUID().toString());
+
+        Mess savedMess =
+                messRepository.save(mess);
+
+        owner.setMess(savedMess);
 
         MessOwner savedOwner =
                 messOwnerRepository.save(owner);
+
+        /*
+         * Required configuration for the new mess.
+         *
+         * Uses the same initial cutoffs and prices as the
+         * existing application, with no demo operational data.
+         *
+         * Initialization joins this registration transaction.
+         */
+        messConfigurationInitializer.initialize(savedMess);
 
         String accessToken =
                 jwtService.generateToken(
@@ -126,20 +158,18 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
+    @Transactional(readOnly = true)
     @Override
     public OwnerLoginResponse loginOwner(
             OwnerLoginRequest request) {
 
         MessOwner owner =
                 messOwnerRepository
-                        .findByEmail(
-                                request.email()
-                        )
+                        .findByEmail(request.email())
                         .orElseThrow(() ->
                                 new BusinessException(
                                         "Invalid email or password."
-                                )
-                        );
+                                ));
 
         if (!passwordEncoder.matches(
                 request.password(),
@@ -150,8 +180,7 @@ public class AuthServiceImpl implements AuthService {
             );
         }
 
-        if (owner.getStatus()
-                != MessOwnerStatus.ACTIVE) {
+        if (owner.getStatus() != MessOwnerStatus.ACTIVE) {
 
             throw new BusinessException(
                     "Your account is inactive. Please contact support."
@@ -170,9 +199,26 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
+    /*
+     * Self-registration creates a pending account.
+     *
+     * The owning mess approves the customer before login.
+     * Registration does not issue an access token.
+     */
+    @Transactional
     @Override
-    public CustomerLoginResponse registerCustomer(
+    public CustomerRegistrationResponse registerCustomer(
             CustomerRegistrationRequest request) {
+
+        Mess mess =
+                messRepository
+                        .findByRegistrationCode(
+                                request.registrationCode()
+                        )
+                        .orElseThrow(() ->
+                                new BusinessException(
+                                        "Invalid mess registration link."
+                                ));
 
         if (customerRepository.existsByMobileNumber(
                 request.mobileNumber())) {
@@ -193,45 +239,37 @@ public class AuthServiceImpl implements AuthService {
         Customer customer =
                 customerMapper.toEntity(request);
 
-        customer.setJoiningDate(
-                LocalDate.now(clock)
-        );
+        customer.setMess(mess);
+        customer.setJoiningDate(LocalDate.now(clock));
+        customer.setStatus(CustomerStatus.PENDING);
 
         customer.setPassword(
-                passwordEncoder.encode(
-                        request.password()
-                )
+                passwordEncoder.encode(request.password())
         );
 
         Customer savedCustomer =
                 customerRepository.save(customer);
 
-        String accessToken =
-                jwtService.generateToken(
-                        savedCustomer.getEmail(),
-                        UserRole.CUSTOMER
-                );
-
-        return buildCustomerLoginResponse(
-                savedCustomer,
-                accessToken
+        return new CustomerRegistrationResponse(
+                savedCustomer.getCustomerId(),
+                savedCustomer.getFullName(),
+                savedCustomer.getMobileNumber(),
+                savedCustomer.getStatus()
         );
     }
 
+    @Transactional(readOnly = true)
     @Override
     public CustomerLoginResponse loginCustomer(
             CustomerLoginRequest request) {
 
         Customer customer =
                 customerRepository
-                        .findByEmail(
-                                request.email()
-                        )
+                        .findByEmail(request.email())
                         .orElseThrow(() ->
                                 new BusinessException(
                                         "Invalid email or password."
-                                )
-                        );
+                                ));
 
         if (!passwordEncoder.matches(
                 request.password(),
@@ -242,8 +280,14 @@ public class AuthServiceImpl implements AuthService {
             );
         }
 
-        if (customer.getStatus()
-                != CustomerStatus.ACTIVE) {
+        if (customer.getStatus() == CustomerStatus.PENDING) {
+
+            throw new BusinessException(
+                    "Your registration is awaiting approval from your mess owner."
+            );
+        }
+
+        if (customer.getStatus() != CustomerStatus.ACTIVE) {
 
             throw new BusinessException(
                     "Your account is inactive. Please contact your mess owner."

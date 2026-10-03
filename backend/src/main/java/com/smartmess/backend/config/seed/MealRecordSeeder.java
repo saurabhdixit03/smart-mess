@@ -10,11 +10,13 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.smartmess.backend.entity.Customer;
 import com.smartmess.backend.entity.MealPricing;
 import com.smartmess.backend.entity.MealRecord;
 import com.smartmess.backend.entity.MealResponse;
+import com.smartmess.backend.entity.Mess;
 import com.smartmess.backend.entity.Menu;
 import com.smartmess.backend.enums.CustomerStatus;
 import com.smartmess.backend.enums.MealOption;
@@ -30,9 +32,7 @@ import com.smartmess.backend.repository.MenuRepository;
 public class MealRecordSeeder {
 
     private static final Logger log =
-            LoggerFactory.getLogger(
-                    MealRecordSeeder.class
-            );
+            LoggerFactory.getLogger(MealRecordSeeder.class);
 
     private final MealRecordRepository mealRecordRepository;
     private final CustomerRepository customerRepository;
@@ -49,74 +49,85 @@ public class MealRecordSeeder {
             MealPricingRepository mealPricingRepository,
             Clock clock) {
 
-        this.mealRecordRepository =
-                mealRecordRepository;
-
-        this.customerRepository =
-                customerRepository;
-
-        this.menuRepository =
-                menuRepository;
-
-        this.mealResponseRepository =
-                mealResponseRepository;
-
-        this.mealPricingRepository =
-                mealPricingRepository;
-
-        this.clock =
-                clock;
+        this.mealRecordRepository = mealRecordRepository;
+        this.customerRepository = customerRepository;
+        this.menuRepository = menuRepository;
+        this.mealResponseRepository = mealResponseRepository;
+        this.mealPricingRepository = mealPricingRepository;
+        this.clock = clock;
     }
 
-    public void seedMealRecords() {
+    /*
+     * Seeds historical collections only for the supplied demo mess.
+     */
+    @Transactional
+    public void seedMealRecords(Mess mess) {
 
-        if (mealRecordRepository.count() > 0) {
-
-            log.info(
-                    "Meal Records already exist. Skipping demo seeding."
+        if (mess == null || mess.getMessId() == null) {
+            throw new IllegalArgumentException(
+                    "A persisted demo mess is required."
             );
-
-            return;
         }
 
+        Long messId = mess.getMessId();
+
         List<Customer> customers =
-                customerRepository.findByStatus(
+                customerRepository.findAllByMess_MessIdAndStatus(
+                        messId,
                         CustomerStatus.ACTIVE
                 );
 
         if (customers.isEmpty()) {
-
             log.warn(
-                    "Skipping Meal Record seeding because no active customers are available."
+                    "Skipping Meal Record seeding because no active customers "
+                            + "are available for demo mess {}.",
+                    messId
             );
-
             return;
         }
 
         List<Menu> menus =
                 menuRepository
-                        .findAllByOrderByMenuDateAscMealSessionAsc();
+                        .findAllByMess_MessIdOrderByMenuDateAscMealSessionAsc(
+                                messId
+                        );
 
         if (menus.isEmpty()) {
-
             log.warn(
-                    "Skipping Meal Record seeding because no menus are available."
+                    "Skipping Meal Record seeding because no menus "
+                            + "are available for demo mess {}.",
+                    messId
             );
-
             return;
+        }
+
+        /*
+         * Preserves the existing skip-if-records-exist strategy,
+         * restricted to the demo mess's menus.
+         */
+        for (Menu menu : menus) {
+            if (!mealRecordRepository.findByMess_MessIdAndMenu(
+                    messId,
+                    menu
+            ).isEmpty()) {
+                log.info(
+                        "Meal Records already exist for demo mess {}. "
+                                + "Skipping demo seeding.",
+                        messId
+                );
+                return;
+            }
         }
 
         MealPricing pricing =
                 mealPricingRepository
-                        .findTopByOrderByUpdatedAtDesc()
+                        .findByMess_MessId(messId)
                         .orElseThrow(() ->
                                 new IllegalStateException(
                                         "Meal pricing is missing."
-                                )
-                        );
+                                ));
 
-        LocalDate today =
-                LocalDate.now(clock);
+        LocalDate today = LocalDate.now(clock);
 
         int recordsCreated = 0;
         int responseBasedRecords = 0;
@@ -140,14 +151,12 @@ public class MealRecordSeeder {
                  customerIndex < customers.size();
                  customerIndex++) {
 
-                Customer customer =
-                        customers.get(
-                                customerIndex
-                        );
+                Customer customer = customers.get(customerIndex);
 
                 MealResponse mealResponse =
                         mealResponseRepository
-                                .findByCustomerAndMenu(
+                                .findByMess_MessIdAndCustomerAndMenu(
+                                        messId,
                                         customer,
                                         menu
                                 )
@@ -166,10 +175,7 @@ public class MealRecordSeeder {
                  * collection history reproducible.
                  */
                 int pattern =
-                        (
-                                menu.getMenuId().intValue()
-                                        + customerIndex
-                        ) % 10;
+                        (menu.getMenuId().intValue() + customerIndex) % 10;
 
                 if (mealResponse.getResponseStatus()
                         == MealResponseStatus.ACCEPTED) {
@@ -187,19 +193,14 @@ public class MealRecordSeeder {
                     }
 
                     MealOption servedMeal =
-                            getServedMeal(
-                                    mealResponse,
-                                    pattern
-                            );
+                            getServedMeal(mealResponse, pattern);
 
                     int extraRotis =
-                            getExtraRotiCount(
-                                    mealResponse,
-                                    pattern
-                            );
+                            getExtraRotiCount(mealResponse, pattern);
 
                     MealRecord mealRecord =
                             createMealRecord(
+                                    mess,
                                     customer,
                                     menu,
                                     mealResponse,
@@ -209,13 +210,10 @@ public class MealRecordSeeder {
                                     customerIndex
                             );
 
-                    mealRecordRepository.save(
-                            mealRecord
-                    );
+                    mealRecordRepository.save(mealRecord);
 
                     recordsCreated++;
                     responseBasedRecords++;
-
                     continue;
                 }
 
@@ -235,13 +233,11 @@ public class MealRecordSeeder {
                                     ? MealOption.FULL
                                     : MealOption.HALF;
 
-                    int extraRotis =
-                            customerIndex % 4 == 0
-                                    ? 1
-                                    : 0;
+                    int extraRotis = customerIndex % 4 == 0 ? 1 : 0;
 
                     MealRecord mealRecord =
                             createMealRecord(
+                                    mess,
                                     customer,
                                     menu,
                                     null,
@@ -251,9 +247,7 @@ public class MealRecordSeeder {
                                     customerIndex
                             );
 
-                    mealRecordRepository.save(
-                            mealRecord
-                    );
+                    mealRecordRepository.save(mealRecord);
 
                     recordsCreated++;
                     walkInRecords++;
@@ -262,8 +256,9 @@ public class MealRecordSeeder {
         }
 
         log.info(
-                "Demo Meal Records seeded successfully. "
+                "Demo Meal Records seeded successfully for mess {}. "
                         + "Total: {}, Response-based: {}, Walk-ins: {}.",
+                messId,
                 recordsCreated,
                 responseBasedRecords,
                 walkInRecords
@@ -274,15 +269,13 @@ public class MealRecordSeeder {
             MealResponse mealResponse,
             int pattern) {
 
-        MealOption requestedMeal =
-                mealResponse.getMealOption();
+        MealOption requestedMeal = mealResponse.getMealOption();
 
         /*
          * Occasionally serve the opposite meal option
          * to represent an owner-side adjustment.
          */
         if (pattern == 3) {
-
             if (requestedMeal == MealOption.FULL) {
                 return MealOption.HALF;
             }
@@ -299,8 +292,7 @@ public class MealRecordSeeder {
             MealResponse mealResponse,
             int pattern) {
 
-        int requestedRotis =
-                mealResponse.getExtraRotiCount();
+        int requestedRotis = mealResponse.getExtraRotiCount();
 
         /*
          * Occasionally add one extra roti during
@@ -314,6 +306,7 @@ public class MealRecordSeeder {
     }
 
     private MealRecord createMealRecord(
+            Mess mess,
             Customer customer,
             Menu menu,
             MealResponse mealResponse,
@@ -327,15 +320,12 @@ public class MealRecordSeeder {
                         ? pricing.getFullMealPrice()
                         : pricing.getHalfMealPrice();
 
-        BigDecimal extraRotiPrice =
-                pricing.getExtraRotiPrice();
+        BigDecimal extraRotiPrice = pricing.getExtraRotiPrice();
 
         BigDecimal totalAmount =
                 mealPrice.add(
                         extraRotiPrice.multiply(
-                                BigDecimal.valueOf(
-                                        extraRotis
-                                )
+                                BigDecimal.valueOf(extraRotis)
                         )
                 );
 
@@ -352,6 +342,7 @@ public class MealRecordSeeder {
                 );
 
         return MealRecord.builder()
+                .mess(mess)
                 .customer(customer)
                 .menu(menu)
                 .mealResponse(mealResponse)
@@ -368,20 +359,12 @@ public class MealRecordSeeder {
             MealSession mealSession,
             int customerIndex) {
 
-        int minute =
-                30 + (customerIndex % 30);
+        int minute = 30 + (customerIndex % 30);
 
         if (mealSession == MealSession.LUNCH) {
-
-            return LocalTime.of(
-                    12,
-                    minute
-            );
+            return LocalTime.of(12, minute);
         }
 
-        return LocalTime.of(
-                19,
-                minute
-        );
+        return LocalTime.of(19, minute);
     }
 }

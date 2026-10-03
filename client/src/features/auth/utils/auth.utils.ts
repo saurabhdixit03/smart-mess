@@ -5,6 +5,20 @@ import type {
 
 export type AuthRole = "OWNER" | "CUSTOMER";
 
+interface OwnerSession {
+  messOwnerId: number;
+  fullName: string;
+  messName: string;
+  messId: number;
+}
+
+interface CustomerSession {
+  customerId: number;
+  fullName: string;
+  mobileNumber: string;
+  messName?: string;
+}
+
 const AUTH_TOKEN_KEY = "smart_mess_access_token";
 const AUTH_ROLE_KEY = "smart_mess_user_role";
 const OWNER_KEY = "smart_mess_owner";
@@ -13,15 +27,21 @@ const CUSTOMER_KEY = "smart_mess_customer";
 export function saveOwnerAuthSession(
   loginResponse: OwnerLoginResponse
 ): void {
+  if (
+    !Number.isSafeInteger(loginResponse.messId) ||
+    loginResponse.messId <= 0
+  ) {
+    throw new Error(
+      "Your account is not linked to a valid mess."
+    );
+  }
+
   localStorage.setItem(
     AUTH_TOKEN_KEY,
     loginResponse.accessToken
   );
 
-  localStorage.setItem(
-    AUTH_ROLE_KEY,
-    "OWNER"
-  );
+  localStorage.setItem(AUTH_ROLE_KEY, "OWNER");
 
   localStorage.setItem(
     OWNER_KEY,
@@ -29,6 +49,7 @@ export function saveOwnerAuthSession(
       messOwnerId: loginResponse.messOwnerId,
       fullName: loginResponse.fullName,
       messName: loginResponse.messName,
+      messId: loginResponse.messId,
     })
   );
 
@@ -43,10 +64,7 @@ export function saveCustomerAuthSession(
     loginResponse.accessToken
   );
 
-  localStorage.setItem(
-    AUTH_ROLE_KEY,
-    "CUSTOMER"
-  );
+  localStorage.setItem(AUTH_ROLE_KEY, "CUSTOMER");
 
   localStorage.setItem(
     CUSTOMER_KEY,
@@ -54,6 +72,7 @@ export function saveCustomerAuthSession(
       customerId: loginResponse.customerId,
       fullName: loginResponse.fullName,
       mobileNumber: loginResponse.mobileNumber,
+      messName: loginResponse.messName,
     })
   );
 
@@ -74,32 +93,51 @@ export function getAuthRole(): AuthRole | null {
   return null;
 }
 
-export function getOwner(): {
-  messOwnerId: number;
-  fullName: string;
-  messName: string;
-} | null {
-  const owner = localStorage.getItem(OWNER_KEY);
+export function getOwner(): OwnerSession | null {
+  const storedOwner = localStorage.getItem(OWNER_KEY);
 
-  if (!owner) {
+  if (!storedOwner) {
     return null;
   }
 
-  return JSON.parse(owner);
+  try {
+    const owner: OwnerSession = JSON.parse(storedOwner);
+
+    if (
+      !owner ||
+      !Number.isSafeInteger(owner.messId) ||
+      owner.messId <= 0
+    ) {
+      return null;
+    }
+
+    return owner;
+  } catch {
+    return null;
+  }
 }
 
-export function getCustomer(): {
-  customerId: number;
-  fullName: string;
-  mobileNumber: string;
-} | null {
-  const customer = localStorage.getItem(CUSTOMER_KEY);
-
-  if (!customer) {
+export function getCurrentOwnerMessId(): number | null {
+  if (getAuthRole() !== "OWNER") {
     return null;
   }
 
-  return JSON.parse(customer);
+  return getOwner()?.messId ?? null;
+}
+
+export function getCustomer(): CustomerSession | null {
+  const storedCustomer =
+    localStorage.getItem(CUSTOMER_KEY);
+
+  if (!storedCustomer) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(storedCustomer);
+  } catch {
+    return null;
+  }
 }
 
 export function getCurrentCustomerId(): number | null {

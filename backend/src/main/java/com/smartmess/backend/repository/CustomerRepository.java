@@ -12,7 +12,7 @@ import com.smartmess.backend.enums.CustomerStatus;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
-    // Authentication
+    // Authentication: email and mobile remain globally unique.
 
     Optional<Customer> findByMobileNumber(String mobileNumber);
 
@@ -22,25 +22,35 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     boolean existsByEmail(String email);
 
+    // Tenant-scoped customer operations.
 
-    // Customer Status
+    List<Customer> findAllByMess_MessId(Long messId);
 
-    List<Customer> findAllByStatus(CustomerStatus status);
-
-    Optional<Customer> findByCustomerIdAndStatus(
+    Optional<Customer> findByCustomerIdAndMess_MessId(
             Long customerId,
+            Long messId
+    );
+
+    Optional<Customer> findByCustomerIdAndMess_MessIdAndStatus(
+            Long customerId,
+            Long messId,
             CustomerStatus status
     );
 
+    boolean existsByCustomerIdAndMess_MessId(
+            Long customerId,
+            Long messId
+    );
 
-    // Live Dashboard
-
-    long countByStatus(CustomerStatus status);
-
-
-    // Billing Module
-
-    List<Customer> findByStatus(
+    /*
+     * Tenant-scoped customer status lookup.
+     *
+     * Used by notifications, the live dashboard,
+     * billing, and demo seeding to select customers
+     * within one mess.
+     */
+    List<Customer> findAllByMess_MessIdAndStatus(
+            Long messId,
             CustomerStatus status
     );
 }

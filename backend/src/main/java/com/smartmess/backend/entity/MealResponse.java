@@ -2,9 +2,6 @@ package com.smartmess.backend.entity;
 
 import java.time.LocalDateTime;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import com.smartmess.backend.common.BaseEntity;
 import com.smartmess.backend.enums.MealOption;
 import com.smartmess.backend.enums.MealResponseStatus;
@@ -17,6 +14,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -24,16 +22,38 @@ import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(
-    name = "meal_responses",
-    uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"customer_id", "menu_id"})
-    }
+        name = "meal_responses",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        columnNames = {
+                                "customer_id",
+                                "menu_id"
+                        }
+                )
+        },
+        indexes = {
+                @Index(
+                        name = "idx_meal_responses_mess_menu",
+                        columnList = "mess_id, menu_id"
+                )
+        }
 )
 public class MealResponse extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long mealResponseId;
+
+    /*
+     * Tenant Ownership
+     *
+     * The response, customer and menu must belong to the same mess.
+     * The service assigns ownership after resolving tenant-scoped
+     * customer and menu records.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "mess_id", nullable = false)
+    private Mess mess;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
@@ -56,8 +76,6 @@ public class MealResponse extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime respondedAt;
 
-
-
     public MealResponse() {
     }
 
@@ -67,6 +85,14 @@ public class MealResponse extends BaseEntity {
 
     public void setMealResponseId(Long mealResponseId) {
         this.mealResponseId = mealResponseId;
+    }
+
+    public Mess getMess() {
+        return mess;
+    }
+
+    public void setMess(Mess mess) {
+        this.mess = mess;
     }
 
     public Customer getCustomer() {
@@ -116,6 +142,4 @@ public class MealResponse extends BaseEntity {
     public void setRespondedAt(LocalDateTime respondedAt) {
         this.respondedAt = respondedAt;
     }
-
-
 }

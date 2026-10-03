@@ -60,6 +60,20 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**")
                         .permitAll()
 
+                        // Public mess information for customer registration
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/public/messes/registration/*"
+                        )
+                        .permitAll()
+
+                        // Owner's registration link for sharing and QR rendering
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/mess/registration-link"
+                        )
+                        .hasRole("OWNER")
+
                         // SockJS / WebSocket handshake
                         .requestMatchers("/ws-dashboard/**")
                         .permitAll()

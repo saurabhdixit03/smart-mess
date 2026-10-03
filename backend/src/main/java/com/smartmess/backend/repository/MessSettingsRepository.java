@@ -9,6 +9,15 @@ import com.smartmess.backend.entity.MessSettings;
 public interface MessSettingsRepository
         extends JpaRepository<MessSettings, Long> {
 
-    Optional<MessSettings> findTopByOrderBySettingsIdAsc();
+    /*
+     * Tenant-scoped settings lookup.
+     *
+     * Each mess has at most one settings record.
+     */
+    Optional<MessSettings> findByMess_MessId(Long messId);
 
+    /*
+     * Checks whether settings already exist for a mess.
+     */
+    boolean existsByMess_MessId(Long messId);
 }

@@ -75,46 +75,42 @@ public class MealResponseServiceImpl
             SubmitMealResponseRequest request) {
 
         // Customer can only submit for themselves.
+        // Existing owner access is restricted to their own mess.
         customerSecurity.checkCustomerAccess(customerId);
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Customer customer =
-                customerRepository.findById(customerId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Customer not found with ID: "
-                                                + customerId
-                                )
-                        );
+                findCustomer(customerId, messId);
 
         if (customer.getStatus() != CustomerStatus.ACTIVE) {
+
             throw new BusinessException(
                     "Only active customers can submit or update meal responses."
             );
         }
 
         Menu menu =
-                menuRepository.findById(request.getMenuId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Menu not found with ID: "
-                                                + request.getMenuId()
-                                )
-                        );
+                findMenu(request.getMenuId(), messId);
 
-        if (mealRecordRepository.existsByCustomerAndMenu(
+        if (mealRecordRepository.existsByMess_MessIdAndCustomerAndMenu(
+                messId,
                 customer,
                 menu
         )) {
+
             throw new BusinessException(
                     "Meal response cannot be changed because the meal has already been recorded."
             );
         }
 
-        validateResponseWindow(menu);
+        validateResponseWindow(messId, menu);
 
         MealResponse mealResponse =
                 mealResponseRepository
-                        .findByCustomerAndMenu(
+                        .findByMess_MessIdAndCustomerAndMenu(
+                                messId,
                                 customer,
                                 menu
                         )
@@ -123,13 +119,9 @@ public class MealResponseServiceImpl
                             MealResponse response =
                                     new MealResponse();
 
-                            response.setCustomer(
-                                    customer
-                            );
-
-                            response.setMenu(
-                                    menu
-                            );
+                            response.setCustomer(customer);
+                            response.setMenu(menu);
+                            response.setMess(menu.getMess());
 
                             return response;
                         });
@@ -163,11 +155,10 @@ public class MealResponseServiceImpl
             );
         }
 
-        mealResponseMapper
-                .updateMealResponseFromRequest(
-                        request,
-                        mealResponse
-                );
+        mealResponseMapper.updateMealResponseFromRequest(
+                request,
+                mealResponse
+        );
 
         mealResponse.setRespondedAt(
                 LocalDateTime.now(clock)
@@ -191,17 +182,15 @@ public class MealResponseServiceImpl
     public List<MealResponseResponse> getResponsesByMenu(
             Long menuId) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Menu menu =
-                menuRepository.findById(menuId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Menu not found with ID: "
-                                                + menuId
-                                )
-                        );
+                findMenu(menuId, messId);
 
         List<MealResponse> mealResponses =
-                mealResponseRepository.findByMenu(
+                mealResponseRepository.findByMess_MessIdAndMenu(
+                        messId,
                         menu
                 );
 
@@ -215,20 +204,28 @@ public class MealResponseServiceImpl
             Long customerId,
             Long menuId) {
 
-        // OWNER can access any customer.
+        // OWNER can access customers within their own mess.
         // CUSTOMER can access only their own response.
         customerSecurity.checkCustomerAccess(
                 customerId
         );
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
+        Customer customer =
+                findCustomer(customerId, messId);
+
+        Menu menu =
+                findMenu(menuId, messId);
+
         return mealResponseRepository
-                .findByCustomerCustomerIdAndMenuMenuId(
-                        customerId,
-                        menuId
+                .findByMess_MessIdAndCustomerAndMenu(
+                        messId,
+                        customer,
+                        menu
                 )
-                .map(
-                        mealResponseMapper::toResponse
-                )
+                .map(mealResponseMapper::toResponse)
                 .orElse(null);
     }
 
@@ -236,31 +233,24 @@ public class MealResponseServiceImpl
     public MealResponseAvailabilityResponse getResponseAvailability(
             Long menuId) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Menu menu =
-                menuRepository.findById(menuId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Menu not found with ID: "
-                                                + menuId
-                                )
-                        );
+                findMenu(menuId, messId);
 
         Long customerId =
                 customerSecurity.getCurrentUserId();
 
         Customer customer =
-                customerRepository.findById(customerId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Customer not found with ID: "
-                                                + customerId
-                                )
-                        );
+                findCustomer(customerId, messId);
 
-        if (mealRecordRepository.existsByCustomerAndMenu(
+        if (mealRecordRepository.existsByMess_MessIdAndCustomerAndMenu(
+                messId,
                 customer,
                 menu
         )) {
+
             return new MealResponseAvailabilityResponse(
                     menu.getMenuId(),
                     menu.getMealSession(),
@@ -283,7 +273,7 @@ public class MealResponseServiceImpl
         }
 
         MessSettings settings =
-                getMessSettings();
+                getMessSettings(messId);
 
         LocalTime cutoffTime =
                 getResponseCutoff(
@@ -327,8 +317,11 @@ public class MealResponseServiceImpl
     /*
      * Customers can submit or update responses only for today's menu
      * and only before the configured cutoff time for that meal session.
+     *
+     * Settings are resolved within the same mess as the menu.
      */
     private void validateResponseWindow(
+            Long messId,
             Menu menu) {
 
         LocalDate today =
@@ -342,7 +335,7 @@ public class MealResponseServiceImpl
         }
 
         MessSettings settings =
-                getMessSettings();
+                getMessSettings(messId);
 
         LocalTime cutoffTime =
                 getResponseCutoff(
@@ -370,15 +363,53 @@ public class MealResponseServiceImpl
         }
     }
 
-    private MessSettings getMessSettings() {
+    /*
+     * Resolves a customer only within the authenticated mess.
+     */
+    private Customer findCustomer(
+            Long customerId,
+            Long messId) {
+
+        return customerRepository
+                .findByCustomerIdAndMess_MessId(
+                        customerId,
+                        messId
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Customer not found with ID: "
+                                        + customerId
+                        ));
+    }
+
+    /*
+     * Resolves a menu only within the authenticated mess.
+     */
+    private Menu findMenu(
+            Long menuId,
+            Long messId) {
+
+        return menuRepository
+                .findByMenuIdAndMess_MessId(
+                        menuId,
+                        messId
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Menu not found with ID: "
+                                        + menuId
+                        ));
+    }
+
+    private MessSettings getMessSettings(
+            Long messId) {
 
         return messSettingsRepository
-                .findTopByOrderBySettingsIdAsc()
+                .findByMess_MessId(messId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "Mess settings not found."
-                        )
-                );
+                        ));
     }
 
     private LocalTime getResponseCutoff(

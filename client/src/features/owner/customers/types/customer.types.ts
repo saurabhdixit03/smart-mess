@@ -1,11 +1,11 @@
-
 export interface UpdateCustomerRequest {
   remarks: string;
 }
 
 export type CustomerStatus =
   | "ACTIVE"
-  | "INACTIVE";
+  | "INACTIVE"
+  | "PENDING";
 
 export interface CustomerResponse {
   customerId: number;

@@ -1,4 +1,3 @@
-
 package com.smartmess.backend.mapper;
 
 import org.mapstruct.Mapper;
@@ -14,30 +13,34 @@ import com.smartmess.backend.entity.Customer;
 public interface CustomerMapper {
 
     /**
-     * Maps Customer self-registration request to Customer entity.
+     * Maps customer self-registration fields.
      *
-     * Password is handled separately by the authentication service
-     * so that it can be encoded before persistence.
+     * The authentication service assigns the mess,
+     * encodes the password and sets the joining date.
      */
     @Mapping(target = "customerId", ignore = true)
+    @Mapping(target = "mess", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "joiningDate", ignore = true)
     @Mapping(target = "remarks", ignore = true)
     @Mapping(target = "password", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     Customer toEntity(CustomerRegistrationRequest request);
 
     /**
-     * Maps Customer entity to CustomerResponse DTO.
+     * Maps Customer entity to the existing response DTO.
      */
     CustomerResponse toResponse(Customer customer);
 
     /**
-     * Updates only the remarks managed from the Owner Portal.
+     * Updates only owner-managed remarks.
      *
-     * Customer identity, authentication data,
-     * status, and joining date remain protected.
+     * Customer identity, tenant ownership, authentication data,
+     * status and joining date remain protected.
      */
     @Mapping(target = "customerId", ignore = true)
+    @Mapping(target = "mess", ignore = true)
     @Mapping(target = "fullName", ignore = true)
     @Mapping(target = "mobileNumber", ignore = true)
     @Mapping(target = "email", ignore = true)

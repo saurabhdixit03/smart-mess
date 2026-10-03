@@ -6,30 +6,25 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.smartmess.backend.enums.UserRole;
+import com.smartmess.backend.repository.CustomerRepository;
 
 @Component
 public class CustomerSecurity {
+
+    private final CustomerRepository customerRepository;
+
+    public CustomerSecurity(
+            CustomerRepository customerRepository) {
+
+        this.customerRepository = customerRepository;
+    }
 
     /**
      * Returns the currently authenticated user's ID.
      */
     public Long getCurrentUserId() {
 
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
-
-        if (authentication == null
-                || !(authentication.getPrincipal()
-                        instanceof CustomUserDetails userDetails)) {
-
-            throw new AccessDeniedException(
-                    "Authenticated user not found."
-            );
-        }
-
-        return userDetails.getUserId();
+        return getAuthenticatedUser().getUserId();
     }
 
     /**
@@ -37,12 +32,74 @@ public class CustomerSecurity {
      */
     public UserRole getCurrentUserRole() {
 
+        return getAuthenticatedUser().getRole();
+    }
+
+    /**
+     * Returns the authenticated account's mess ID.
+     */
+    public Long getCurrentMessId() {
+
+        Long messId =
+                getAuthenticatedUser().getMessId();
+
+        if (messId == null) {
+
+            throw new AccessDeniedException(
+                    "Authenticated account is not linked to a mess."
+            );
+        }
+
+        return messId;
+    }
+
+    /**
+     * OWNER can access customers only within their own mess.
+     *
+     * CUSTOMER can access only their own account within that mess.
+     */
+    public void checkCustomerAccess(Long customerId) {
+
+        CustomUserDetails userDetails =
+                getAuthenticatedUser();
+
+        UserRole role =
+                userDetails.getRole();
+
+        if (role != UserRole.OWNER
+                && role != UserRole.CUSTOMER) {
+
+            throw customerAccessDenied();
+        }
+
+        if (role == UserRole.CUSTOMER
+                && !userDetails.getUserId().equals(customerId)) {
+
+            throw customerAccessDenied();
+        }
+
+        Long messId =
+                getCurrentMessId();
+
+        if (customerId == null
+                || !customerRepository.existsByCustomerIdAndMess_MessId(
+                        customerId,
+                        messId
+                )) {
+
+            throw customerAccessDenied();
+        }
+    }
+
+    private CustomUserDetails getAuthenticatedUser() {
+
         Authentication authentication =
                 SecurityContextHolder
                         .getContext()
                         .getAuthentication();
 
         if (authentication == null
+                || !authentication.isAuthenticated()
                 || !(authentication.getPrincipal()
                         instanceof CustomUserDetails userDetails)) {
 
@@ -51,28 +108,13 @@ public class CustomerSecurity {
             );
         }
 
-        return userDetails.getRole();
+        return userDetails;
     }
 
-    /**
-     * Allows OWNER access to any customer.
-     *
-     * CUSTOMER can access only their own customer ID.
-     */
-    public void checkCustomerAccess(Long customerId) {
+    private AccessDeniedException customerAccessDenied() {
 
-        UserRole role = getCurrentUserRole();
-
-        if (role == UserRole.OWNER) {
-            return;
-        }
-
-        Long currentUserId = getCurrentUserId();
-
-        if (!currentUserId.equals(customerId)) {
-            throw new AccessDeniedException(
-                    "You do not have permission to access this customer."
-            );
-        }
+        return new AccessDeniedException(
+                "You do not have permission to access this customer."
+        );
     }
 }

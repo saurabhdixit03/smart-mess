@@ -8,9 +8,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.smartmess.backend.dto.request.CreatePaymentRequest;
-import com.smartmess.backend.dto.response.BillResponse;
 import com.smartmess.backend.dto.response.PaymentOverviewResponse;
 import com.smartmess.backend.dto.response.PaymentResponse;
 import com.smartmess.backend.dto.response.PendingPaymentResponse;
@@ -34,17 +34,11 @@ import com.smartmess.backend.service.PaymentService;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
-
     private final BillRepository billRepository;
-
     private final PaymentMapper paymentMapper;
-
     private final MessSettingsRepository messSettingsRepository;
-
     private final BillMapper billMapper;
-
     private final CustomerSecurity customerSecurity;
-
     private final Clock clock;
 
     public PaymentServiceImpl(
@@ -69,20 +63,18 @@ public class PaymentServiceImpl implements PaymentService {
      * Collect Payment.
      *
      * Owner only.
+     * Payment and bill status are saved in one transaction.
      */
+    @Transactional
     @Override
     public PaymentResponse collectPayment(
             CreatePaymentRequest request) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Bill bill =
-                billRepository.findById(
-                        request.billId()
-                )
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Bill not found with ID: "
-                                        + request.billId()
-                        ));
+                findBill(request.billId(), messId);
 
         if (bill.getBillStatus() == BillStatus.PAID) {
 
@@ -107,7 +99,10 @@ public class PaymentServiceImpl implements PaymentService {
             );
         }
 
-        if (paymentRepository.existsByBill(bill)) {
+        if (paymentRepository.existsByMess_MessIdAndBill(
+                messId,
+                bill
+        )) {
 
             throw new BusinessException(
                     "Payment has already been collected for this bill."
@@ -117,6 +112,7 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment =
                 new Payment();
 
+        payment.setMess(bill.getMess());
         payment.setBill(bill);
 
         payment.setPaymentAmount(
@@ -152,18 +148,27 @@ public class PaymentServiceImpl implements PaymentService {
      * View Payment.
      *
      * Owner only.
+     * Restricted to the authenticated mess.
      */
+    @Transactional(readOnly = true)
     @Override
     public PaymentResponse getPayment(
             Long paymentId) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Payment payment =
-                paymentRepository.findById(paymentId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Payment not found with ID: "
-                                        + paymentId
-                        ));
+                paymentRepository
+                        .findByPaymentIdAndMess_MessId(
+                                paymentId,
+                                messId
+                        )
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Payment not found with ID: "
+                                                + paymentId
+                                ));
 
         return paymentMapper.toResponse(
                 payment
@@ -174,26 +179,30 @@ public class PaymentServiceImpl implements PaymentService {
      * View Payment By Bill.
      *
      * Owner only.
+     * Bill and payment must belong to the authenticated mess.
      */
+    @Transactional(readOnly = true)
     @Override
     public PaymentResponse getPaymentByBill(
             Long billId) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Bill bill =
-                billRepository.findById(billId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Bill not found with ID: "
-                                        + billId
-                        ));
+                findBill(billId, messId);
 
         Payment payment =
-                paymentRepository.findByBill(bill)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Payment not found for Bill ID: "
-                                        + billId
-                        ));
+                paymentRepository
+                        .findByMess_MessIdAndBill(
+                                messId,
+                                bill
+                        )
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Payment not found for Bill ID: "
+                                                + billId
+                                ));
 
         return paymentMapper.toResponse(
                 payment
@@ -206,23 +215,23 @@ public class PaymentServiceImpl implements PaymentService {
      * Customer can request payment only
      * for their own bill.
      */
+    @Transactional
     @Override
     public void requestUpiPayment(
             Long billId) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Bill bill =
-                billRepository.findById(billId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Bill not found with ID: "
-                                        + billId
-                        ));
+                findBill(billId, messId);
 
         /*
          * Ownership validation.
          *
          * OWNER:
-         *     checkCustomerAccess() allows access.
+         *     checkCustomerAccess() permits customers in their mess.
+         *     The controller restricts this endpoint to CUSTOMER.
          *
          * CUSTOMER:
          *     checkCustomerAccess() verifies that
@@ -250,32 +259,31 @@ public class PaymentServiceImpl implements PaymentService {
      * View pending payment requests.
      *
      * Owner only.
+     * Restricted to the authenticated mess.
      */
+    @Transactional(readOnly = true)
     @Override
     public List<PendingPaymentResponse> getPendingPayments() {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         List<Bill> pendingBills =
-                billRepository.findByBillStatusOrderByGeneratedAtAsc(
-                        BillStatus.PAYMENT_PENDING
-                );
+                billRepository
+                        .findByMess_MessIdAndBillStatusOrderByGeneratedAtAsc(
+                                messId,
+                                BillStatus.PAYMENT_PENDING
+                        );
 
         return pendingBills.stream()
                 .map(bill -> new PendingPaymentResponse(
-
                         bill.getBillId(),
-
                         bill.getCustomer().getCustomerId(),
-
                         bill.getCustomer().getFullName(),
-
                         bill.getBillingMonth(),
-
                         bill.getBillingYear(),
-
                         bill.getTotalAmount(),
-
                         bill.getBillStatus()
-
                 ))
                 .toList();
     }
@@ -288,7 +296,11 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public long getPendingPaymentCount() {
 
-        return billRepository.countByBillStatus(
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
+        return billRepository.countByMess_MessIdAndBillStatus(
+                messId,
                 BillStatus.PAYMENT_PENDING
         );
     }
@@ -299,17 +311,16 @@ public class PaymentServiceImpl implements PaymentService {
      * Customer can generate payment data
      * only for their own bill.
      */
+    @Transactional(readOnly = true)
     @Override
     public UpiPaymentResponse generateUpiPayment(
             Long billId) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Bill bill =
-                billRepository.findById(billId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Bill not found with ID: "
-                                        + billId
-                        ));
+                findBill(billId, messId);
 
         /*
          * Ownership validation.
@@ -330,39 +341,48 @@ public class PaymentServiceImpl implements PaymentService {
 
         MessSettings settings =
                 messSettingsRepository
-                        .findTopByOrderBySettingsIdAsc()
+                        .findByMess_MessId(messId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Mess settings not found."
                                 ));
 
+        /*
+         * UPI details are optional until configured by the owner.
+         * Do not attempt to encode missing payment details.
+         */
+        if (settings.getUpiId() == null
+                || settings.getUpiId().isBlank()
+                || settings.getReceiverName() == null
+                || settings.getReceiverName().isBlank()) {
+
+            throw new BusinessException(
+                    "UPI payment settings are not configured. Please contact your mess owner."
+            );
+        }
+
         String upiUrl =
                 "upi://pay"
-                + "?pa=" + URLEncoder.encode(
-                        settings.getUpiId(),
-                        StandardCharsets.UTF_8
-                )
-                + "&pn=" + URLEncoder.encode(
-                        settings.getReceiverName(),
-                        StandardCharsets.UTF_8
-                )
-                + "&am=" + bill.getTotalAmount()
-                + "&cu=INR"
-                + "&tn=" + URLEncoder.encode(
-                        "Bill-" + bill.getBillId(),
-                        StandardCharsets.UTF_8
-                );
+                        + "?pa=" + URLEncoder.encode(
+                                settings.getUpiId(),
+                                StandardCharsets.UTF_8
+                        )
+                        + "&pn=" + URLEncoder.encode(
+                                settings.getReceiverName(),
+                                StandardCharsets.UTF_8
+                        )
+                        + "&am=" + bill.getTotalAmount()
+                        + "&cu=INR"
+                        + "&tn=" + URLEncoder.encode(
+                                "Bill-" + bill.getBillId(),
+                                StandardCharsets.UTF_8
+                        );
 
         return new UpiPaymentResponse(
-
                 upiUrl,
-
                 settings.getUpiId(),
-
                 settings.getReceiverName(),
-
                 bill.getTotalAmount(),
-
                 bill.getBillId()
         );
     }
@@ -371,9 +391,14 @@ public class PaymentServiceImpl implements PaymentService {
      * Payment Dashboard Overview.
      *
      * Owner only.
+     * All counts, tables and totals are restricted to their mess.
      */
+    @Transactional(readOnly = true)
     @Override
     public PaymentOverviewResponse getPaymentOverview() {
+
+        Long messId =
+                customerSecurity.getCurrentMessId();
 
         PaymentOverviewResponse response =
                 new PaymentOverviewResponse();
@@ -381,19 +406,22 @@ public class PaymentServiceImpl implements PaymentService {
         // Dashboard Counts
 
         response.setUnpaidBillCount(
-                billRepository.countByBillStatus(
+                billRepository.countByMess_MessIdAndBillStatus(
+                        messId,
                         BillStatus.UNPAID
                 )
         );
 
         response.setPendingRequestCount(
-                billRepository.countByBillStatus(
+                billRepository.countByMess_MessIdAndBillStatus(
+                        messId,
                         BillStatus.PAYMENT_PENDING
                 )
         );
 
         response.setPaidBillCount(
-                billRepository.countByBillStatus(
+                billRepository.countByMess_MessIdAndBillStatus(
+                        messId,
                         BillStatus.PAID
                 )
         );
@@ -401,9 +429,11 @@ public class PaymentServiceImpl implements PaymentService {
         // Unpaid Bills Table
 
         List<Bill> unpaidBills =
-                billRepository.findByBillStatusOrderByGeneratedAtAsc(
-                        BillStatus.UNPAID
-                );
+                billRepository
+                        .findByMess_MessIdAndBillStatusOrderByGeneratedAtAsc(
+                                messId,
+                                BillStatus.UNPAID
+                        );
 
         response.setUnpaidBills(
                 billMapper.toResponseList(
@@ -420,9 +450,11 @@ public class PaymentServiceImpl implements PaymentService {
         // Total Collected Revenue
 
         List<Bill> paidBills =
-                billRepository.findByBillStatusOrderByGeneratedAtAsc(
-                        BillStatus.PAID
-                );
+                billRepository
+                        .findByMess_MessIdAndBillStatusOrderByGeneratedAtAsc(
+                                messId,
+                                BillStatus.PAID
+                        );
 
         response.setTotalCollectedAmount(
                 paidBills.stream()
@@ -434,5 +466,24 @@ public class PaymentServiceImpl implements PaymentService {
         );
 
         return response;
+    }
+
+    /*
+     * Resolves a bill only within the authenticated mess.
+     */
+    private Bill findBill(
+            Long billId,
+            Long messId) {
+
+        return billRepository
+                .findByBillIdAndMess_MessId(
+                        billId,
+                        messId
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Bill not found with ID: "
+                                        + billId
+                        ));
     }
 }

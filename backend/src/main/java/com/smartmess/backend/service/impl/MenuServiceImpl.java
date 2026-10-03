@@ -21,7 +21,9 @@ import com.smartmess.backend.exception.BusinessException;
 import com.smartmess.backend.mapper.MenuMapper;
 import com.smartmess.backend.repository.MenuRepository;
 import com.smartmess.backend.repository.MessClosureRepository;
+import com.smartmess.backend.repository.MessRepository;
 import com.smartmess.backend.repository.MessSettingsRepository;
+import com.smartmess.backend.security.CustomerSecurity;
 import com.smartmess.backend.service.MenuService;
 import com.smartmess.backend.service.NotificationService;
 
@@ -38,6 +40,8 @@ public class MenuServiceImpl
     private final MessClosureRepository messClosureRepository;
     private final NotificationService notificationService;
     private final Clock clock;
+    private final MessRepository messRepository;
+    private final CustomerSecurity customerSecurity;
 
     public MenuServiceImpl(
             MenuRepository menuRepository,
@@ -45,7 +49,9 @@ public class MenuServiceImpl
             MessSettingsRepository messSettingsRepository,
             MessClosureRepository messClosureRepository,
             NotificationService notificationService,
-            Clock clock) {
+            Clock clock,
+            MessRepository messRepository,
+            CustomerSecurity customerSecurity) {
 
         this.menuRepository = menuRepository;
         this.menuMapper = menuMapper;
@@ -53,20 +59,34 @@ public class MenuServiceImpl
         this.messClosureRepository = messClosureRepository;
         this.notificationService = notificationService;
         this.clock = clock;
+        this.messRepository = messRepository;
+        this.customerSecurity = customerSecurity;
     }
 
     @Override
     public MenuResponse publishMenu(
             CreateMenuRequest request) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         validateMenuDate(request);
-        validateMenuNotPublished(request);
-        validateWeeklySchedule(request);
-        validateTemporaryClosure(request);
-        validateResponseCutoff(request);
+        validateMenuNotPublished(messId, request);
+        validateWeeklySchedule(messId, request);
+        validateTemporaryClosure(messId, request);
+        validateResponseCutoff(messId, request);
 
         Menu menu =
                 menuMapper.toEntity(request);
+
+        menu.setMess(
+                messRepository
+                        .findById(messId)
+                        .orElseThrow(() ->
+                                new BusinessException(
+                                        "Mess not found."
+                                ))
+        );
 
         Menu savedMenu =
                 menuRepository.save(menu);
@@ -74,11 +94,16 @@ public class MenuServiceImpl
         /*
          * Notify active customers only after
          * the menu has been published successfully.
+         *
+         * Recipients are restricted to the authenticated mess.
          */
         notificationService.notifyActiveCustomers(
                 NotificationType.MENU_PUBLISHED,
                 "Menu Published",
-                buildMenuNotificationMessage(savedMenu)
+                buildMenuNotificationMessage(
+                        messId,
+                        savedMenu
+                )
         );
 
         return menuMapper.toResponse(savedMenu);
@@ -87,9 +112,13 @@ public class MenuServiceImpl
     @Override
     public List<MenuResponse> getTodayMenus() {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         List<Menu> menus =
                 menuRepository
-                        .findByMenuDateOrderByMealSessionAsc(
+                        .findByMess_MessIdAndMenuDateOrderByMealSessionAsc(
+                                messId,
                                 LocalDate.now(clock)
                         );
 
@@ -102,17 +131,22 @@ public class MenuServiceImpl
     public List<MenuAvailabilityResponse>
             getTodayMenuAvailability() {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         List<MenuAvailabilityResponse> availability =
                 new ArrayList<>();
 
         availability.add(
                 buildMenuAvailability(
+                        messId,
                         MealSession.LUNCH
                 )
         );
 
         availability.add(
                 buildMenuAvailability(
+                        messId,
                         MealSession.DINNER
                 )
         );
@@ -124,9 +158,15 @@ public class MenuServiceImpl
     public MenuResponse getMenuById(
             Long menuId) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Menu menu =
                 menuRepository
-                        .findById(menuId)
+                        .findByMenuIdAndMess_MessId(
+                                menuId,
+                                messId
+                        )
                         .orElseThrow(() ->
                                 new BusinessException(
                                         "Menu not found with ID: "
@@ -140,9 +180,14 @@ public class MenuServiceImpl
     @Override
     public List<MenuResponse> getMenuHistory() {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         List<Menu> menus =
                 menuRepository
-                        .findAllByOrderByMenuDateDescMealSessionAsc();
+                        .findAllByMess_MessIdOrderByMenuDateDescMealSessionAsc(
+                                messId
+                        );
 
         return menus.stream()
                 .map(menuMapper::toResponse)
@@ -156,6 +201,7 @@ public class MenuServiceImpl
                 LocalDate.now(clock);
 
         if (!today.equals(request.menuDate())) {
+
             throw new BusinessException(
                     "Menu can only be published for today."
             );
@@ -163,9 +209,11 @@ public class MenuServiceImpl
     }
 
     private void validateMenuNotPublished(
+            Long messId,
             CreateMenuRequest request) {
 
-        if (menuRepository.existsByMenuDateAndMealSession(
+        if (menuRepository.existsByMess_MessIdAndMenuDateAndMealSession(
+                messId,
                 request.menuDate(),
                 request.mealSession())) {
 
@@ -176,10 +224,11 @@ public class MenuServiceImpl
     }
 
     private void validateWeeklySchedule(
+            Long messId,
             CreateMenuRequest request) {
 
         MessSettings settings =
-                getSettingsOrDefaults();
+                getSettingsOrDefaults(messId);
 
         if (settings.getWeeklyClosedDay() == null) {
             return;
@@ -199,6 +248,7 @@ public class MenuServiceImpl
                 );
 
         if (sessionClosed) {
+
             throw new BusinessException(
                     "Menu cannot be published because this meal session is closed as per the weekly schedule."
             );
@@ -206,15 +256,18 @@ public class MenuServiceImpl
     }
 
     private void validateTemporaryClosure(
+            Long messId,
             CreateMenuRequest request) {
 
         MessClosure closure =
                 findBlockingClosure(
+                        messId,
                         request.menuDate(),
                         request.mealSession()
                 );
 
         if (closure != null) {
+
             throw new BusinessException(
                     "Menu cannot be published because this meal session is temporarily closed."
             );
@@ -226,10 +279,11 @@ public class MenuServiceImpl
      * cutoff for that meal session has passed.
      */
     private void validateResponseCutoff(
+            Long messId,
             CreateMenuRequest request) {
 
         MessSettings settings =
-                getSettingsOrDefaults();
+                getSettingsOrDefaults(messId);
 
         LocalTime cutoffTime =
                 getResponseCutoff(
@@ -238,6 +292,7 @@ public class MenuServiceImpl
                 );
 
         if (cutoffTime == null) {
+
             throw new BusinessException(
                     "Response cutoff time is not configured for this meal session."
             );
@@ -247,6 +302,7 @@ public class MenuServiceImpl
                 LocalTime.now(clock);
 
         if (!currentTime.isBefore(cutoffTime)) {
+
             throw new BusinessException(
                     "Menu cannot be published because the response cutoff passed at "
                             + cutoffTime.format(TIME_FORMAT)
@@ -258,14 +314,18 @@ public class MenuServiceImpl
     /*
      * Builds the current publishing state for one
      * meal session using the same backend business rules.
+     *
+     * Menu, settings and closure checks use the same mess.
      */
     private MenuAvailabilityResponse buildMenuAvailability(
+            Long messId,
             MealSession mealSession) {
 
         LocalDate today =
                 LocalDate.now(clock);
 
-        if (menuRepository.existsByMenuDateAndMealSession(
+        if (menuRepository.existsByMess_MessIdAndMenuDateAndMealSession(
+                messId,
                 today,
                 mealSession)) {
 
@@ -277,7 +337,7 @@ public class MenuServiceImpl
         }
 
         MessSettings settings =
-                getSettingsOrDefaults();
+                getSettingsOrDefaults(messId);
 
         if (settings.getWeeklyClosedDay() != null
                 && today.getDayOfWeek()
@@ -295,11 +355,13 @@ public class MenuServiceImpl
 
         MessClosure closure =
                 findBlockingClosure(
+                        messId,
                         today,
                         mealSession
                 );
 
         if (closure != null) {
+
             return new MenuAvailabilityResponse(
                     mealSession,
                     false,
@@ -315,6 +377,7 @@ public class MenuServiceImpl
                 );
 
         if (cutoffTime == null) {
+
             return new MenuAvailabilityResponse(
                     mealSession,
                     false,
@@ -326,6 +389,7 @@ public class MenuServiceImpl
                 LocalTime.now(clock);
 
         if (!currentTime.isBefore(cutoffTime)) {
+
             return new MenuAvailabilityResponse(
                     mealSession,
                     false,
@@ -342,10 +406,11 @@ public class MenuServiceImpl
         );
     }
 
-    private MessSettings getSettingsOrDefaults() {
+    private MessSettings getSettingsOrDefaults(
+            Long messId) {
 
         return messSettingsRepository
-                .findTopByOrderBySettingsIdAsc()
+                .findByMess_MessId(messId)
                 .orElseGet(MessSettings::new);
     }
 
@@ -376,12 +441,14 @@ public class MenuServiceImpl
     }
 
     private MessClosure findBlockingClosure(
+            Long messId,
             LocalDate date,
             MealSession mealSession) {
 
         List<MessClosure> closures =
                 messClosureRepository
-                        .findByStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                        .findByMess_MessIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                                messId,
                                 date,
                                 date
                         );
@@ -421,6 +488,7 @@ public class MenuServiceImpl
      * after a menu has been published successfully.
      */
     private String buildMenuNotificationMessage(
+            Long messId,
             Menu menu) {
 
         String session =
@@ -430,7 +498,7 @@ public class MenuServiceImpl
                 };
 
         MessSettings settings =
-                getSettingsOrDefaults();
+                getSettingsOrDefaults(messId);
 
         LocalTime cutoffTime =
                 getResponseCutoff(
@@ -439,6 +507,7 @@ public class MenuServiceImpl
                 );
 
         if (cutoffTime == null) {
+
             return session
                     + " menu is now available.";
         }

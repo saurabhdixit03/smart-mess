@@ -8,7 +8,9 @@ import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.smartmess.backend.entity.Mess;
 import com.smartmess.backend.entity.Menu;
 import com.smartmess.backend.enums.MealSession;
 import com.smartmess.backend.repository.MenuRepository;
@@ -28,18 +30,14 @@ public class MenuSeeder {
             20260917L;
 
     private final MenuRepository menuRepository;
-
     private final Clock clock;
 
     public MenuSeeder(
             MenuRepository menuRepository,
             Clock clock) {
 
-        this.menuRepository =
-                menuRepository;
-
-        this.clock =
-                clock;
+        this.menuRepository = menuRepository;
+        this.clock = clock;
     }
 
     private record MenuTemplate(
@@ -51,12 +49,31 @@ public class MenuSeeder {
     ) {
     }
 
-    public void seed() {
+    /*
+     * Seeds sample menus within the dedicated demo mess.
+     *
+     * SeedDataService selects and passes the demo mess.
+     * Other messes' menus do not affect this seed check.
+     */
+    @Transactional
+    public void seed(Mess mess) {
 
-        if (menuRepository.count() > 0) {
+        if (mess == null || mess.getMessId() == null) {
+
+            throw new IllegalArgumentException(
+                    "A persisted demo mess is required."
+            );
+        }
+
+        if (!menuRepository
+                .findAllByMess_MessIdOrderByMenuDateAscMealSessionAsc(
+                        mess.getMessId()
+                )
+                .isEmpty()) {
 
             log.info(
-                    "Menus already exist. Skipping demo seeding."
+                    "Menus already exist for demo mess {}. Skipping demo seeding.",
+                    mess.getMessId()
             );
 
             return;
@@ -105,12 +122,14 @@ public class MenuSeeder {
                     );
 
             saveMenu(
+                    mess,
                     date,
                     MealSession.LUNCH,
                     lunchTemplate
             );
 
             saveMenu(
+                    mess,
                     date,
                     MealSession.DINNER,
                     dinnerTemplate
@@ -132,6 +151,7 @@ public class MenuSeeder {
                 );
 
         saveMenu(
+                mess,
                 today,
                 MealSession.LUNCH,
                 todayLunchTemplate
@@ -140,8 +160,9 @@ public class MenuSeeder {
         menuCount++;
 
         log.info(
-                "Demo Menus seeded successfully. "
+                "Demo Menus seeded successfully for mess {}. "
                         + "Historical days: {}, Total menus: {}.",
+                mess.getMessId(),
                 HISTORICAL_DAY_COUNT,
                 menuCount
         );
@@ -182,12 +203,15 @@ public class MenuSeeder {
     }
 
     private void saveMenu(
+            Mess mess,
             LocalDate date,
             MealSession mealSession,
             MenuTemplate template) {
 
         Menu menu =
                 new Menu();
+
+        menu.setMess(mess);
 
         menu.setMenuDate(
                 date

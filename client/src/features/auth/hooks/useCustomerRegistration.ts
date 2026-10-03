@@ -1,15 +1,19 @@
 import { useState } from "react";
 
-import { authApi } from "../api/auth.api";
-import { saveCustomerAuthSession } from "../utils/auth.utils";
+import {
+  authApi,
+} from "../api/auth.api";
 
 import type {
   CustomerRegistrationRequest,
 } from "../types/auth.types";
 
 export function useCustomerRegistration() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState<string | null>(null);
 
   const register = async (
     payload: CustomerRegistrationRequest
@@ -18,20 +22,23 @@ export function useCustomerRegistration() {
       setLoading(true);
       setError(null);
 
-      const response = await authApi.customerRegister(payload);
+      const response =
+        await authApi.customerRegister(payload);
 
-      saveCustomerAuthSession(response.data); 
-
+      /*
+       * Pending registration does not authenticate the customer.
+       * Login becomes available after the owner approves them.
+       */
       return response.data;
-    } catch (error) {
+    } catch (registrationError) {
       const message =
-        error instanceof Error
-          ? error.message
+        registrationError instanceof Error
+          ? registrationError.message
           : "Registration failed.";
 
       setError(message);
 
-      throw error;
+      throw registrationError;
     } finally {
       setLoading(false);
     }

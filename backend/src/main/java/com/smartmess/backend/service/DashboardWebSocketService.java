@@ -3,7 +3,10 @@ package com.smartmess.backend.service;
 import com.smartmess.backend.enums.MealSession;
 
 public interface DashboardWebSocketService {
-	
-	void broadcastDashboard(MealSession mealSession);
 
+    /*
+     * Broadcasts the requested session's dashboard
+     * within the authenticated mess.
+     */
+    void broadcastDashboard(MealSession mealSession);
 }
