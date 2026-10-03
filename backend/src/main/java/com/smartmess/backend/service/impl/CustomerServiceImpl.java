@@ -1,9 +1,11 @@
 package com.smartmess.backend.service.impl;
 
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,17 +35,20 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerMapper customerMapper;
     private final CustomerSecurity customerSecurity;
     private final EmailService emailService;
+    private final Executor emailExecutor;
 
     public CustomerServiceImpl(
             CustomerRepository customerRepository,
             CustomerMapper customerMapper,
             CustomerSecurity customerSecurity,
-            EmailService emailService) {
+            EmailService emailService,
+            @Qualifier("emailExecutor") Executor emailExecutor) {
 
         this.customerRepository = customerRepository;
         this.customerMapper = customerMapper;
         this.customerSecurity = customerSecurity;
         this.emailService = emailService;
+        this.emailExecutor = emailExecutor;
     }
 
     @Transactional(readOnly = true)
@@ -53,17 +58,16 @@ public class CustomerServiceImpl implements CustomerService {
         Long messId =
                 customerSecurity.getCurrentMessId();
 
-        Customer customer =
-                customerRepository
-                        .findByCustomerIdAndMess_MessIdAndStatus(
-                                customerId,
-                                messId,
-                                CustomerStatus.ACTIVE
-                        )
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Customer not found."
-                                ));
+        Customer customer = customerRepository
+                .findByCustomerIdAndMess_MessIdAndStatus(
+                        customerId,
+                        messId,
+                        CustomerStatus.ACTIVE
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Customer not found."
+                        ));
 
         customerSecurity.checkCustomerAccess(customerId);
 
@@ -111,11 +115,6 @@ public class CustomerServiceImpl implements CustomerService {
         return customerMapper.toResponse(updatedCustomer);
     }
 
-    /*
-     * Approves a pending registration within the owner's mess.
-     *
-     * Inactive customers must use reactivation.
-     */
     @Transactional
     @Override
     public CustomerResponse approveCustomer(Long customerId) {
@@ -131,7 +130,6 @@ public class CustomerServiceImpl implements CustomerService {
         customerSecurity.checkCustomerAccess(customerId);
 
         if (customer.getStatus() != CustomerStatus.PENDING) {
-
             throw new BusinessException(
                     "Only pending customer registrations can be approved."
             );
@@ -147,13 +145,6 @@ public class CustomerServiceImpl implements CustomerService {
         return customerMapper.toResponse(approvedCustomer);
     }
 
-    /*
-     * Permanently removes an unapproved registration.
-     *
-     * Only pending accounts within the owner's mess qualify.
-     * Active and inactive customer accounts cannot be deleted here.
-     * No rejection email is sent.
-     */
     @Transactional
     @Override
     public void rejectCustomer(Long customerId) {
@@ -169,7 +160,6 @@ public class CustomerServiceImpl implements CustomerService {
         customerSecurity.checkCustomerAccess(customerId);
 
         if (customer.getStatus() != CustomerStatus.PENDING) {
-
             throw new BusinessException(
                     "Only pending customer registrations can be rejected."
             );
@@ -178,12 +168,6 @@ public class CustomerServiceImpl implements CustomerService {
         customerRepository.delete(customer);
     }
 
-    /*
-     * Restores an inactive account within the owner's mess.
-     *
-     * Customer identity, password, joining date and historical
-     * records are preserved. Pending registrations require approval.
-     */
     @Transactional
     @Override
     public CustomerResponse reactivateCustomer(Long customerId) {
@@ -199,7 +183,6 @@ public class CustomerServiceImpl implements CustomerService {
         customerSecurity.checkCustomerAccess(customerId);
 
         if (customer.getStatus() != CustomerStatus.INACTIVE) {
-
             throw new BusinessException(
                     "Only inactive customers can be reactivated."
             );
@@ -213,12 +196,6 @@ public class CustomerServiceImpl implements CustomerService {
         return customerMapper.toResponse(reactivatedCustomer);
     }
 
-    /*
-     * Soft-deactivates an active customer.
-     *
-     * Pending registrations must use approve or reject.
-     * Approved customer history is retained.
-     */
     @Transactional
     @Override
     public void deleteCustomer(Long customerId) {
@@ -234,14 +211,12 @@ public class CustomerServiceImpl implements CustomerService {
         customerSecurity.checkCustomerAccess(customerId);
 
         if (customer.getStatus() == CustomerStatus.INACTIVE) {
-
             throw new BusinessException(
                     "Customer is already inactive."
             );
         }
 
         if (customer.getStatus() != CustomerStatus.ACTIVE) {
-
             throw new BusinessException(
                     "Only active customers can be deactivated."
             );
@@ -252,20 +227,22 @@ public class CustomerServiceImpl implements CustomerService {
         customerRepository.save(customer);
     }
 
-    /*
-     * Capture message data while the entity is attached.
-     *
-     * Send only after approval has committed successfully.
-     * Email failure must not undo approval or fail its HTTP response.
-     */
     private void scheduleApprovalEmail(Customer customer) {
 
-        Long customerId = customer.getCustomerId();
-        Long messId = customer.getMess().getMessId();
+        Long customerId =
+                customer.getCustomerId();
 
-        String recipientEmail = customer.getEmail();
-        String customerName = customer.getFullName();
-        String messName = customer.getMess().getMessName();
+        Long messId =
+                customer.getMess().getMessId();
+
+        String recipientEmail =
+                customer.getEmail();
+
+        String customerName =
+                customer.getFullName();
+
+        String messName =
+                customer.getMess().getMessName();
 
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
@@ -274,23 +251,20 @@ public class CustomerServiceImpl implements CustomerService {
                     public void afterCommit() {
 
                         try {
-
-                            emailService.sendCustomerApprovalEmail(
-                                    recipientEmail,
-                                    customerName,
-                                    messName
-                            );
-
-                            log.info(
-                                    "Customer approval email sent. Customer ID: {}, Mess ID: {}.",
-                                    customerId,
-                                    messId
+                            emailExecutor.execute(() ->
+                                    sendApprovalEmail(
+                                            customerId,
+                                            messId,
+                                            recipientEmail,
+                                            customerName,
+                                            messName
+                                    )
                             );
 
                         } catch (RuntimeException exception) {
-
                             log.error(
-                                    "Customer approved, but approval email could not be sent. "
+                                    "Customer approved, but approval email "
+                                            + "could not be queued. "
                                             + "Customer ID: {}, Mess ID: {}.",
                                     customerId,
                                     messId,
@@ -302,9 +276,38 @@ public class CustomerServiceImpl implements CustomerService {
         );
     }
 
-    /*
-     * Resolves a customer only within the authenticated mess.
-     */
+    private void sendApprovalEmail(
+            Long customerId,
+            Long messId,
+            String recipientEmail,
+            String customerName,
+            String messName) {
+
+        try {
+            emailService.sendCustomerApprovalEmail(
+                    recipientEmail,
+                    customerName,
+                    messName
+            );
+
+            log.info(
+                    "Brevo accepted the customer approval email. "
+                            + "Customer ID: {}, Mess ID: {}.",
+                    customerId,
+                    messId
+            );
+
+        } catch (RuntimeException exception) {
+            log.error(
+                    "Customer approved, but approval email could not be sent. "
+                            + "Customer ID: {}, Mess ID: {}.",
+                    customerId,
+                    messId,
+                    exception
+            );
+        }
+    }
+
     private Customer findCustomer(
             Long customerId,
             Long messId) {
