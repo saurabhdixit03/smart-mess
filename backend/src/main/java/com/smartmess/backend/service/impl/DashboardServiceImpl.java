@@ -20,6 +20,7 @@ import com.smartmess.backend.repository.CustomerRepository;
 import com.smartmess.backend.repository.MealRecordRepository;
 import com.smartmess.backend.repository.MealResponseRepository;
 import com.smartmess.backend.repository.MenuRepository;
+import com.smartmess.backend.security.CustomerSecurity;
 import com.smartmess.backend.service.DashboardService;
 
 @Service
@@ -30,48 +31,66 @@ public class DashboardServiceImpl implements DashboardService {
     private final MealResponseRepository mealResponseRepository;
     private final MealRecordRepository mealRecordRepository;
     private final Clock clock;
+    private final CustomerSecurity customerSecurity;
 
     public DashboardServiceImpl(
             CustomerRepository customerRepository,
             MenuRepository menuRepository,
             MealResponseRepository mealResponseRepository,
             MealRecordRepository mealRecordRepository,
-            Clock clock) {
+            Clock clock,
+            CustomerSecurity customerSecurity) {
 
         this.customerRepository = customerRepository;
         this.menuRepository = menuRepository;
         this.mealResponseRepository = mealResponseRepository;
         this.mealRecordRepository = mealRecordRepository;
         this.clock = clock;
+        this.customerSecurity = customerSecurity;
     }
 
     @Override
-    public DashboardSummaryResponse getDashboardSummary(MealSession mealSession) {
+    public DashboardSummaryResponse getDashboardSummary(
+            MealSession mealSession) {
+
+        Long messId =
+                customerSecurity.getCurrentMessId();
 
         Menu menu = menuRepository
-                .findByMenuDateAndMealSession(
+                .findByMess_MessIdAndMenuDateAndMealSession(
+                        messId,
                         LocalDate.now(clock),
                         mealSession
                 )
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
-                                "Menu not found for today and session : " + mealSession
+                                "Menu not found for today and session : "
+                                        + mealSession
                         ));
 
         long activeCustomers =
-                customerRepository.countByStatus(CustomerStatus.ACTIVE);
+                customerRepository
+                        .findAllByMess_MessIdAndStatus(
+                                messId,
+                                CustomerStatus.ACTIVE
+                        )
+                        .size();
 
         long acceptedResponses =
-                mealResponseRepository.countByMenuAndResponseStatus(
-                        menu,
-                        MealResponseStatus.ACCEPTED
-                );
+                mealResponseRepository
+                        .countByMess_MessIdAndMenuAndResponseStatus(
+                                messId,
+                                menu,
+                                MealResponseStatus.ACCEPTED
+                        );
 
         long declinedResponses =
-                mealResponseRepository.countByMenuAndResponseStatus(
-                        menu,
-                        MealResponseStatus.DECLINED
-                );
+                mealResponseRepository
+                        .countByMess_MessIdAndMenuAndResponseStatus(
+                                messId,
+                                menu,
+                                MealResponseStatus.DECLINED
+                        );
 
         long pendingResponses =
                 activeCustomers
@@ -79,19 +98,26 @@ public class DashboardServiceImpl implements DashboardService {
                         - declinedResponses;
 
         long expectedFullMeals =
-                mealResponseRepository.countByMenuAndMealOption(
-                        menu,
-                        MealOption.FULL
-                );
+                mealResponseRepository
+                        .countByMess_MessIdAndMenuAndMealOption(
+                                messId,
+                                menu,
+                                MealOption.FULL
+                        );
 
         long expectedHalfMeals =
-                mealResponseRepository.countByMenuAndMealOption(
-                        menu,
-                        MealOption.HALF
-                );
+                mealResponseRepository
+                        .countByMess_MessIdAndMenuAndMealOption(
+                                messId,
+                                menu,
+                                MealOption.HALF
+                        );
 
         Long expectedExtraRotis =
-                mealResponseRepository.getTotalExtraRotis(menu);
+                mealResponseRepository.getTotalExtraRotisByMess(
+                        messId,
+                        menu
+                );
 
         long acceptedMeals =
                 expectedFullMeals + expectedHalfMeals;
@@ -101,17 +127,21 @@ public class DashboardServiceImpl implements DashboardService {
 
         long totalRotisRequired =
                 baseRotisRequired
-                        + (expectedExtraRotis == null ? 0L : expectedExtraRotis);
+                        + (expectedExtraRotis == null
+                                ? 0L
+                                : expectedExtraRotis);
 
         List<MealResponse> responses =
-                mealResponseRepository.findByMenu(menu);
+                mealResponseRepository.findByMess_MessIdAndMenu(
+                        messId,
+                        menu
+                );
 
         DashboardSummaryResponse response =
                 new DashboardSummaryResponse();
 
         response.setMenuDate(menu.getMenuDate());
         response.setMealSession(menu.getMealSession());
-
         response.setActiveCustomers(activeCustomers);
 
         response.setMenuId(menu.getMenuId());
@@ -121,11 +151,12 @@ public class DashboardServiceImpl implements DashboardService {
 
         response.setExpectedFullMeals(expectedFullMeals);
         response.setExpectedHalfMeals(expectedHalfMeals);
-
         response.setBaseRotisRequired(baseRotisRequired);
 
         response.setExpectedExtraRotis(
-                expectedExtraRotis == null ? 0L : expectedExtraRotis
+                expectedExtraRotis == null
+                        ? 0L
+                        : expectedExtraRotis
         );
 
         response.setTotalRotisRequired(totalRotisRequired);
@@ -133,109 +164,99 @@ public class DashboardServiceImpl implements DashboardService {
         /*
          * Customer Collection Queue
          */
-        List<DashboardCustomerResponse> customerQueue = responses.stream()
+        List<DashboardCustomerResponse> customerQueue =
+                responses.stream()
+                        .filter(mealResponse ->
+                                mealResponse.getResponseStatus()
+                                        == MealResponseStatus.ACCEPTED)
+                        .sorted(Comparator.comparing(
+                                mealResponse ->
+                                        mealResponse.getCustomer().getFullName()
+                        ))
+                        .map(mealResponse -> {
 
-                .filter(mealResponse ->
-                        mealResponse.getResponseStatus() == MealResponseStatus.ACCEPTED)
+                            DashboardCustomerResponse customer =
+                                    new DashboardCustomerResponse();
 
-                .sorted(Comparator.comparing(
-                        mealResponse -> mealResponse.getCustomer().getFullName()
-                ))
+                            customer.setMealResponseId(
+                                    mealResponse.getMealResponseId());
 
-                .map(mealResponse -> {
+                            customer.setCustomerId(
+                                    mealResponse.getCustomer().getCustomerId());
 
-                    DashboardCustomerResponse customer =
-                            new DashboardCustomerResponse();
+                            customer.setCustomerName(
+                                    mealResponse.getCustomer().getFullName());
 
-                    customer.setMealResponseId(
-                            mealResponse.getMealResponseId());
+                            customer.setResponseStatus(
+                                    mealResponse.getResponseStatus());
 
-                    customer.setCustomerId(
-                            mealResponse.getCustomer().getCustomerId());
+                            customer.setMealOption(
+                                    mealResponse.getMealOption());
 
-                    customer.setCustomerName(
-                            mealResponse.getCustomer().getFullName());
+                            customer.setExtraRotiCount(
+                                    mealResponse.getExtraRotiCount());
 
-                    customer.setResponseStatus(
-                            mealResponse.getResponseStatus());
+                            customer.setCollected(
+                                    mealRecordRepository
+                                            .existsByMess_MessIdAndCustomerAndMenu(
+                                                    messId,
+                                                    mealResponse.getCustomer(),
+                                                    menu
+                                            )
+                            );
 
-                    customer.setMealOption(
-                            mealResponse.getMealOption());
-
-                    customer.setExtraRotiCount(
-                            mealResponse.getExtraRotiCount());
-
-                    customer.setCollected(
-
-                            mealRecordRepository.existsByCustomerAndMenu(
-
-                                    mealResponse.getCustomer(),
-
-                                    menu
-                            )
-
-                    );
-
-                    return customer;
-
-                })
-
-                .toList();
+                            return customer;
+                        })
+                        .toList();
 
         response.setCollectionQueue(customerQueue);
 
-        List<DashboardCustomerResponse> recentActivities = responses.stream()
+        List<DashboardCustomerResponse> recentActivities =
+                responses.stream()
+                        .sorted(
+                                Comparator.comparing(
+                                        MealResponse::getRespondedAt
+                                ).reversed()
+                        )
+                        .limit(3)
+                        .map(mealResponse -> {
 
-                .sorted(
-                        Comparator.comparing(
-                                MealResponse::getRespondedAt
-                        ).reversed()
-                )
+                            DashboardCustomerResponse customer =
+                                    new DashboardCustomerResponse();
 
-                .limit(3)
+                            customer.setMealResponseId(
+                                    mealResponse.getMealResponseId());
 
-                .map(mealResponse -> {
+                            customer.setCustomerId(
+                                    mealResponse.getCustomer().getCustomerId());
 
-                    DashboardCustomerResponse customer =
-                            new DashboardCustomerResponse();
+                            customer.setCustomerName(
+                                    mealResponse.getCustomer().getFullName());
 
-                    customer.setMealResponseId(
-                            mealResponse.getMealResponseId());
+                            customer.setResponseStatus(
+                                    mealResponse.getResponseStatus());
 
-                    customer.setCustomerId(
-                            mealResponse.getCustomer().getCustomerId());
+                            customer.setMealOption(
+                                    mealResponse.getMealOption());
 
-                    customer.setCustomerName(
-                            mealResponse.getCustomer().getFullName());
+                            customer.setExtraRotiCount(
+                                    mealResponse.getExtraRotiCount());
 
-                    customer.setResponseStatus(
-                            mealResponse.getResponseStatus());
+                            customer.setRespondedAt(
+                                    mealResponse.getRespondedAt());
 
-                    customer.setMealOption(
-                            mealResponse.getMealOption());
+                            customer.setCollected(
+                                    mealRecordRepository
+                                            .existsByMess_MessIdAndCustomerAndMenu(
+                                                    messId,
+                                                    mealResponse.getCustomer(),
+                                                    menu
+                                            )
+                            );
 
-                    customer.setExtraRotiCount(
-                            mealResponse.getExtraRotiCount());
-
-                    customer.setRespondedAt(
-                            mealResponse.getRespondedAt());
-
-                    customer.setCollected(
-
-                            mealRecordRepository.existsByCustomerAndMenu(
-
-                                    mealResponse.getCustomer(),
-
-                                    menu
-                            )
-
-                    );
-
-                    return customer;
-
-                })
-
-                .toList();
+                            return customer;
+                        })
+                        .toList();
 
         response.setRecentActivities(
                 recentActivities

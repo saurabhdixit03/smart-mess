@@ -77,35 +77,45 @@ public class MealRecordServiceImpl implements MealRecordService {
     public MealRecordResponse createMealRecord(
             CreateMealRecordRequest request) {
 
-        // Load Customer
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
+        // Load Customer within the authenticated mess
 
         Customer customer =
-                customerRepository.findById(request.customerId())
+                customerRepository
+                        .findByCustomerIdAndMess_MessId(
+                                request.customerId(),
+                                messId
+                        )
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Customer not found with ID: "
                                                 + request.customerId()
-                                )
-                        );
+                                ));
 
         // Customer Validation
 
         if (customer.getStatus() != CustomerStatus.ACTIVE) {
+
             throw new BusinessException(
                     "Only active customers can collect meals."
             );
         }
 
-        // Load Menu
+        // Load Menu within the authenticated mess
 
         Menu menu =
-                menuRepository.findById(request.menuId())
+                menuRepository
+                        .findByMenuIdAndMess_MessId(
+                                request.menuId(),
+                                messId
+                        )
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Menu not found with ID: "
                                                 + request.menuId()
-                                )
-                        );
+                                ));
 
         /*
          * An existing menu represents an operational meal session.
@@ -115,25 +125,24 @@ public class MealRecordServiceImpl implements MealRecordService {
          * including direct or walk-in meal collection.
          */
 
-        // Load Meal Pricing
+        // Load Meal Pricing for the authenticated mess
 
         MealPricing mealPricing =
                 mealPricingRepository
-                        .findTopByOrderByUpdatedAtDesc()
+                        .findByMess_MessId(messId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Meal pricing is not configured."
-                                )
-                        );
+                                ));
 
         // Meal Pricing Validation
 
         if (mealPricing.getHalfMealPrice()
                 .compareTo(BigDecimal.ZERO) <= 0
                 || mealPricing.getFullMealPrice()
-                .compareTo(BigDecimal.ZERO) <= 0
+                        .compareTo(BigDecimal.ZERO) <= 0
                 || mealPricing.getExtraRotiPrice()
-                .compareTo(BigDecimal.ZERO) <= 0) {
+                        .compareTo(BigDecimal.ZERO) <= 0) {
 
             throw new BusinessException(
                     "Meal pricing is invalid. Please configure valid meal prices."
@@ -148,13 +157,15 @@ public class MealRecordServiceImpl implements MealRecordService {
 
             mealResponse =
                     mealResponseRepository
-                            .findById(request.mealResponseId())
+                            .findByMealResponseIdAndMess_MessId(
+                                    request.mealResponseId(),
+                                    messId
+                            )
                             .orElseThrow(() ->
                                     new ResourceNotFoundException(
                                             "Meal response not found with ID: "
                                                     + request.mealResponseId()
-                                    )
-                            );
+                                    ));
         }
 
         // Business Validation
@@ -180,7 +191,10 @@ public class MealRecordServiceImpl implements MealRecordService {
             }
 
             if (mealRecordRepository
-                    .findByMealResponse(mealResponse)
+                    .findByMess_MessIdAndMealResponse(
+                            messId,
+                            mealResponse
+                    )
                     .isPresent()) {
 
                 throw new BusinessException(
@@ -191,7 +205,11 @@ public class MealRecordServiceImpl implements MealRecordService {
         } else {
 
             if (mealRecordRepository
-                    .existsByCustomerAndMenu(customer, menu)) {
+                    .existsByMess_MessIdAndCustomerAndMenu(
+                            messId,
+                            customer,
+                            menu
+                    )) {
 
                 throw new BusinessException(
                         "Meal has already been collected for this customer and menu."
@@ -223,8 +241,16 @@ public class MealRecordServiceImpl implements MealRecordService {
 
         // Create Meal Record
 
+        /*
+         * Save the owner's final served meal and quantities.
+         *
+         * Response choices are optional prefill data.
+         * Stored prices preserve the collection-time charge
+         * even when the mess changes pricing later.
+         */
         MealRecord mealRecord =
                 MealRecord.builder()
+                        .mess(menu.getMess())
                         .customer(customer)
                         .menu(menu)
                         .mealResponse(mealResponse)
@@ -256,14 +282,20 @@ public class MealRecordServiceImpl implements MealRecordService {
     public List<MealRecordResponse> getCustomerMealHistory(
             Long customerId) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Customer customer =
-                customerRepository.findById(customerId)
+                customerRepository
+                        .findByCustomerIdAndMess_MessId(
+                                customerId,
+                                messId
+                        )
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Customer not found with ID: "
                                                 + customerId
-                                )
-                        );
+                                ));
 
         customerSecurity.checkCustomerAccess(
                 customerId
@@ -271,7 +303,8 @@ public class MealRecordServiceImpl implements MealRecordService {
 
         List<MealRecord> mealRecords =
                 mealRecordRepository
-                        .findByCustomerOrderByCollectedAtDesc(
+                        .findByMess_MessIdAndCustomerOrderByCollectedAtDesc(
+                                messId,
                                 customer
                         );
 
@@ -284,21 +317,17 @@ public class MealRecordServiceImpl implements MealRecordService {
     public List<MealRecordResponse> getTodayMealRecords(
             MealSession mealSession) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Menu menu =
-                menuRepository
-                        .findByMenuDateAndMealSession(
-                                LocalDate.now(clock),
-                                mealSession
-                        )
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Menu not found for today and session: "
-                                                + mealSession
-                                )
-                        );
+                findTodayMenu(messId, mealSession);
 
         List<MealRecord> mealRecords =
-                mealRecordRepository.findByMenu(menu);
+                mealRecordRepository.findByMess_MessIdAndMenu(
+                        messId,
+                        menu
+                );
 
         return mealRecordMapper.toResponseList(
                 mealRecords
@@ -312,25 +341,42 @@ public class MealRecordServiceImpl implements MealRecordService {
     public List<CollectionQueueResponse> getCollectionQueue(
             MealSession mealSession) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Menu menu =
-                menuRepository
-                        .findByMenuDateAndMealSession(
-                                LocalDate.now(clock),
-                                mealSession
-                        )
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Menu not found for today and session: "
-                                                + mealSession
-                                )
-                        );
+                findTodayMenu(messId, mealSession);
 
         List<MealResponse> mealResponses =
                 mealResponseRepository
-                        .findCollectionQueue(menu);
+                        .findCollectionQueueByMess(
+                                messId,
+                                menu
+                        );
 
         return mealCollectionMapper.toResponseList(
                 mealResponses
         );
+    }
+
+    /*
+     * Resolves today's meal-session menu within one mess.
+     * Preserves the existing missing-menu message.
+     */
+    private Menu findTodayMenu(
+            Long messId,
+            MealSession mealSession) {
+
+        return menuRepository
+                .findByMess_MessIdAndMenuDateAndMealSession(
+                        messId,
+                        LocalDate.now(clock),
+                        mealSession
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Menu not found for today and session: "
+                                        + mealSession
+                        ));
     }
 }

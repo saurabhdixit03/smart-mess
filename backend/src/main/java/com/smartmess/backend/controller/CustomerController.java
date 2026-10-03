@@ -1,4 +1,3 @@
-
 package com.smartmess.backend.controller;
 
 import java.util.List;
@@ -7,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,24 +27,23 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    public CustomerController(CustomerService customerService) {
+    public CustomerController(
+            CustomerService customerService) {
+
         this.customerService = customerService;
     }
 
     /**
-     * Get a customer by ID.
+     * Gets an active customer.
      *
-     * OWNER:
-     * Can access any customer.
-     *
-     * CUSTOMER:
-     * Can access only their own customer record.
+     * Owners are restricted to their own mess.
+     * Customers can access only their own record.
      */
     @GetMapping("/{customerId}")
     @PreAuthorize(
-            "hasRole('OWNER') or " +
-            "(hasRole('CUSTOMER') and " +
-            "#customerId == authentication.principal.userId)"
+            "hasRole('OWNER') or "
+                    + "(hasRole('CUSTOMER') and "
+                    + "#customerId == authentication.principal.userId)"
     )
     public ResponseEntity<ApiResponse<CustomerResponse>> getCustomerById(
             @PathVariable Long customerId,
@@ -53,20 +52,18 @@ public class CustomerController {
         CustomerResponse response =
                 customerService.getCustomerById(customerId);
 
-        ApiResponse<CustomerResponse> apiResponse =
+        return ResponseEntity.ok(
                 ApiResponse.success(
                         "Customer retrieved successfully.",
                         request.getRequestURI(),
                         response
-                );
-
-        return ResponseEntity.ok(apiResponse);
+                )
+        );
     }
 
     /**
-     * Get all customers.
-     *
-     * OWNER only.
+     * Includes active, inactive and pending accounts.
+     * Returns only customers within the owner's mess.
      */
     @GetMapping
     @PreAuthorize("hasRole('OWNER')")
@@ -76,20 +73,17 @@ public class CustomerController {
         List<CustomerResponse> response =
                 customerService.getAllCustomers();
 
-        ApiResponse<List<CustomerResponse>> apiResponse =
+        return ResponseEntity.ok(
                 ApiResponse.success(
                         "Customers retrieved successfully.",
                         request.getRequestURI(),
                         response
-                );
-
-        return ResponseEntity.ok(apiResponse);
+                )
+        );
     }
 
     /**
-     * Update customer remarks.
-     *
-     * OWNER only.
+     * Updates owner-managed customer remarks.
      */
     @PutMapping("/{customerId}")
     @PreAuthorize("hasRole('OWNER')")
@@ -104,20 +98,80 @@ public class CustomerController {
                         requestBody
                 );
 
-        ApiResponse<CustomerResponse> apiResponse =
+        return ResponseEntity.ok(
                 ApiResponse.success(
                         "Customer remarks updated successfully.",
                         request.getRequestURI(),
                         response
-                );
-
-        return ResponseEntity.ok(apiResponse);
+                )
+        );
     }
 
     /**
-     * Deactivate a customer.
-     *
-     * OWNER only.
+     * Approves a pending registration within the owner's mess.
+     */
+    @PatchMapping("/{customerId}/approve")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<CustomerResponse>> approveCustomer(
+            @PathVariable Long customerId,
+            HttpServletRequest request) {
+
+        CustomerResponse response =
+                customerService.approveCustomer(customerId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Customer approved successfully.",
+                        request.getRequestURI(),
+                        response
+                )
+        );
+    }
+
+    /**
+     * Rejects and permanently removes a pending registration.
+     * Does not send an email.
+     */
+    @PatchMapping("/{customerId}/reject")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<Void>> rejectCustomer(
+            @PathVariable Long customerId,
+            HttpServletRequest request) {
+
+        customerService.rejectCustomer(customerId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Registration rejected and removed.",
+                        request.getRequestURI(),
+                        null
+                )
+        );
+    }
+
+    /**
+     * Reactivates an inactive account within the owner's mess.
+     */
+    @PatchMapping("/{customerId}/reactivate")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<ApiResponse<CustomerResponse>> reactivateCustomer(
+            @PathVariable Long customerId,
+            HttpServletRequest request) {
+
+        CustomerResponse response =
+                customerService.reactivateCustomer(customerId);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Customer reactivated successfully.",
+                        request.getRequestURI(),
+                        response
+                )
+        );
+    }
+
+    /**
+     * Soft-deactivates an active customer.
      */
     @DeleteMapping("/{customerId}")
     @PreAuthorize("hasRole('OWNER')")
@@ -127,13 +181,12 @@ public class CustomerController {
 
         customerService.deleteCustomer(customerId);
 
-        ApiResponse<Void> apiResponse =
+        return ResponseEntity.ok(
                 ApiResponse.success(
                         "Customer deactivated successfully.",
                         request.getRequestURI(),
                         null
-                );
-
-        return ResponseEntity.ok(apiResponse);
+                )
+        );
     }
 }

@@ -19,6 +19,8 @@ import com.smartmess.backend.exception.ResourceNotFoundException;
 import com.smartmess.backend.mapper.MessClosureMapper;
 import com.smartmess.backend.repository.MenuRepository;
 import com.smartmess.backend.repository.MessClosureRepository;
+import com.smartmess.backend.repository.MessRepository;
+import com.smartmess.backend.security.CustomerSecurity;
 import com.smartmess.backend.service.MessClosureService;
 import com.smartmess.backend.service.NotificationService;
 
@@ -34,24 +36,33 @@ public class MessClosureServiceImpl
     private final MessClosureMapper messClosureMapper;
     private final NotificationService notificationService;
     private final Clock clock;
+    private final MessRepository messRepository;
+    private final CustomerSecurity customerSecurity;
 
     public MessClosureServiceImpl(
             MessClosureRepository messClosureRepository,
             MenuRepository menuRepository,
             MessClosureMapper messClosureMapper,
             NotificationService notificationService,
-            Clock clock) {
+            Clock clock,
+            MessRepository messRepository,
+            CustomerSecurity customerSecurity) {
 
         this.messClosureRepository = messClosureRepository;
         this.menuRepository = menuRepository;
         this.messClosureMapper = messClosureMapper;
         this.notificationService = notificationService;
         this.clock = clock;
+        this.messRepository = messRepository;
+        this.customerSecurity = customerSecurity;
     }
 
     @Override
     public MessClosureResponse createClosure(
             CreateMessClosureRequest request) {
+
+        Long messId =
+                customerSecurity.getCurrentMessId();
 
         validateDateRange(
                 request.startDate(),
@@ -62,6 +73,7 @@ public class MessClosureServiceImpl
 
         ClosureBoundary effectiveStart =
                 resolveEffectiveStart(
+                        messId,
                         request.startDate(),
                         request.startSession()
                 );
@@ -74,6 +86,7 @@ public class MessClosureServiceImpl
         );
 
         validateNoOverlap(
+                messId,
                 null,
                 effectiveStart.date(),
                 effectiveStart.session(),
@@ -83,6 +96,15 @@ public class MessClosureServiceImpl
 
         MessClosure closure =
                 messClosureMapper.toEntity(request);
+
+        closure.setMess(
+                messRepository
+                        .findById(messId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Mess not found."
+                                ))
+        );
 
         closure.setStartDate(
                 effectiveStart.date()
@@ -100,6 +122,8 @@ public class MessClosureServiceImpl
         /*
          * Notify active customers only after
          * the temporary closure has been created successfully.
+         *
+         * Recipients are restricted to the authenticated mess.
          */
         notificationService.notifyActiveCustomers(
                 NotificationType.MESS_CLOSURE,
@@ -119,15 +143,11 @@ public class MessClosureServiceImpl
             Long closureId,
             UpdateMessClosureRequest request) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         MessClosure closure =
-                messClosureRepository
-                        .findById(closureId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Mess closure not found with ID: "
-                                                + closureId
-                                )
-                        );
+                findClosure(closureId, messId);
 
         validateDateRange(
                 request.startDate(),
@@ -138,6 +158,7 @@ public class MessClosureServiceImpl
 
         ClosureBoundary effectiveStart =
                 resolveEffectiveStart(
+                        messId,
                         request.startDate(),
                         request.startSession()
                 );
@@ -150,6 +171,7 @@ public class MessClosureServiceImpl
         );
 
         validateNoOverlap(
+                messId,
                 closureId,
                 effectiveStart.date(),
                 effectiveStart.session(),
@@ -202,6 +224,8 @@ public class MessClosureServiceImpl
         /*
          * Notify active customers only after
          * the temporary closure has actually changed.
+         *
+         * Recipients are restricted to the authenticated mess.
          */
         notificationService.notifyActiveCustomers(
                 NotificationType.MESS_CLOSURE,
@@ -220,15 +244,11 @@ public class MessClosureServiceImpl
     public void deleteClosure(
             Long closureId) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         MessClosure closure =
-                messClosureRepository
-                        .findById(closureId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Mess closure not found with ID: "
-                                                + closureId
-                                )
-                        );
+                findClosure(closureId, messId);
 
         /*
          * Build the customer-facing details before
@@ -246,6 +266,8 @@ public class MessClosureServiceImpl
         /*
          * Notify active customers only after
          * the temporary closure has been cancelled successfully.
+         *
+         * Recipients are restricted to the authenticated mess.
          */
         notificationService.notifyActiveCustomers(
                 NotificationType.MESS_CLOSURE,
@@ -258,11 +280,15 @@ public class MessClosureServiceImpl
     public List<MessClosureResponse>
             getCurrentAndUpcomingClosures() {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         LocalDate today =
                 LocalDate.now(clock);
 
         return messClosureRepository
-                .findByEndDateGreaterThanEqualOrderByStartDateAsc(
+                .findByMess_MessIdAndEndDateGreaterThanEqualOrderByStartDateAsc(
+                        messId,
                         today
                 )
                 .stream()
@@ -274,11 +300,35 @@ public class MessClosureServiceImpl
     public List<MessClosureResponse>
             getClosureHistory() {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         return messClosureRepository
-                .findAllByOrderByStartDateDesc()
+                .findAllByMess_MessIdOrderByStartDateDesc(
+                        messId
+                )
                 .stream()
                 .map(messClosureMapper::toResponse)
                 .toList();
+    }
+
+    /*
+     * Resolves a closure only within the authenticated mess.
+     */
+    private MessClosure findClosure(
+            Long closureId,
+            Long messId) {
+
+        return messClosureRepository
+                .findByClosureIdAndMess_MessId(
+                        closureId,
+                        messId
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Mess closure not found with ID: "
+                                        + closureId
+                        ));
     }
 
     private void validateDateRange(
@@ -304,7 +354,7 @@ public class MessClosureServiceImpl
 
         if (startDate.equals(endDate)
                 && sessionOrder(startSession)
-                > sessionOrder(endSession)) {
+                        > sessionOrder(endSession)) {
 
             throw new BusinessException(
                     "Closure end session cannot be before the start session on the same date."
@@ -312,7 +362,13 @@ public class MessClosureServiceImpl
         }
     }
 
+    /*
+     * Preserves the existing effective-start rules.
+     *
+     * Published sessions are checked within this mess only.
+     */
     private ClosureBoundary resolveEffectiveStart(
+            Long messId,
             LocalDate startDate,
             MealSession startSession) {
 
@@ -330,7 +386,8 @@ public class MessClosureServiceImpl
 
             boolean lunchPublished =
                     menuRepository
-                            .existsByMenuDateAndMealSession(
+                            .existsByMess_MessIdAndMenuDateAndMealSession(
+                                    messId,
                                     today,
                                     MealSession.LUNCH
                             );
@@ -344,7 +401,8 @@ public class MessClosureServiceImpl
 
             boolean dinnerPublished =
                     menuRepository
-                            .existsByMenuDateAndMealSession(
+                            .existsByMess_MessIdAndMenuDateAndMealSession(
+                                    messId,
                                     today,
                                     MealSession.DINNER
                             );
@@ -364,7 +422,8 @@ public class MessClosureServiceImpl
 
         boolean dinnerPublished =
                 menuRepository
-                        .existsByMenuDateAndMealSession(
+                        .existsByMess_MessIdAndMenuDateAndMealSession(
+                                messId,
                                 today,
                                 MealSession.DINNER
                         );
@@ -408,6 +467,7 @@ public class MessClosureServiceImpl
     }
 
     private void validateNoOverlap(
+            Long messId,
             Long currentClosureId,
             LocalDate startDate,
             MealSession startSession,
@@ -426,8 +486,19 @@ public class MessClosureServiceImpl
                         endSession
                 );
 
+        /*
+         * Select date-overlap candidates from this mess only.
+         *
+         * The inclusive meal-slot comparison below remains
+         * the final overlap check.
+         */
         List<MessClosure> existingClosures =
-                messClosureRepository.findAll();
+                messClosureRepository
+                        .findByMess_MessIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                                messId,
+                                endDate,
+                                startDate
+                        );
 
         for (MessClosure existing : existingClosures) {
 
@@ -576,5 +647,6 @@ public class MessClosureServiceImpl
     private record ClosureBoundary(
             LocalDate date,
             MealSession session
-    ) {}
+    ) {
+    }
 }

@@ -4,19 +4,20 @@ export interface OwnerLoginRequest {
 }
 
 export interface OwnerLoginResponse {
-accessToken: string;
-tokenType: string;
-messOwnerId: number;
-fullName: string;
-messName: string;
+  accessToken: string;
+  tokenType: string;
+  messOwnerId: number;
+  fullName: string;
+  messName: string;
+  messId: number;
 }
 
 export interface ApiResponse<T> {
-timestamp: string;
-success: boolean;
-message: string;
-path: string;
-data: T;
+  timestamp: string;
+  success: boolean;
+  message: string;
+  path: string;
+  data: T;
 }
 
 export interface OwnerRegistrationRequest {
@@ -26,8 +27,6 @@ export interface OwnerRegistrationRequest {
   email: string;
   password: string;
 }
-
-// customer login 
 
 export interface CustomerLoginRequest {
   email: string;
@@ -40,6 +39,7 @@ export interface CustomerLoginResponse {
   customerId: number;
   fullName: string;
   mobileNumber: string;
+  messName: string;
 }
 
 export interface CustomerRegistrationRequest {
@@ -47,13 +47,25 @@ export interface CustomerRegistrationRequest {
   mobileNumber: string;
   email: string;
   password: string;
+  registrationCode: string;
 }
 
-// for Forget and Reset password
+/*
+ * Registration confirms a pending account.
+ * An access token is issued only after approval and login.
+ */
+export interface CustomerRegistrationResponse {
+  customerId: number;
+  fullName: string;
+  mobileNumber: string;
+  status: "PENDING";
+}
 
-export type AuthRole =
-  | "OWNER"
-  | "CUSTOMER";
+export interface MessRegistrationInfoResponse {
+  messName: string;
+}
+
+export type AuthRole = "OWNER" | "CUSTOMER";
 
 export interface ForgotPasswordRequest {
   email: string;

@@ -8,10 +8,13 @@ import com.smartmess.backend.enums.MealOption;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -21,11 +24,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-
 @Entity
-@Table(name = "meal_records")
+@Table(
+        name = "meal_records",
+        indexes = {
+                @Index(
+                        name = "idx_meal_records_mess_customer_collected",
+                        columnList = "mess_id, customer_id, collected_at"
+                ),
+                @Index(
+                        name = "idx_meal_records_mess_menu",
+                        columnList = "mess_id, menu_id"
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -36,6 +48,16 @@ public class MealRecord extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long mealRecordId;
+
+    /*
+     * Tenant Ownership
+     *
+     * The record, customer, menu and any linked response or bill
+     * must belong to the same mess.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "mess_id", nullable = false)
+    private Mess mess;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
@@ -70,12 +92,11 @@ public class MealRecord extends BaseEntity {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bill_id")
     private Bill bill;
 
     @Column(nullable = false)
     private LocalDateTime collectedAt;
-
 }

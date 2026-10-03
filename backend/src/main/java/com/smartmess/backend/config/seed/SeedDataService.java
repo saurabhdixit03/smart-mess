@@ -1,6 +1,11 @@
 package com.smartmess.backend.config.seed;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.smartmess.backend.entity.Mess;
+import com.smartmess.backend.repository.MessRepository;
+import com.smartmess.backend.service.MessConfigurationInitializer;
 
 import lombok.RequiredArgsConstructor;
 
@@ -8,8 +13,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SeedDataService {
 
-    private final MealPricingSeeder mealPricingSeeder;
-    private final MessSettingsSeeder messSettingsSeeder;
+    private final MessRepository messRepository;
+    private final MessConfigurationInitializer messConfigurationInitializer;
+    private final DemoMessSeeder demoMessSeeder;
     private final CustomerSeeder customerSeeder;
     private final MenuSeeder menuSeeder;
     private final MealResponseSeeder mealResponseSeeder;
@@ -19,13 +25,17 @@ public class SeedDataService {
      * Required application configuration.
      *
      * These records are initialized in every environment
-     * when they do not already exist.
+     * when they do not already exist for an existing mess.
+     *
+     * New messes receive the same configuration during
+     * owner registration.
      */
     public void initializeRequiredConfiguration() {
 
-        mealPricingSeeder.seed();
+        for (Mess mess : messRepository.findAll()) {
 
-        messSettingsSeeder.seed();
+            messConfigurationInitializer.initialize(mess);
+        }
     }
 
     /*
@@ -33,15 +43,22 @@ public class SeedDataService {
      *
      * This method runs only when
      * app.seed-demo-data is enabled.
+     *
+     * All sample data belongs to the dedicated demo mess.
+     * The entire sequence participates in one transaction.
      */
+    @Transactional
     public void seedDemoData() {
 
-        customerSeeder.seed();
+        Mess demoMess =
+                demoMessSeeder.seed();
 
-        menuSeeder.seed();
+        customerSeeder.seed(demoMess);
 
-        mealResponseSeeder.seed();
+        menuSeeder.seed(demoMess);
 
-        mealRecordSeeder.seedMealRecords();
+        mealResponseSeeder.seed(demoMess);
+
+        mealRecordSeeder.seedMealRecords(demoMess);
     }
 }

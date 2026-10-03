@@ -5,12 +5,14 @@ import java.io.IOException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.smartmess.backend.enums.UserRole;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        final String authHeader =
+        String authHeader =
                 request.getHeader("Authorization");
 
         if (authHeader == null
@@ -47,43 +49,65 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = authHeader.substring(7);
+        if (SecurityContextHolder
+                .getContext()
+                .getAuthentication() == null) {
 
-        String email =
-                jwtService.extractEmail(token);
+            try {
 
-        UserRole role =
-                jwtService.extractRole(token);
+                String token =
+                        authHeader.substring(7);
 
-        if (email != null
-                && SecurityContextHolder
-                        .getContext()
-                        .getAuthentication() == null) {
+                String email =
+                        jwtService.extractEmail(token);
 
-            UserDetails userDetails =
-                    userDetailsService
-                            .loadUserByEmail(
+                UserRole role =
+                        jwtService.extractRole(token);
+
+                if (email != null) {
+
+                    /*
+                     * This lookup checks current account status.
+                     * Pending or inactive accounts are not authenticated,
+                     * even when a previously issued JWT still exists.
+                     */
+                    UserDetails userDetails =
+                            userDetailsService.loadUserByEmail(
                                     email,
                                     role
                             );
 
-            if (jwtService.isTokenValid(
-                    token,
-                    userDetails.getUsername())) {
+                    if (jwtService.isTokenValid(
+                            token,
+                            userDetails.getUsername())) {
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities());
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails,
+                                        null,
+                                        userDetails.getAuthorities()
+                                );
 
-                authentication.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request));
+                        authentication.setDetails(
+                                new WebAuthenticationDetailsSource()
+                                        .buildDetails(request)
+                        );
 
-                SecurityContextHolder
-                        .getContext()
-                        .setAuthentication(authentication);
+                        SecurityContextHolder
+                                .getContext()
+                                .setAuthentication(authentication);
+                    }
+                }
+
+            } catch (JwtException
+                    | IllegalArgumentException
+                    | UsernameNotFoundException exception) {
+
+                /*
+                 * Invalid credentials leave the request unauthenticated.
+                 * Spring Security enforces protected-route access.
+                 */
+                SecurityContextHolder.clearContext();
             }
         }
 

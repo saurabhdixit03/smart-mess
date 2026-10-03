@@ -5,6 +5,7 @@ import com.smartmess.backend.dto.request.CustomerRegistrationRequest;
 import com.smartmess.backend.dto.request.OwnerLoginRequest;
 import com.smartmess.backend.dto.request.OwnerRegistrationRequest;
 import com.smartmess.backend.dto.response.CustomerLoginResponse;
+import com.smartmess.backend.dto.response.CustomerRegistrationResponse;
 import com.smartmess.backend.dto.response.OwnerLoginResponse;
 
 public interface AuthService {
@@ -25,7 +26,7 @@ public interface AuthService {
     // Customer Authentication
     // =========================
 
-    CustomerLoginResponse registerCustomer(
+    CustomerRegistrationResponse registerCustomer(
             CustomerRegistrationRequest request
     );
 

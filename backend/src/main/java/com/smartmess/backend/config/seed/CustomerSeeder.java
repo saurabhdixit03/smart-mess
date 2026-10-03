@@ -8,8 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.smartmess.backend.entity.Customer;
+import com.smartmess.backend.entity.Mess;
 import com.smartmess.backend.enums.CustomerStatus;
 import com.smartmess.backend.repository.CustomerRepository;
 
@@ -38,14 +40,9 @@ public class CustomerSeeder {
             PasswordEncoder passwordEncoder,
             Clock clock) {
 
-        this.customerRepository =
-                customerRepository;
-
-        this.passwordEncoder =
-                passwordEncoder;
-
-        this.clock =
-                clock;
+        this.customerRepository = customerRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.clock = clock;
     }
 
     private record CustomerSeed(
@@ -58,15 +55,54 @@ public class CustomerSeeder {
     ) {
     }
 
-    public void seed() {
+    /*
+     * Seeds sample customers within the dedicated demo mess.
+     *
+     * SeedDataService selects and passes the demo mess.
+     * Other messes' customers do not affect this seed check.
+     */
+    @Transactional
+    public void seed(Mess mess) {
 
-        if (customerRepository.count() > 0) {
+        if (mess == null || mess.getMessId() == null) {
+
+            throw new IllegalArgumentException(
+                    "A persisted demo mess is required."
+            );
+        }
+
+        if (!customerRepository.findAllByMess_MessId(
+                mess.getMessId()
+        ).isEmpty()) {
 
             log.info(
-                    "Customers already exist. Skipping demo seeding."
+                    "Customers already exist for demo mess {}. Skipping demo seeding.",
+                    mess.getMessId()
             );
 
             return;
+        }
+
+        /*
+         * Email and mobile uniqueness remain global.
+         *
+         * Do not reuse another mess's customer account
+         * when a reserved sample identity is already present.
+         */
+        List<CustomerSeed> demoCustomers =
+                buildDemoCustomers();
+
+        for (CustomerSeed seed : demoCustomers) {
+
+            if (customerRepository.existsByEmail(seed.email())
+                    || customerRepository.existsByMobileNumber(
+                            seed.mobileNumber()
+                    )) {
+
+                throw new IllegalStateException(
+                        "A reserved demo customer email or mobile number is already in use."
+                );
+            }
         }
 
         String encodedPassword =
@@ -77,10 +113,12 @@ public class CustomerSeeder {
         LocalDate today =
                 LocalDate.now(clock);
 
-        for (CustomerSeed seed : buildDemoCustomers()) {
+        for (CustomerSeed seed : demoCustomers) {
 
             Customer customer =
                     new Customer();
+
+            customer.setMess(mess);
 
             customer.setFullName(
                     seed.fullName()
@@ -118,8 +156,9 @@ public class CustomerSeeder {
         }
 
         log.info(
-                "Demo Customers seeded successfully. "
-                        + "Active: 8, Inactive: 2."
+                "Demo Customers seeded successfully for mess {}. "
+                        + "Active: 8, Inactive: 2.",
+                mess.getMessId()
         );
     }
 

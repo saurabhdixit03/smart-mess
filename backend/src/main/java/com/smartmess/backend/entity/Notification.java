@@ -11,6 +11,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -22,13 +23,31 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "notifications")
+@Table(
+        name = "notifications",
+        indexes = {
+                @Index(
+                        name = "idx_notifications_mess_customer_created",
+                        columnList = "mess_id, customer_id, created_at"
+                )
+        }
+)
 public class Notification extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "notification_id")
     private Long notificationId;
+
+    /*
+     * Tenant Ownership
+     *
+     * The notification and its recipient must belong
+     * to the same mess.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "mess_id", nullable = false)
+    private Mess mess;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(

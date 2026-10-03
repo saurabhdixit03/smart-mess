@@ -10,9 +10,11 @@ import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.smartmess.backend.entity.Customer;
 import com.smartmess.backend.entity.MealResponse;
+import com.smartmess.backend.entity.Mess;
 import com.smartmess.backend.entity.Menu;
 import com.smartmess.backend.enums.CustomerStatus;
 import com.smartmess.backend.enums.MealOption;
@@ -25,12 +27,9 @@ import com.smartmess.backend.repository.MenuRepository;
 public class MealResponseSeeder {
 
     private static final Logger log =
-            LoggerFactory.getLogger(
-                    MealResponseSeeder.class
-            );
+            LoggerFactory.getLogger(MealResponseSeeder.class);
 
-    private static final long RANDOM_SEED =
-            20260917L;
+    private static final long RANDOM_SEED = 20260917L;
 
     private final MealResponseRepository mealResponseRepository;
     private final CustomerRepository customerRepository;
@@ -43,82 +42,89 @@ public class MealResponseSeeder {
             MenuRepository menuRepository,
             Clock clock) {
 
-        this.mealResponseRepository =
-                mealResponseRepository;
-
-        this.customerRepository =
-                customerRepository;
-
-        this.menuRepository =
-                menuRepository;
-
-        this.clock =
-                clock;
+        this.mealResponseRepository = mealResponseRepository;
+        this.customerRepository = customerRepository;
+        this.menuRepository = menuRepository;
+        this.clock = clock;
     }
 
-    public void seed() {
+    /*
+     * Seeds responses only for the explicitly supplied demo mess.
+     */
+    @Transactional
+    public void seed(Mess mess) {
 
-        if (mealResponseRepository.count() > 0) {
-
-            log.info(
-                    "Meal Responses already exist. Skipping demo seeding."
+        if (mess == null || mess.getMessId() == null) {
+            throw new IllegalArgumentException(
+                    "A persisted demo mess is required."
             );
-
-            return;
         }
 
+        Long messId = mess.getMessId();
+
         List<Customer> customers =
-                customerRepository.findByStatus(
+                customerRepository.findAllByMess_MessIdAndStatus(
+                        messId,
                         CustomerStatus.ACTIVE
                 );
 
         if (customers.isEmpty()) {
-
             log.warn(
-                    "Skipping Meal Response seeding because no active customers are available."
+                    "Skipping Meal Response seeding because no active customers "
+                            + "are available for demo mess {}.",
+                    messId
             );
-
             return;
         }
 
         List<Menu> menus =
                 menuRepository
-                        .findAllByOrderByMenuDateAscMealSessionAsc();
+                        .findAllByMess_MessIdOrderByMenuDateAscMealSessionAsc(
+                                messId
+                        );
 
         if (menus.isEmpty()) {
-
             log.warn(
-                    "Skipping Meal Response seeding because no menus are available."
+                    "Skipping Meal Response seeding because no menus "
+                            + "are available for demo mess {}.",
+                    messId
             );
-
             return;
         }
 
-        Random random =
-                new Random(
-                        RANDOM_SEED
+        /*
+         * Preserves the existing skip-if-responses-exist strategy,
+         * restricted to the demo mess's menus.
+         */
+        for (Menu menu : menus) {
+            if (!mealResponseRepository.findByMess_MessIdAndMenu(
+                    messId,
+                    menu
+            ).isEmpty()) {
+                log.info(
+                        "Meal Responses already exist for demo mess {}. "
+                                + "Skipping demo seeding.",
+                        messId
                 );
+                return;
+            }
+        }
 
-        LocalDate today =
-                LocalDate.now(clock);
+        Random random = new Random(RANDOM_SEED);
+        LocalDate today = LocalDate.now(clock);
 
         int historicalResponseCount = 0;
         int todayResponseCount = 0;
 
         for (Menu menu : menus) {
 
-            boolean isToday =
-                    menu.getMenuDate()
-                            .equals(today);
+            boolean isToday = menu.getMenuDate().equals(today);
 
             for (int customerIndex = 0;
                  customerIndex < customers.size();
                  customerIndex++) {
 
-                Customer customer =
-                        customers.get(
-                                customerIndex
-                        );
+                Customer customer = customers.get(customerIndex);
 
                 /*
                  * Only half of the active customers receive
@@ -129,25 +135,20 @@ public class MealResponseSeeder {
                  */
                 if (isToday) {
 
-                    if (!shouldSeedTodayResponse(
-                            customerIndex
-                    )) {
+                    if (!shouldSeedTodayResponse(customerIndex)) {
                         continue;
                     }
 
                     MealResponse response =
                             createTodayResponse(
+                                    mess,
                                     customer,
                                     menu,
                                     customerIndex
                             );
 
-                    mealResponseRepository.save(
-                            response
-                    );
-
+                    mealResponseRepository.save(response);
                     todayResponseCount++;
-
                     continue;
                 }
 
@@ -155,39 +156,34 @@ public class MealResponseSeeder {
                  * Approximately 75% of customers respond
                  * to each historical menu.
                  */
-                if (!shouldSeedHistoricalResponse(
-                        random
-                )) {
+                if (!shouldSeedHistoricalResponse(random)) {
                     continue;
                 }
 
                 MealResponse response =
                         createHistoricalResponse(
+                                mess,
                                 customer,
                                 menu,
                                 random
                         );
 
-                mealResponseRepository.save(
-                        response
-                );
-
+                mealResponseRepository.save(response);
                 historicalResponseCount++;
             }
         }
 
         log.info(
-                "Demo Meal Responses seeded successfully. "
+                "Demo Meal Responses seeded successfully for mess {}. "
                         + "Historical: {}, Today: {}, Total: {}.",
+                messId,
                 historicalResponseCount,
                 todayResponseCount,
-                historicalResponseCount
-                        + todayResponseCount
+                historicalResponseCount + todayResponseCount
         );
     }
 
-    private boolean shouldSeedTodayResponse(
-            int customerIndex) {
+    private boolean shouldSeedTodayResponse(int customerIndex) {
 
         /*
          * With eight active demo customers, indexes
@@ -199,27 +195,21 @@ public class MealResponseSeeder {
         return customerIndex % 2 == 0;
     }
 
-    private boolean shouldSeedHistoricalResponse(
-            Random random) {
-
+    private boolean shouldSeedHistoricalResponse(Random random) {
         return random.nextDouble() < 0.75;
     }
 
     private MealResponse createTodayResponse(
+            Mess mess,
             Customer customer,
             Menu menu,
             int customerIndex) {
 
-        MealResponse response =
-                new MealResponse();
+        MealResponse response = new MealResponse();
 
-        response.setCustomer(
-                customer
-        );
-
-        response.setMenu(
-                menu
-        );
+        response.setMess(mess);
+        response.setCustomer(customer);
+        response.setMenu(menu);
 
         /*
          * Customer index 4 represents a declined response.
@@ -230,62 +220,39 @@ public class MealResponseSeeder {
          */
         if (customerIndex == 4) {
 
-            response.setResponseStatus(
-                    MealResponseStatus.DECLINED
-            );
-
-            response.setMealOption(
-                    null
-            );
-
-            response.setExtraRotiCount(
-                    0
-            );
+            response.setResponseStatus(MealResponseStatus.DECLINED);
+            response.setMealOption(null);
+            response.setExtraRotiCount(0);
 
         } else {
 
-            response.setResponseStatus(
-                    MealResponseStatus.ACCEPTED
-            );
+            response.setResponseStatus(MealResponseStatus.ACCEPTED);
 
             MealOption mealOption =
                     customerIndex % 3 == 0
                             ? MealOption.FULL
                             : MealOption.HALF;
 
-            response.setMealOption(
-                    mealOption
-            );
-
-            response.setExtraRotiCount(
-                    customerIndex == 6
-                            ? 1
-                            : 0
-            );
+            response.setMealOption(mealOption);
+            response.setExtraRotiCount(customerIndex == 6 ? 1 : 0);
         }
 
-        response.setRespondedAt(
-                LocalDateTime.now(clock)
-        );
+        response.setRespondedAt(LocalDateTime.now(clock));
 
         return response;
     }
 
     private MealResponse createHistoricalResponse(
+            Mess mess,
             Customer customer,
             Menu menu,
             Random random) {
 
-        MealResponse response =
-                new MealResponse();
+        MealResponse response = new MealResponse();
 
-        response.setCustomer(
-                customer
-        );
-
-        response.setMenu(
-                menu
-        );
+        response.setMess(mess);
+        response.setCustomer(customer);
+        response.setMenu(menu);
 
         /*
          * Approximately:
@@ -293,14 +260,11 @@ public class MealResponseSeeder {
          * 75% ACCEPTED
          * 25% DECLINED
          */
-        boolean accepted =
-                random.nextDouble() < 0.75;
+        boolean accepted = random.nextDouble() < 0.75;
 
         if (accepted) {
 
-            response.setResponseStatus(
-                    MealResponseStatus.ACCEPTED
-            );
+            response.setResponseStatus(MealResponseStatus.ACCEPTED);
 
             /*
              * Approximately:
@@ -313,29 +277,14 @@ public class MealResponseSeeder {
                             ? MealOption.FULL
                             : MealOption.HALF;
 
-            response.setMealOption(
-                    mealOption
-            );
-
-            response.setExtraRotiCount(
-                    generateExtraRotiCount(
-                            random
-                    )
-            );
+            response.setMealOption(mealOption);
+            response.setExtraRotiCount(generateExtraRotiCount(random));
 
         } else {
 
-            response.setResponseStatus(
-                    MealResponseStatus.DECLINED
-            );
-
-            response.setMealOption(
-                    null
-            );
-
-            response.setExtraRotiCount(
-                    0
-            );
+            response.setResponseStatus(MealResponseStatus.DECLINED);
+            response.setMealOption(null);
+            response.setExtraRotiCount(0);
         }
 
         response.setRespondedAt(
@@ -348,11 +297,9 @@ public class MealResponseSeeder {
         return response;
     }
 
-    private int generateExtraRotiCount(
-            Random random) {
+    private int generateExtraRotiCount(Random random) {
 
-        double value =
-                random.nextDouble();
+        double value = random.nextDouble();
 
         /*
          * Approximately:
@@ -380,18 +327,12 @@ public class MealResponseSeeder {
          * Generate a response between 7:00 AM
          * and 10:59 PM on the menu date.
          */
-        int hour =
-                7 + random.nextInt(16);
-
-        int minute =
-                random.nextInt(60);
+        int hour = 7 + random.nextInt(16);
+        int minute = random.nextInt(60);
 
         return LocalDateTime.of(
                 menuDate,
-                LocalTime.of(
-                        hour,
-                        minute
-                )
+                LocalTime.of(hour, minute)
         );
     }
 }

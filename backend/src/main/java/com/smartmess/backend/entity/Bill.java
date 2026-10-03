@@ -8,16 +8,17 @@ import com.smartmess.backend.enums.BillStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
@@ -31,6 +32,16 @@ import jakarta.validation.constraints.NotNull;
                                 "billing_year"
                         }
                 )
+        },
+        indexes = {
+                @Index(
+                        name = "idx_bills_mess_period_generated",
+                        columnList = "mess_id, billing_month, billing_year, generated_at"
+                ),
+                @Index(
+                        name = "idx_bills_mess_status_generated",
+                        columnList = "mess_id, bill_status, generated_at"
+                )
         }
 )
 public class Bill extends BaseEntity {
@@ -38,6 +49,16 @@ public class Bill extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long billId;
+
+    /*
+     * Tenant Ownership
+     *
+     * The bill, customer, linked meal records and payment
+     * must belong to the same mess.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "mess_id", nullable = false)
+    private Mess mess;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
@@ -84,6 +105,14 @@ public class Bill extends BaseEntity {
 
     public void setBillId(Long billId) {
         this.billId = billId;
+    }
+
+    public Mess getMess() {
+        return mess;
+    }
+
+    public void setMess(Mess mess) {
+        this.mess = mess;
     }
 
     public Customer getCustomer() {

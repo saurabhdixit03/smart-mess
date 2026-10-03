@@ -13,6 +13,7 @@ import com.smartmess.backend.dto.request.CustomerRegistrationRequest;
 import com.smartmess.backend.dto.request.ForgotPasswordRequest;
 import com.smartmess.backend.dto.response.ApiResponse;
 import com.smartmess.backend.dto.response.CustomerLoginResponse;
+import com.smartmess.backend.dto.response.CustomerRegistrationResponse;
 import com.smartmess.backend.enums.UserRole;
 import com.smartmess.backend.service.AuthService;
 import com.smartmess.backend.service.PasswordResetService;
@@ -37,16 +38,16 @@ public class CustomerAuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<CustomerLoginResponse>> registerCustomer(
+    public ResponseEntity<ApiResponse<CustomerRegistrationResponse>> registerCustomer(
             @Valid @RequestBody CustomerRegistrationRequest request,
             HttpServletRequest httpRequest) {
 
-        CustomerLoginResponse response =
+        CustomerRegistrationResponse response =
                 authService.registerCustomer(request);
 
-        ApiResponse<CustomerLoginResponse> apiResponse =
+        ApiResponse<CustomerRegistrationResponse> apiResponse =
                 ApiResponse.success(
-                        "Customer registered successfully.",
+                        "Registration submitted. Please wait for approval from your mess owner.",
                         httpRequest.getRequestURI(),
                         response
                 );

@@ -19,13 +19,26 @@ public interface MealResponseMapper {
     @Mapping(target = "menuId", source = "menu.menuId")
     MealResponseResponse toResponse(MealResponse mealResponse);
 
+    /*
+     * Updates response choices only.
+     *
+     * The service manages tenant ownership, customer/menu
+     * relationships and respondedAt.
+     * BaseEntity auditing manages createdAt and updatedAt.
+     */
     @Mapping(target = "customer", ignore = true)
     @Mapping(target = "menu", ignore = true)
+    @Mapping(target = "mess", ignore = true)
     @Mapping(target = "mealResponseId", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "respondedAt", ignore = true)
     void updateMealResponseFromRequest(
             SubmitMealResponseRequest request,
             @MappingTarget MealResponse mealResponse
     );
 
-    List<MealResponseResponse> toResponseList(List<MealResponse> mealResponses);
+    List<MealResponseResponse> toResponseList(
+            List<MealResponse> mealResponses
+    );
 }

@@ -29,8 +29,7 @@ public class WebSocketAuthInterceptor
             CustomUserDetailsService customUserDetailsService) {
 
         this.jwtService = jwtService;
-        this.customUserDetailsService =
-                customUserDetailsService;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     @Override
@@ -58,6 +57,10 @@ public class WebSocketAuthInterceptor
         } else if (StompCommand.SUBSCRIBE.equals(command)) {
 
             authorizeSubscription(accessor);
+
+        } else if (StompCommand.SEND.equals(command)) {
+
+            rejectClientBrokerSend(accessor);
         }
 
         return message;
@@ -66,6 +69,8 @@ public class WebSocketAuthInterceptor
     /*
      * Authenticates the STOMP connection using
      * the JWT supplied in the Authorization header.
+     *
+     * Account and mess ownership are loaded from the database.
      */
     private void authenticateConnection(
             StompHeaderAccessor accessor) {
@@ -93,11 +98,10 @@ public class WebSocketAuthInterceptor
                 jwtService.extractRole(token);
 
         UserDetails userDetails =
-                customUserDetailsService
-                        .loadUserByEmail(
-                                email,
-                                role
-                        );
+                customUserDetailsService.loadUserByEmail(
+                        email,
+                        role
+                );
 
         if (!jwtService.isTokenValid(
                 token,
@@ -120,7 +124,7 @@ public class WebSocketAuthInterceptor
 
     /*
      * Authorizes subscriptions according to
-     * the authenticated user's application role.
+     * the authenticated user's application role and mess.
      */
     private void authorizeSubscription(
             StompHeaderAccessor accessor) {
@@ -136,7 +140,8 @@ public class WebSocketAuthInterceptor
         }
 
         if (!(principal
-                instanceof UsernamePasswordAuthenticationToken authentication)) {
+                instanceof UsernamePasswordAuthenticationToken authentication)
+                || !authentication.isAuthenticated()) {
 
             throw new IllegalArgumentException(
                     "Invalid WebSocket authentication."
@@ -164,8 +169,7 @@ public class WebSocketAuthInterceptor
         UserRole role =
                 userDetails.getRole();
 
-        if (destination.startsWith(
-                "/topic/dashboard/")) {
+        if (destination.startsWith("/topic/dashboard/")) {
 
             if (role != UserRole.OWNER) {
 
@@ -174,16 +178,46 @@ public class WebSocketAuthInterceptor
                 );
             }
 
+            Long messId =
+                    userDetails.getMessId();
+
+            if (messId == null) {
+
+                throw new IllegalArgumentException(
+                        "WebSocket user is not linked to a mess."
+                );
+            }
+
+            String dashboardPrefix =
+                    "/topic/dashboard/" + messId + "/";
+
+            boolean ownDashboardDestination =
+                    destination.equals(dashboardPrefix + "LUNCH")
+                            || destination.equals(dashboardPrefix + "DINNER");
+
+            if (!ownDashboardDestination) {
+
+                throw new IllegalArgumentException(
+                        "You can subscribe only to your own mess dashboard."
+                );
+            }
+
             return;
         }
 
-        if (destination.equals(
-                "/user/queue/notifications")) {
+        if (destination.equals("/user/queue/notifications")) {
 
             if (role != UserRole.CUSTOMER) {
 
                 throw new IllegalArgumentException(
-                    "Only customers can subscribe to notifications."
+                        "Only customers can subscribe to notifications."
+                );
+            }
+
+            if (userDetails.getMessId() == null) {
+
+                throw new IllegalArgumentException(
+                        "WebSocket user is not linked to a mess."
                 );
             }
 
@@ -194,5 +228,38 @@ public class WebSocketAuthInterceptor
                 "WebSocket subscription destination is not allowed: "
                         + destination
         );
+    }
+
+    /*
+     * Dashboard and notification messages are published
+     * by server-side services.
+     *
+     * Clients must not send messages directly to broker
+     * or user destinations.
+     */
+    private void rejectClientBrokerSend(
+            StompHeaderAccessor accessor) {
+
+        String destination =
+                accessor.getDestination();
+
+        if (destination == null) {
+
+            throw new IllegalArgumentException(
+                    "WebSocket message destination is required."
+            );
+        }
+
+        if (destination.equals("/topic")
+                || destination.startsWith("/topic/")
+                || destination.equals("/queue")
+                || destination.startsWith("/queue/")
+                || destination.equals("/user")
+                || destination.startsWith("/user/")) {
+
+            throw new IllegalArgumentException(
+                    "Clients cannot publish directly to broker destinations."
+            );
+        }
     }
 }

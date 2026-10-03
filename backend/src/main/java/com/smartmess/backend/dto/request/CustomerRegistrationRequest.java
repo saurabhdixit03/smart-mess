@@ -29,6 +29,13 @@ public record CustomerRegistrationRequest(
                 max = 100,
                 message = "Password must be between 8 and 100 characters"
         )
-        String password
+        String password,
+
+        @NotBlank(message = "Mess registration code is required")
+        @Pattern(
+                regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                message = "Invalid mess registration code"
+        )
+        String registrationCode
 ) {
 }

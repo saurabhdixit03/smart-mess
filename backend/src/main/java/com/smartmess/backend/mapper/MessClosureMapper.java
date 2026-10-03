@@ -12,7 +12,12 @@ import com.smartmess.backend.entity.MessClosure;
 @Mapper(componentModel = "spring")
 public interface MessClosureMapper {
 
+    /*
+     * Maps closure details.
+     * The service assigns the authenticated mess.
+     */
     @Mapping(target = "closureId", ignore = true)
+    @Mapping(target = "mess", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     MessClosure toEntity(
@@ -23,7 +28,12 @@ public interface MessClosureMapper {
             MessClosure closure
     );
 
+    /*
+     * Updates closure details without changing tenant ownership,
+     * record identity or auditing fields.
+     */
     @Mapping(target = "closureId", ignore = true)
+    @Mapping(target = "mess", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateClosureFromRequest(

@@ -9,8 +9,14 @@ import { dashboardApi } from "../api/dashboard.api";
 
 import {
   connectWebSocket,
+  removeWebSocketConnectionListener,
   subscribeTopic,
+  websocketClient,
 } from "@/services/websocket/websocket.service";
+
+import {
+  getCurrentOwnerMessId,
+} from "@/features/auth/utils/auth.utils";
 
 import type {
   DashboardSummary,
@@ -34,12 +40,23 @@ export function useDashboard(
     ReturnType<typeof subscribeTopic> | null
   >(null);
 
+  const messId = getCurrentOwnerMessId();
+
   const fetchDashboard = useCallback(
     async () => {
       if (!enabled) {
         setDashboard(null);
         setLoading(false);
         setError(null);
+        return;
+      }
+
+      if (messId === null) {
+        setDashboard(null);
+        setLoading(false);
+        setError(
+          "Please sign out and sign in again to load your mess dashboard."
+        );
         return;
       }
 
@@ -61,41 +78,72 @@ export function useDashboard(
         setLoading(false);
       }
     },
-    [mealSession, enabled]
+    [mealSession, enabled, messId]
   );
 
   useEffect(() => {
     if (!enabled) {
-      subscriptionRef.current?.unsubscribe();
-      subscriptionRef.current = null;
-
       return;
     }
 
-    fetchDashboard();
+    void fetchDashboard();
 
-    connectWebSocket(() => {
-      subscriptionRef.current?.unsubscribe();
+    if (messId === null) {
+      return;
+    }
 
+    let disposed = false;
+
+    /*
+     * Each owner subscribes only to their own mess.
+     * The backend independently authorizes the destination.
+     *
+     * This listener also restores the subscription
+     * after a WebSocket reconnection.
+     */
+    const onConnected = () => {
+      if (disposed) {
+        return;
+      }
+
+      /*
+       * A reconnected socket has new subscriptions.
+       * Do not send an unsubscribe for an old socket's ID.
+       */
       subscriptionRef.current =
         subscribeTopic<DashboardSummary>(
-          `/topic/dashboard/${mealSession}`,
-          (dashboard) => {
-            console.log(
-              "📡 Dashboard Update",
-              dashboard
-            );
+          `/topic/dashboard/${messId}/${mealSession}`,
+          (updatedDashboard) => {
+            if (disposed) {
+              return;
+            }
 
-            setDashboard(dashboard);
+            setDashboard(updatedDashboard);
           }
         );
-    });
+    };
+
+    connectWebSocket(onConnected);
 
     return () => {
-      subscriptionRef.current?.unsubscribe();
+      disposed = true;
+
+      removeWebSocketConnectionListener(
+        onConnected
+      );
+
+      if (websocketClient.connected) {
+        subscriptionRef.current?.unsubscribe();
+      }
+
       subscriptionRef.current = null;
     };
-  }, [fetchDashboard, mealSession, enabled]);
+  }, [
+    fetchDashboard,
+    mealSession,
+    enabled,
+    messId,
+  ]);
 
   return {
     dashboard,

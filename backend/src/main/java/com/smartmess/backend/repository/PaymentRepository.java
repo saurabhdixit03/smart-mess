@@ -10,8 +10,28 @@ import com.smartmess.backend.entity.Payment;
 public interface PaymentRepository
         extends JpaRepository<Payment, Long> {
 
-    Optional<Payment> findByBill(Bill bill);
+    /*
+     * Finds a payment only within the specified mess.
+     */
+    Optional<Payment> findByPaymentIdAndMess_MessId(
+            Long paymentId,
+            Long messId
+    );
 
-    boolean existsByBill(Bill bill);
+    /*
+     * Finds the payment for a bill within the same mess.
+     */
+    Optional<Payment> findByMess_MessIdAndBill(
+            Long messId,
+            Bill bill
+    );
 
+    /*
+     * Checks whether payment has already been collected
+     * for a bill within the specified mess.
+     */
+    boolean existsByMess_MessIdAndBill(
+            Long messId,
+            Bill bill
+    );
 }

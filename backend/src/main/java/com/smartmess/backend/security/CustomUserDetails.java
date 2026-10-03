@@ -15,17 +15,24 @@ public class CustomUserDetails implements UserDetails {
     private final String email;
     private final String password;
     private final UserRole role;
+    private final Long messId;
 
+    /*
+     * Tenant ownership is supplied by CustomUserDetailsService
+     * from the account's persisted Mess relationship.
+     */
     public CustomUserDetails(
             Long userId,
             String email,
             String password,
-            UserRole role) {
+            UserRole role,
+            Long messId) {
 
         this.userId = userId;
         this.email = email;
         this.password = password;
         this.role = role;
+        this.messId = messId;
     }
 
     public Long getUserId() {
@@ -34,6 +41,10 @@ public class CustomUserDetails implements UserDetails {
 
     public UserRole getRole() {
         return role;
+    }
+
+    public Long getMessId() {
+        return messId;
     }
 
     @Override

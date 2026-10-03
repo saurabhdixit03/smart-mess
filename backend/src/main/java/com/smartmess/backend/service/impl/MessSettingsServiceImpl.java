@@ -12,11 +12,14 @@ import com.smartmess.backend.dto.request.UpdatePaymentSettingsRequest;
 import com.smartmess.backend.dto.request.UpdateResponseWindowRequest;
 import com.smartmess.backend.dto.request.UpdateWeeklyScheduleRequest;
 import com.smartmess.backend.dto.response.MessSettingsResponse;
+import com.smartmess.backend.entity.Mess;
 import com.smartmess.backend.entity.MessSettings;
 import com.smartmess.backend.enums.NotificationType;
 import com.smartmess.backend.exception.BusinessException;
 import com.smartmess.backend.mapper.MessSettingsMapper;
+import com.smartmess.backend.repository.MessRepository;
 import com.smartmess.backend.repository.MessSettingsRepository;
+import com.smartmess.backend.security.CustomerSecurity;
 import com.smartmess.backend.service.MessSettingsService;
 import com.smartmess.backend.service.NotificationService;
 
@@ -30,24 +33,32 @@ public class MessSettingsServiceImpl
     private final MessSettingsRepository messSettingsRepository;
     private final MessSettingsMapper messSettingsMapper;
     private final NotificationService notificationService;
+    private final MessRepository messRepository;
+    private final CustomerSecurity customerSecurity;
 
     public MessSettingsServiceImpl(
             MessSettingsRepository messSettingsRepository,
             MessSettingsMapper messSettingsMapper,
-            NotificationService notificationService) {
+            NotificationService notificationService,
+            MessRepository messRepository,
+            CustomerSecurity customerSecurity) {
 
         this.messSettingsRepository = messSettingsRepository;
         this.messSettingsMapper = messSettingsMapper;
         this.notificationService = notificationService;
+        this.messRepository = messRepository;
+        this.customerSecurity = customerSecurity;
     }
 
     @Override
     public MessSettingsResponse createSettings(
             CreateMessSettingsRequest request) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         if (messSettingsRepository
-                .findTopByOrderBySettingsIdAsc()
-                .isPresent()) {
+                .existsByMess_MessId(messId)) {
 
             throw new BusinessException(
                     "Mess settings already exist. Please update the existing settings."
@@ -56,6 +67,10 @@ public class MessSettingsServiceImpl
 
         MessSettings settings =
                 messSettingsMapper.toEntity(request);
+
+        settings.setMess(
+                getMess(messId)
+        );
 
         MessSettings savedSettings =
                 messSettingsRepository.save(settings);
@@ -68,9 +83,12 @@ public class MessSettingsServiceImpl
     @Override
     public MessSettingsResponse getSettings() {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         MessSettings settings =
                 messSettingsRepository
-                        .findTopByOrderBySettingsIdAsc()
+                        .findByMess_MessId(messId)
                         .orElseGet(MessSettings::new);
 
         return messSettingsMapper.toResponse(
@@ -91,9 +109,7 @@ public class MessSettingsServiceImpl
         );
 
         MessSettings updatedSettings =
-                messSettingsRepository.save(
-                        settings
-                );
+                messSettingsRepository.save(settings);
 
         return messSettingsMapper.toResponse(
                 updatedSettings
@@ -118,6 +134,7 @@ public class MessSettingsServiceImpl
                         );
 
         if (!changed) {
+
             return messSettingsMapper.toResponse(
                     settings
             );
@@ -132,12 +149,10 @@ public class MessSettingsServiceImpl
         );
 
         MessSettings updatedSettings =
-                messSettingsRepository.save(
-                        settings
-                );
+                messSettingsRepository.save(settings);
 
         /*
-         * Notify active customers only after
+         * Notify active customers of this mess only after
          * the response window has changed successfully.
          */
         notificationService.notifyActiveCustomers(
@@ -177,6 +192,7 @@ public class MessSettingsServiceImpl
                                 != request.weeklyDinnerClosed();
 
         if (!changed) {
+
             return messSettingsMapper.toResponse(
                     settings
             );
@@ -195,12 +211,10 @@ public class MessSettingsServiceImpl
         );
 
         MessSettings updatedSettings =
-                messSettingsRepository.save(
-                        settings
-                );
+                messSettingsRepository.save(settings);
 
         /*
-         * Notify active customers only after
+         * Notify active customers of this mess only after
          * the weekly schedule has changed successfully.
          */
         notificationService.notifyActiveCustomers(
@@ -216,11 +230,44 @@ public class MessSettingsServiceImpl
         );
     }
 
+    /*
+     * Returns the authenticated mess's existing settings,
+     * or prepares a new settings record owned by that mess.
+     *
+     * Persistence remains the responsibility of the caller.
+     */
     private MessSettings getOrCreateSettings() {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         return messSettingsRepository
-                .findTopByOrderBySettingsIdAsc()
-                .orElseGet(MessSettings::new);
+                .findByMess_MessId(messId)
+                .orElseGet(() -> {
+
+                    MessSettings settings =
+                            new MessSettings();
+
+                    settings.setMess(
+                            getMess(messId)
+                    );
+
+                    return settings;
+                });
+    }
+
+    /*
+     * Resolves tenant ownership from the authenticated mess ID.
+     * Requests cannot supply a different mess for settings updates.
+     */
+    private Mess getMess(Long messId) {
+
+        return messRepository
+                .findById(messId)
+                .orElseThrow(() ->
+                        new BusinessException(
+                                "Mess not found."
+                        ));
     }
 
     private void validateWeeklySchedule(
@@ -231,6 +278,7 @@ public class MessSettingsServiceImpl
         if (weeklyClosedDay == null) {
 
             if (weeklyLunchClosed || weeklyDinnerClosed) {
+
                 throw new BusinessException(
                         "A weekly closed day must be selected when a meal session is marked closed."
                 );
@@ -240,6 +288,7 @@ public class MessSettingsServiceImpl
         }
 
         if (!weeklyLunchClosed && !weeklyDinnerClosed) {
+
             throw new BusinessException(
                     "At least one meal session must be closed for the selected weekly off day."
             );
@@ -278,24 +327,19 @@ public class MessSettingsServiceImpl
         }
 
         String day =
-                formatDayOfWeek(
-                        closedDay
-                );
+                formatDayOfWeek(closedDay);
 
         if (settings.isWeeklyLunchClosed()
                 && settings.isWeeklyDinnerClosed()) {
 
-            return day
-                    + " • Lunch & Dinner closed";
+            return day + " • Lunch & Dinner closed";
         }
 
         if (settings.isWeeklyLunchClosed()) {
-            return day
-                    + " • Lunch closed";
+            return day + " • Lunch closed";
         }
 
-        return day
-                + " • Dinner closed";
+        return day + " • Dinner closed";
     }
 
     /*
@@ -323,12 +367,10 @@ public class MessSettingsServiceImpl
             DayOfWeek dayOfWeek) {
 
         String value =
-                dayOfWeek.name()
-                        .toLowerCase();
+                dayOfWeek.name().toLowerCase();
 
         return Character.toUpperCase(
                 value.charAt(0)
-        )
-                + value.substring(1);
+        ) + value.substring(1);
     }
 }

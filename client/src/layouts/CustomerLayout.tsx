@@ -11,6 +11,7 @@ import { useCustomerLogout } from "@/features/auth/hooks";
 import { getCustomer } from "@/features/auth/utils/auth.utils";
 
 import { CustomerClosureNotice } from "@/features/customer/closures";
+
 import NotificationBell from "@/features/customer/notifications/components/NotificationBell";
 import { useNotifications } from "@/features/customer/notifications/hooks";
 
@@ -18,14 +19,8 @@ export default function CustomerLayout() {
   const { logout } = useCustomerLogout();
 
   const customer = getCustomer();
+  const messName = customer?.messName?.trim() || "Smart Mess";
 
-  /**
-   * Initializes customer notifications.
-   *
-   * For now this establishes the REST +
-   * WebSocket notification flow.
-   * Visual notification UI will be added next.
-   */
   useNotifications();
 
   return (
@@ -35,13 +30,9 @@ export default function CustomerLayout() {
           title="Smart Mess"
           subtitle="Meal Planning & Mess Operations"
           navigation={customerNavigation}
-          bottomContent={
-            <CustomerClosureNotice />
-          }
+          bottomContent={<CustomerClosureNotice />}
           account={{
-            name:
-              customer?.fullName ??
-              "Customer",
+            name: customer?.fullName ?? "Customer",
             profilePath: ROUTES.PROFILE,
             onLogout: logout,
           }}
@@ -49,10 +40,8 @@ export default function CustomerLayout() {
       }
       topbar={
         <Topbar
-          title="Smart Mess"
-          actions={
-            <NotificationBell />
-          }
+          title={messName}
+          actions={<NotificationBell />}
         />
       }
     >

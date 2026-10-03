@@ -1,5 +1,5 @@
-
 import api from "@/lib/api";
+
 import { CUSTOMER_API_ENDPOINT } from "../constants";
 
 import type {
@@ -28,6 +28,24 @@ export const customerApi = {
     return api.put<ApiResponse<CustomerResponse>>(
       `${CUSTOMER_API_ENDPOINT}/${customerId}`,
       payload
+    );
+  },
+
+  approveCustomer(customerId: number) {
+    return api.patch<ApiResponse<CustomerResponse>>(
+      `${CUSTOMER_API_ENDPOINT}/${customerId}/approve`
+    );
+  },
+
+  rejectCustomer(customerId: number) {
+    return api.patch<ApiResponse<void>>(
+      `${CUSTOMER_API_ENDPOINT}/${customerId}/reject`
+    );
+  },
+
+  reactivateCustomer(customerId: number) {
+    return api.patch<ApiResponse<CustomerResponse>>(
+      `${CUSTOMER_API_ENDPOINT}/${customerId}/reactivate`
     );
   },
 

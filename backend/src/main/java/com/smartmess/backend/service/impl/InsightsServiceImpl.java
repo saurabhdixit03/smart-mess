@@ -12,13 +12,13 @@ import com.smartmess.backend.dto.response.CustomerInsightsResponse;
 import com.smartmess.backend.dto.response.FinancialInsightsResponse;
 import com.smartmess.backend.dto.response.MealInsightsResponse;
 import com.smartmess.backend.dto.response.MonthlyInsightsResponse;
+import com.smartmess.backend.exception.BusinessException;
 import com.smartmess.backend.repository.BillRepository;
 import com.smartmess.backend.repository.MealRecordRepository;
+import com.smartmess.backend.security.CustomerSecurity;
 import com.smartmess.backend.service.InsightsService;
 
 import lombok.RequiredArgsConstructor;
-
-import com.smartmess.backend.exception.BusinessException;
 
 @Service
 @RequiredArgsConstructor
@@ -29,22 +29,39 @@ public class InsightsServiceImpl
 
     private final MealRecordRepository mealRecordRepository;
 
+    private final CustomerSecurity customerSecurity;
+
     @Override
     public MonthlyInsightsResponse getMonthlyInsights(
             Integer month,
             Integer year) {
-    	
+
         validateMonth(month);
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         List<Object[]> financialRows =
-                billRepository.getMonthlyFinancialInsights(month, year);
+                billRepository.getMonthlyFinancialInsightsByMess(
+                        messId,
+                        month,
+                        year
+                );
 
         List<Object[]> mealRows =
-                mealRecordRepository.getMonthlyMealInsights(month, year);
+                mealRecordRepository.getMonthlyMealInsightsByMess(
+                        messId,
+                        month,
+                        year
+                );
 
         if (financialRows.isEmpty()) {
+
             return new MonthlyInsightsResponse(
-                    Month.of(month).getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+                    Month.of(month).getDisplayName(
+                            TextStyle.FULL,
+                            Locale.ENGLISH
+                    ),
                     year,
                     new FinancialInsightsResponse(
                             0L,
@@ -66,7 +83,8 @@ public class InsightsServiceImpl
             );
         }
 
-        Object[] financialData = financialRows.get(0);
+        Object[] financialData =
+                financialRows.get(0);
 
         Object[] mealData =
                 mealRows.isEmpty()
@@ -78,21 +96,36 @@ public class InsightsServiceImpl
                         getLong(financialData[0])
                 );
 
-        Long billsGenerated = getLong(financialData[1]);
-        Long paidBills = getLong(financialData[2]);
-        Long pendingBills = getLong(financialData[3]);
+        Long billsGenerated =
+                getLong(financialData[1]);
 
-        BigDecimal totalRevenue = getBigDecimal(financialData[4]);
-        BigDecimal collectedRevenue = getBigDecimal(financialData[5]);
-        BigDecimal pendingRevenue = getBigDecimal(financialData[6]);
+        Long paidBills =
+                getLong(financialData[2]);
+
+        Long pendingBills =
+                getLong(financialData[3]);
+
+        BigDecimal totalRevenue =
+                getBigDecimal(financialData[4]);
+
+        BigDecimal collectedRevenue =
+                getBigDecimal(financialData[5]);
+
+        BigDecimal pendingRevenue =
+                getBigDecimal(financialData[6]);
 
         double collectionRate = 0.0;
 
         if (totalRevenue.compareTo(BigDecimal.ZERO) > 0) {
+
             collectionRate =
                     collectedRevenue
                             .multiply(BigDecimal.valueOf(100))
-                            .divide(totalRevenue, 2, java.math.RoundingMode.HALF_UP)
+                            .divide(
+                                    totalRevenue,
+                                    2,
+                                    java.math.RoundingMode.HALF_UP
+                            )
                             .doubleValue();
         }
 
@@ -117,14 +150,17 @@ public class InsightsServiceImpl
                 );
 
         return new MonthlyInsightsResponse(
-                Month.of(month).getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+                Month.of(month).getDisplayName(
+                        TextStyle.FULL,
+                        Locale.ENGLISH
+                ),
                 year,
                 financialInsights,
                 customerInsights,
                 mealInsights
         );
     }
-    
+
     private void validateMonth(
             Integer month) {
 
@@ -137,13 +173,12 @@ public class InsightsServiceImpl
             );
         }
     }
-    
+
     private Long getLong(Object value) {
 
         return value == null
                 ? 0L
                 : ((Number) value).longValue();
-
     }
 
     private BigDecimal getBigDecimal(Object value) {
@@ -151,8 +186,5 @@ public class InsightsServiceImpl
         return value == null
                 ? BigDecimal.ZERO
                 : (BigDecimal) value;
-
     }
-    
-
 }

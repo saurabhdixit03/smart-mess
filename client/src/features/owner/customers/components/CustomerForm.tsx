@@ -84,7 +84,7 @@ const CustomerForm = ({
               </p>
 
               <p className="mt-1 font-semibold">
-                #{selectedCustomer?.customerId ?? "-"}
+                {selectedCustomer?.customerId ?? "-"}
               </p>
             </div>
 

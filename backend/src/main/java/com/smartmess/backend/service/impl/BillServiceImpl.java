@@ -44,19 +44,12 @@ public class BillServiceImpl implements BillService {
             Locale.forLanguageTag("en-IN");
 
     private final BillRepository billRepository;
-
     private final CustomerRepository customerRepository;
-
     private final MealRecordRepository mealRecordRepository;
-
     private final BillMapper billMapper;
-
     private final MealRecordMapper mealRecordMapper;
-
     private final CustomerSecurity customerSecurity;
-
     private final NotificationService notificationService;
-
     private final Clock clock;
 
     public BillServiceImpl(
@@ -83,14 +76,19 @@ public class BillServiceImpl implements BillService {
      * Generate Bills
      *
      * Owner only.
+     * Customers and meal records are restricted to the owner's mess.
      */
     @Transactional
     @Override
     public List<BillResponse> generateBills(
             GenerateBillRequest request) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         List<Customer> customers =
-                customerRepository.findByStatus(
+                customerRepository.findAllByMess_MessIdAndStatus(
+                        messId,
                         CustomerStatus.ACTIVE
                 );
 
@@ -98,7 +96,6 @@ public class BillServiceImpl implements BillService {
                 new ArrayList<>();
 
         int existingBillCount = 0;
-
         int noMealRecordCount = 0;
 
         LocalDate startDate =
@@ -128,7 +125,8 @@ public class BillServiceImpl implements BillService {
              */
             boolean billExists =
                     billRepository
-                            .existsByCustomerAndBillingMonthAndBillingYear(
+                            .existsByMess_MessIdAndCustomerAndBillingMonthAndBillingYear(
+                                    messId,
                                     customer,
                                     request.billingMonth(),
                                     request.billingYear()
@@ -137,17 +135,19 @@ public class BillServiceImpl implements BillService {
             if (billExists) {
 
                 existingBillCount++;
-
                 continue;
             }
 
             /*
              * Get meal records for the customer's
              * selected billing period.
+             *
+             * Records are restricted to the same mess.
              */
             List<MealRecord> mealRecords =
                     mealRecordRepository
-                            .findByCustomerAndCollectedAtBetween(
+                            .findByMess_MessIdAndCustomerAndCollectedAtBetween(
+                                    messId,
                                     customer,
                                     start,
                                     end
@@ -159,7 +159,6 @@ public class BillServiceImpl implements BillService {
             if (mealRecords.isEmpty()) {
 
                 noMealRecordCount++;
-
                 continue;
             }
 
@@ -174,31 +173,14 @@ public class BillServiceImpl implements BillService {
             Bill bill =
                     new Bill();
 
+            bill.setMess(customer.getMess());
             bill.setCustomer(customer);
-
-            bill.setBillingMonth(
-                    request.billingMonth()
-            );
-
-            bill.setBillingYear(
-                    request.billingYear()
-            );
-
-            bill.setMealRecordCount(
-                    mealRecords.size()
-            );
-
-            bill.setTotalAmount(
-                    totalAmount
-            );
-
-            bill.setBillStatus(
-                    BillStatus.UNPAID
-            );
-
-            bill.setGeneratedAt(
-                    LocalDateTime.now(clock)
-            );
+            bill.setBillingMonth(request.billingMonth());
+            bill.setBillingYear(request.billingYear());
+            bill.setMealRecordCount(mealRecords.size());
+            bill.setTotalAmount(totalAmount);
+            bill.setBillStatus(BillStatus.UNPAID);
+            bill.setGeneratedAt(LocalDateTime.now(clock));
 
             Bill savedBill =
                     billRepository.save(bill);
@@ -207,7 +189,6 @@ public class BillServiceImpl implements BillService {
              * Link Meal Records to the generated Bill.
              */
             for (MealRecord mealRecord : mealRecords) {
-
                 mealRecord.setBill(savedBill);
             }
 
@@ -218,6 +199,9 @@ public class BillServiceImpl implements BillService {
             /*
              * Notify the customer only after the bill
              * and its meal records have been saved.
+             *
+             * Saving occurs within this transaction;
+             * commit happens after the method completes.
              */
             notificationService.notifyCustomer(
                     customer,
@@ -253,24 +237,27 @@ public class BillServiceImpl implements BillService {
      *
      * Owner use case.
      *
-     * The owner can request bills for any customer.
-     * Authorization is handled at the controller level.
+     * The owner can request bills for any customer within their mess.
+     * Role authorization is handled at the controller level.
+     * Customer ownership is also validated in the service.
      */
+    @Transactional(readOnly = true)
     @Override
     public List<BillResponse> getCustomerBills(
             Long customerId) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Customer customer =
-                customerRepository.findById(customerId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Customer not found with ID: "
-                                                + customerId
-                                ));
+                findCustomer(customerId, messId);
+
+        customerSecurity.checkCustomerAccess(customerId);
 
         List<Bill> bills =
                 billRepository
-                        .findByCustomerOrderByGeneratedAtDesc(
+                        .findByMess_MessIdAndCustomerOrderByGeneratedAtDesc(
+                                messId,
                                 customer
                         );
 
@@ -282,27 +269,27 @@ public class BillServiceImpl implements BillService {
     /*
      * Authenticated Customer Bill History
      *
-     * Customer ID comes directly from the JWT.
+     * Customer ID comes directly from the JWT-backed principal.
      *
      * The client does NOT provide a customer ID.
      */
+    @Transactional(readOnly = true)
     @Override
     public List<BillResponse> getMyBills() {
 
         Long customerId =
                 customerSecurity.getCurrentUserId();
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Customer customer =
-                customerRepository.findById(customerId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Customer not found with ID: "
-                                                + customerId
-                                ));
+                findCustomer(customerId, messId);
 
         List<Bill> bills =
                 billRepository
-                        .findByCustomerOrderByGeneratedAtDesc(
+                        .findByMess_MessIdAndCustomerOrderByGeneratedAtDesc(
+                                messId,
                                 customer
                         );
 
@@ -314,16 +301,24 @@ public class BillServiceImpl implements BillService {
     /*
      * Bill Details
      *
-     * Owner can view any bill.
+     * Owner can view any bill within their mess.
      *
      * Customer can view only their own bill.
      */
+    @Transactional(readOnly = true)
     @Override
     public BillDetailResponse getBillDetails(
             Long billId) {
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         Bill bill =
-                billRepository.findById(billId)
+                billRepository
+                        .findByBillIdAndMess_MessId(
+                                billId,
+                                messId
+                        )
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Bill not found with ID: "
@@ -334,7 +329,7 @@ public class BillServiceImpl implements BillService {
          * Ownership validation.
          *
          * OWNER:
-         *     checkCustomerAccess() allows access.
+         *     checkCustomerAccess() permits customers in their mess.
          *
          * CUSTOMER:
          *     checkCustomerAccess() verifies that
@@ -346,7 +341,8 @@ public class BillServiceImpl implements BillService {
 
         List<MealRecord> mealRecords =
                 mealRecordRepository
-                        .findByBillOrderByCollectedAtAsc(
+                        .findByMess_MessIdAndBillOrderByCollectedAtAsc(
+                                messId,
                                 bill
                         );
 
@@ -368,7 +364,9 @@ public class BillServiceImpl implements BillService {
      * Billing Overview
      *
      * Owner only.
+     * Bills and financial summaries are restricted to their mess.
      */
+    @Transactional(readOnly = true)
     @Override
     public BillingOverviewResponse getBillingOverview(
             Integer billingMonth,
@@ -378,9 +376,13 @@ public class BillServiceImpl implements BillService {
                 billingMonth
         );
 
+        Long messId =
+                customerSecurity.getCurrentMessId();
+
         List<Bill> bills =
                 billRepository
-                        .findByBillingMonthAndBillingYearOrderByGeneratedAtDesc(
+                        .findByMess_MessIdAndBillingMonthAndBillingYearOrderByGeneratedAtDesc(
+                                messId,
                                 billingMonth,
                                 billingYear
                         );
@@ -393,7 +395,8 @@ public class BillServiceImpl implements BillService {
         }
 
         List<Object[]> summaryResult =
-                billRepository.getMonthlyFinancialInsights(
+                billRepository.getMonthlyFinancialInsightsByMess(
+                        messId,
                         billingMonth,
                         billingYear
                 );
@@ -448,6 +451,25 @@ public class BillServiceImpl implements BillService {
     }
 
     /*
+     * Resolves a customer only within the authenticated mess.
+     */
+    private Customer findCustomer(
+            Long customerId,
+            Long messId) {
+
+        return customerRepository
+                .findByCustomerIdAndMess_MessId(
+                        customerId,
+                        messId
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Customer not found with ID: "
+                                        + customerId
+                        ));
+    }
+
+    /*
      * Build the customer-facing bill notification.
      */
     private String buildBillNotificationMessage(
@@ -491,20 +513,17 @@ public class BillServiceImpl implements BillService {
                 );
 
         if (activeCustomerCount == 0) {
-
             return "No active customers were found.";
         }
 
-        if (existingBillCount
-                == activeCustomerCount) {
+        if (existingBillCount == activeCustomerCount) {
 
             return "Bills have already been generated for all active customers for "
                     + billingPeriod
                     + ".";
         }
 
-        if (noMealRecordCount
-                == activeCustomerCount) {
+        if (noMealRecordCount == activeCustomerCount) {
 
             return "No meal records were found for active customers for "
                     + billingPeriod

@@ -9,9 +9,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -22,15 +25,17 @@ import lombok.Setter;
 
 @Entity
 @Table(
-    name = "menus",
-    uniqueConstraints = {
-        @UniqueConstraint(
-            columnNames = {
-                "menu_date",
-                "meal_session"
-            }
-        )
-    }
+        name = "menus",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_menus_mess_date_session",
+                        columnNames = {
+                                "mess_id",
+                                "menu_date",
+                                "meal_session"
+                        }
+                )
+        }
 )
 @Getter
 @Setter
@@ -42,6 +47,17 @@ public class Menu extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long menuId;
+
+    /*
+     * Tenant Ownership
+     *
+     * Each menu belongs to one mess.
+     * Different messes can publish menus for the same date
+     * and meal session.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "mess_id", nullable = false)
+    private Mess mess;
 
     @Column(name = "menu_date", nullable = false)
     private LocalDate menuDate;
@@ -64,5 +80,4 @@ public class Menu extends BaseEntity {
 
     @Column(length = 100)
     private String sweet;
-
 }

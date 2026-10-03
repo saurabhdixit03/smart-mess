@@ -4,9 +4,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.smartmess.backend.entity.Customer;
 import com.smartmess.backend.entity.MessOwner;
+import com.smartmess.backend.enums.CustomerStatus;
+import com.smartmess.backend.enums.MessOwnerStatus;
 import com.smartmess.backend.enums.UserRole;
 import com.smartmess.backend.repository.CustomerRepository;
 import com.smartmess.backend.repository.MessOwnerRepository;
@@ -28,8 +31,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     /**
      * Required by Spring Security.
      *
-     * Authentication is handled through JWT, so this method
-     * is not used directly by our JWT authentication flow.
+     * The JWT authentication flow uses loadUserByEmail().
      */
     @Override
     public UserDetails loadUserByUsername(String username)
@@ -41,52 +43,87 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     /**
-     * Loads the authenticated user using the email
-     * and role extracted from the JWT.
+     * Loads tenant ownership and current account status
+     * from the database.
+     *
+     * HTTP JWT authentication and WebSocket CONNECT
+     * both use this account lookup.
      */
+    @Transactional(readOnly = true)
     public UserDetails loadUserByEmail(
             String email,
             UserRole role) {
 
-        switch (role) {
+        if (role == UserRole.OWNER) {
 
-            case OWNER:
+            MessOwner owner =
+                    messOwnerRepository
+                            .findByEmail(email)
+                            .orElseThrow(() ->
+                                    new UsernameNotFoundException(
+                                            "Owner not found."
+                                    ));
 
-                MessOwner owner = messOwnerRepository
-                        .findByEmail(email)
-                        .orElseThrow(() ->
-                                new UsernameNotFoundException(
-                                        "Owner not found."
-                                ));
-
-                return new CustomUserDetails(
-                        owner.getMessOwnerId(),
-                        owner.getEmail(),
-                        owner.getPassword(),
-                        UserRole.OWNER
-                );
-
-            case CUSTOMER:
-
-                Customer customer = customerRepository
-                        .findByEmail(email)
-                        .orElseThrow(() ->
-                                new UsernameNotFoundException(
-                                        "Customer not found."
-                                ));
-
-                return new CustomUserDetails(
-                        customer.getCustomerId(),
-                        customer.getEmail(),
-                        customer.getPassword(),
-                        UserRole.CUSTOMER
-                );
-
-            default:
+            if (owner.getStatus() != MessOwnerStatus.ACTIVE) {
 
                 throw new UsernameNotFoundException(
-                        "Unsupported user role."
+                        "Owner account is not active."
                 );
+            }
+
+            if (owner.getMess() == null
+                    || owner.getMess().getMessId() == null) {
+
+                throw new UsernameNotFoundException(
+                        "Owner is not linked to a mess."
+                );
+            }
+
+            return new CustomUserDetails(
+                    owner.getMessOwnerId(),
+                    owner.getEmail(),
+                    owner.getPassword(),
+                    UserRole.OWNER,
+                    owner.getMess().getMessId()
+            );
         }
+
+        if (role == UserRole.CUSTOMER) {
+
+            Customer customer =
+                    customerRepository
+                            .findByEmail(email)
+                            .orElseThrow(() ->
+                                    new UsernameNotFoundException(
+                                            "Customer not found."
+                                    ));
+
+            if (customer.getStatus() != CustomerStatus.ACTIVE) {
+
+                throw new UsernameNotFoundException(
+                        "Customer account is not active."
+                );
+            }
+
+            if (customer.getMess() == null
+                    || customer.getMess().getMessId() == null) {
+
+                throw new UsernameNotFoundException(
+                        "Customer is not linked to a mess."
+                );
+            }
+
+            return new CustomUserDetails(
+                    customer.getCustomerId(),
+                    customer.getEmail(),
+                    customer.getPassword(),
+                    UserRole.CUSTOMER,
+                    customer.getMess().getMessId()
+            );
+        }
+
+        throw new UsernameNotFoundException(
+                "Unsupported user role."
+        );
     }
 }
