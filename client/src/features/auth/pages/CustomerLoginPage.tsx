@@ -1,12 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-
-import {
-  useNavigate,
-  useSearchParams,
-} from "react-router-dom";
-
-import { QrCode } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { useCustomerLogin } from "../hooks/useCustomerLogin";
 
@@ -19,10 +13,6 @@ import {
 
 export default function CustomerLoginPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-
-  const registrationCode =
-    searchParams.get("registrationCode")?.trim();
 
   const {
     login,
@@ -32,10 +22,6 @@ export default function CustomerLoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const registrationPath =
-    "/customer/register?registrationCode=" +
-    encodeURIComponent(registrationCode ?? "");
 
   const handleSubmit = async (
     event: FormEvent<HTMLFormElement>
@@ -149,56 +135,6 @@ export default function CustomerLoginPage() {
             </Button>
           </form>
         </Card.Body>
-
-        <Card.Footer>
-          <div className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-4">
-            <div className="flex items-center gap-2">
-              <QrCode
-                size={18}
-                aria-hidden="true"
-                className="shrink-0 text-[var(--color-primary)]"
-              />
-
-              <h2 className="text-sm font-semibold text-[var(--color-text)]">
-                Joining a mess?
-              </h2>
-            </div>
-
-            {registrationCode ? (
-              <>
-                <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
-                  Use your mess's registration link to
-                  create an account. Check the mess name
-                  before submitting your details.
-                </p>
-
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() =>
-                    navigate(registrationPath)
-                  }
-                  className="mt-3 inline-flex min-h-10 items-center rounded-sm text-sm font-semibold text-[var(--color-primary)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Create Account
-                </button>
-              </>
-            ) : (
-              <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">
-                Scan the registration QR displayed at
-                your mess, or ask the owner for its
-                registration link.
-              </p>
-            )}
-
-            <p className="mt-3 border-t border-[var(--color-border)] pt-3 text-xs leading-5 text-[var(--color-text-secondary)]">
-              After the owner approves your account,
-              you'll receive an email with a login link.
-              Use the email and password you registered
-              with to sign in.
-            </p>
-          </div>
-        </Card.Footer>
       </Card>
     </div>
   );
