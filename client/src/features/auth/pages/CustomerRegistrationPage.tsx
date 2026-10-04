@@ -236,36 +236,22 @@ export default function CustomerRegistrationPage() {
                 <strong className="text-[var(--color-text)]">
                   {submittedRegistration.fullName}
                 </strong>
-                .
+              .
               </p>
 
-              <div className="rounded-xl border border-[var(--color-border)] p-4">
-                <p className="font-semibold text-[var(--color-text)]">
+            <div className="rounded-xl border border-[var(--color-border)] p-4">
+              <p className="font-semibold text-[var(--color-text)]">
                   Awaiting Owner Approval
-                </p>
-
-                <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-                  Your registration has been submitted
-                  to the mess owner. You can sign in
-                  after they approve your account.
-                </p>
-              </div>
-
-              <p className="text-sm text-[var(--color-text-secondary)]">
-                Please contact your mess owner if
-                you need help with approval.
               </p>
 
-              <Button
-                type="button"
-                fullWidth
-                onClick={() =>
-                  navigate(loginPath)
-                }
-              >
-                Go to Login
-              </Button>
+              <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                  Your registration is awaiting approval.
+                  Once approved, you’ll receive an email
+                  with a link to sign in.
+              </p>
             </div>
+
+          </div>
           </Card.Body>
         </Card>
       </div>
