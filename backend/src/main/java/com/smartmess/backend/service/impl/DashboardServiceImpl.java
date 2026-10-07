@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.smartmess.backend.dto.response.DashboardCustomerResponse;
 import com.smartmess.backend.dto.response.DashboardSummaryResponse;
@@ -49,12 +50,12 @@ public class DashboardServiceImpl implements DashboardService {
         this.customerSecurity = customerSecurity;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public DashboardSummaryResponse getDashboardSummary(
             MealSession mealSession) {
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        Long messId = customerSecurity.getCurrentMessId();
 
         Menu menu = menuRepository
                 .findByMess_MessIdAndMenuDateAndMealSession(
@@ -62,80 +63,80 @@ public class DashboardServiceImpl implements DashboardService {
                         LocalDate.now(clock),
                         mealSession
                 )
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Menu not found for today and session : "
-                                        + mealSession
-                        ));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Menu not found for today and session : "
+                                + mealSession
+                ));
 
-        long activeCustomers =
-                customerRepository
-                        .findAllByMess_MessIdAndStatus(
-                                messId,
-                                CustomerStatus.ACTIVE
-                        )
-                        .size();
-
-        long acceptedResponses =
-                mealResponseRepository
-                        .countByMess_MessIdAndMenuAndResponseStatus(
-                                messId,
-                                menu,
-                                MealResponseStatus.ACCEPTED
-                        );
-
-        long declinedResponses =
-                mealResponseRepository
-                        .countByMess_MessIdAndMenuAndResponseStatus(
-                                messId,
-                                menu,
-                                MealResponseStatus.DECLINED
-                        );
-
-        long pendingResponses =
-                activeCustomers
-                        - acceptedResponses
-                        - declinedResponses;
-
-        long expectedFullMeals =
-                mealResponseRepository
-                        .countByMess_MessIdAndMenuAndMealOption(
-                                messId,
-                                menu,
-                                MealOption.FULL
-                        );
-
-        long expectedHalfMeals =
-                mealResponseRepository
-                        .countByMess_MessIdAndMenuAndMealOption(
-                                messId,
-                                menu,
-                                MealOption.HALF
-                        );
-
-        Long expectedExtraRotis =
-                mealResponseRepository.getTotalExtraRotisByMess(
+        long activeCustomers = customerRepository
+                .findAllByMess_MessIdAndStatus(
                         messId,
-                        menu
-                );
+                        CustomerStatus.ACTIVE
+                )
+                .size();
 
-        long acceptedMeals =
-                expectedFullMeals + expectedHalfMeals;
+        /*
+         * Preserve stored responses for history.
+         * Only currently active customers contribute to
+         * daily dashboard counts and lists.
+         */
+        List<MealResponse> responses = mealResponseRepository
+                .findByMess_MessIdAndMenu(messId, menu)
+                .stream()
+                .filter(mealResponse ->
+                        mealResponse.getCustomer().getStatus()
+                                == CustomerStatus.ACTIVE)
+                .filter(mealResponse ->
+                        messId.equals(
+                                mealResponse.getCustomer()
+                                        .getMess()
+                                        .getMessId()
+                        ))
+                .toList();
 
-        long baseRotisRequired =
-                acceptedMeals * 3;
+        List<MealResponse> accepted = responses.stream()
+                .filter(mealResponse ->
+                        mealResponse.getResponseStatus()
+                                == MealResponseStatus.ACCEPTED)
+                .toList();
 
-        long totalRotisRequired =
-                baseRotisRequired
-                        + (expectedExtraRotis == null
+        long acceptedResponses = accepted.size();
+
+        long declinedResponses = responses.stream()
+                .filter(mealResponse ->
+                        mealResponse.getResponseStatus()
+                                == MealResponseStatus.DECLINED)
+                .count();
+
+        long pendingResponses = Math.max(
+                0L,
+                activeCustomers - acceptedResponses - declinedResponses
+        );
+
+        long expectedFullMeals = accepted.stream()
+                .filter(mealResponse ->
+                        mealResponse.getMealOption() == MealOption.FULL)
+                .count();
+
+        long expectedHalfMeals = accepted.stream()
+                .filter(mealResponse ->
+                        mealResponse.getMealOption() == MealOption.HALF)
+                .count();
+
+        long expectedExtraRotis = accepted.stream()
+                .mapToLong(mealResponse ->
+                        mealResponse.getExtraRotiCount() == null
                                 ? 0L
-                                : expectedExtraRotis);
+                                : mealResponse.getExtraRotiCount())
+                .sum();
 
-        List<MealResponse> responses =
-                mealResponseRepository.findByMess_MessIdAndMenu(
-                        messId,
-                        menu
-                );
+        /*
+         * Preserve the existing base-roti rule.
+         * Both FULL and HALF meals include three base rotis.
+         */
+        long acceptedMeals = expectedFullMeals + expectedHalfMeals;
+        long baseRotisRequired = acceptedMeals * 3;
+        long totalRotisRequired = baseRotisRequired + expectedExtraRotis;
 
         DashboardSummaryResponse response =
                 new DashboardSummaryResponse();
@@ -143,8 +144,8 @@ public class DashboardServiceImpl implements DashboardService {
         response.setMenuDate(menu.getMenuDate());
         response.setMealSession(menu.getMealSession());
         response.setActiveCustomers(activeCustomers);
-
         response.setMenuId(menu.getMenuId());
+
         response.setAcceptedResponses(acceptedResponses);
         response.setDeclinedResponses(declinedResponses);
         response.setPendingResponses(pendingResponses);
@@ -152,116 +153,95 @@ public class DashboardServiceImpl implements DashboardService {
         response.setExpectedFullMeals(expectedFullMeals);
         response.setExpectedHalfMeals(expectedHalfMeals);
         response.setBaseRotisRequired(baseRotisRequired);
-
-        response.setExpectedExtraRotis(
-                expectedExtraRotis == null
-                        ? 0L
-                        : expectedExtraRotis
-        );
-
+        response.setExpectedExtraRotis(expectedExtraRotis);
         response.setTotalRotisRequired(totalRotisRequired);
 
         /*
-         * Customer Collection Queue
+         * Preserve the dashboard's accepted-customer list
+         * and its collected indicator.
+         *
+         * The separate meal collection page's pending queue
+         * excludes collected customers.
          */
-        List<DashboardCustomerResponse> customerQueue =
-                responses.stream()
-                        .filter(mealResponse ->
-                                mealResponse.getResponseStatus()
-                                        == MealResponseStatus.ACCEPTED)
-                        .sorted(Comparator.comparing(
-                                mealResponse ->
-                                        mealResponse.getCustomer().getFullName()
-                        ))
-                        .map(mealResponse -> {
-
-                            DashboardCustomerResponse customer =
-                                    new DashboardCustomerResponse();
-
-                            customer.setMealResponseId(
-                                    mealResponse.getMealResponseId());
-
-                            customer.setCustomerId(
-                                    mealResponse.getCustomer().getCustomerId());
-
-                            customer.setCustomerName(
-                                    mealResponse.getCustomer().getFullName());
-
-                            customer.setResponseStatus(
-                                    mealResponse.getResponseStatus());
-
-                            customer.setMealOption(
-                                    mealResponse.getMealOption());
-
-                            customer.setExtraRotiCount(
-                                    mealResponse.getExtraRotiCount());
-
-                            customer.setCollected(
-                                    mealRecordRepository
-                                            .existsByMess_MessIdAndCustomerAndMenu(
-                                                    messId,
-                                                    mealResponse.getCustomer(),
-                                                    menu
-                                            )
-                            );
-
-                            return customer;
-                        })
-                        .toList();
+        List<DashboardCustomerResponse> customerQueue = accepted.stream()
+                .sorted(Comparator.comparing(
+                        (MealResponse mealResponse) ->
+                                mealResponse.getCustomer().getFullName()
+                ))
+                .map(mealResponse ->
+                        toDashboardCustomer(mealResponse, messId, menu))
+                .toList();
 
         response.setCollectionQueue(customerQueue);
 
-        List<DashboardCustomerResponse> recentActivities =
-                responses.stream()
-                        .sorted(
-                                Comparator.comparing(
-                                        MealResponse::getRespondedAt
-                                ).reversed()
-                        )
-                        .limit(3)
-                        .map(mealResponse -> {
+        List<DashboardCustomerResponse> recentActivities = responses.stream()
+                .sorted(Comparator.comparing(
+                        MealResponse::getRespondedAt,
+                        Comparator.nullsLast(Comparator.reverseOrder())
+                ))
+                .limit(3)
+                .map(mealResponse -> {
+                    DashboardCustomerResponse customer =
+                            toDashboardCustomer(mealResponse, messId, menu);
 
-                            DashboardCustomerResponse customer =
-                                    new DashboardCustomerResponse();
+                    customer.setRespondedAt(
+                            mealResponse.getRespondedAt()
+                    );
 
-                            customer.setMealResponseId(
-                                    mealResponse.getMealResponseId());
+                    return customer;
+                })
+                .toList();
 
-                            customer.setCustomerId(
-                                    mealResponse.getCustomer().getCustomerId());
-
-                            customer.setCustomerName(
-                                    mealResponse.getCustomer().getFullName());
-
-                            customer.setResponseStatus(
-                                    mealResponse.getResponseStatus());
-
-                            customer.setMealOption(
-                                    mealResponse.getMealOption());
-
-                            customer.setExtraRotiCount(
-                                    mealResponse.getExtraRotiCount());
-
-                            customer.setRespondedAt(
-                                    mealResponse.getRespondedAt());
-
-                            customer.setCollected(
-                                    mealRecordRepository
-                                            .existsByMess_MessIdAndCustomerAndMenu(
-                                                    messId,
-                                                    mealResponse.getCustomer(),
-                                                    menu
-                                            )
-                            );
-
-                            return customer;
-                        })
-                        .toList();
-
-        response.setRecentActivities(
-                recentActivities
-        );
+        response.setRecentActivities(recentActivities);
 
         return response;
+    }
+
+    private DashboardCustomerResponse toDashboardCustomer(
+            MealResponse mealResponse,
+            Long messId,
+            Menu menu) {
+
+        DashboardCustomerResponse customer =
+                new DashboardCustomerResponse();
+
+        customer.setMealResponseId(
+                mealResponse.getMealResponseId()
+        );
+
+        customer.setCustomerId(
+                mealResponse.getCustomer().getCustomerId()
+        );
+
+        customer.setCustomerName(
+                mealResponse.getCustomer().getFullName()
+        );
+
+        customer.setResponseStatus(
+                mealResponse.getResponseStatus()
+        );
+
+        customer.setMealOption(
+                mealResponse.getMealOption()
+        );
+
+        customer.setExtraRotiCount(
+                mealResponse.getExtraRotiCount()
+        );
+
+        /*
+         * Detects collection through either the response queue
+         * or manual collection without a linked response.
+         */
+        customer.setCollected(
+                mealRecordRepository
+                        .existsByMess_MessIdAndCustomerAndMenu(
+                                messId,
+                                mealResponse.getCustomer(),
+                                menu
+                        )
+        );
+
+        return customer;
     }
 }

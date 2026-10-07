@@ -11,6 +11,7 @@ import com.smartmess.backend.entity.MealPricing;
 @Mapper(componentModel = "spring")
 public interface MealPricingMapper {
 
+    @Mapping(target = "effectiveFrom", source = "effectiveFrom")
     MealPricingResponse toResponse(
             MealPricing mealPricing
     );
@@ -18,11 +19,12 @@ public interface MealPricingMapper {
     /*
      * Updates meal prices only.
      *
-     * Tenant ownership, record identity and auditing
-     * fields remain protected.
+     * Tenant ownership, identity, effective time
+     * and auditing fields are managed separately.
      */
     @Mapping(target = "mealPricingId", ignore = true)
     @Mapping(target = "mess", ignore = true)
+    @Mapping(target = "effectiveFrom", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     void updateMealPricingFromRequest(

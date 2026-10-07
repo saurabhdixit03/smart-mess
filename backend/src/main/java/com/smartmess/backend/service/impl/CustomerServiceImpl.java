@@ -55,22 +55,16 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public CustomerResponse getCustomerById(Long customerId) {
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        Long messId = customerSecurity.getCurrentMessId();
 
-        Customer customer = customerRepository
-                .findByCustomerIdAndMess_MessIdAndStatus(
-                        customerId,
-                        messId,
-                        CustomerStatus.ACTIVE
-                )
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Customer not found."
-                        ));
+        Customer customer = findCustomer(customerId, messId);
 
         customerSecurity.checkCustomerAccess(customerId);
 
+        /*
+         * Inactive customers retain access to their own profile.
+         * Daily operational eligibility is checked separately.
+         */
         return customerMapper.toResponse(customer);
     }
 
@@ -78,8 +72,7 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public List<CustomerResponse> getAllCustomers() {
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        Long messId = customerSecurity.getCurrentMessId();
 
         return customerRepository
                 .findAllByMess_MessId(messId)
@@ -96,21 +89,15 @@ public class CustomerServiceImpl implements CustomerService {
 
         requireOwner();
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        Long messId = customerSecurity.getCurrentMessId();
 
-        Customer customer =
-                findCustomer(customerId, messId);
+        Customer customer = findCustomerForUpdate(customerId, messId);
 
         customerSecurity.checkCustomerAccess(customerId);
 
-        customerMapper.updateCustomerFromRequest(
-                request,
-                customer
-        );
+        customerMapper.updateCustomerFromRequest(request, customer);
 
-        Customer updatedCustomer =
-                customerRepository.save(customer);
+        Customer updatedCustomer = customerRepository.save(customer);
 
         return customerMapper.toResponse(updatedCustomer);
     }
@@ -121,11 +108,9 @@ public class CustomerServiceImpl implements CustomerService {
 
         requireOwner();
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        Long messId = customerSecurity.getCurrentMessId();
 
-        Customer customer =
-                findCustomer(customerId, messId);
+        Customer customer = findCustomerForUpdate(customerId, messId);
 
         customerSecurity.checkCustomerAccess(customerId);
 
@@ -137,8 +122,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         customer.setStatus(CustomerStatus.ACTIVE);
 
-        Customer approvedCustomer =
-                customerRepository.save(customer);
+        Customer approvedCustomer = customerRepository.save(customer);
 
         scheduleApprovalEmail(approvedCustomer);
 
@@ -151,11 +135,9 @@ public class CustomerServiceImpl implements CustomerService {
 
         requireOwner();
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        Long messId = customerSecurity.getCurrentMessId();
 
-        Customer customer =
-                findCustomer(customerId, messId);
+        Customer customer = findCustomerForUpdate(customerId, messId);
 
         customerSecurity.checkCustomerAccess(customerId);
 
@@ -174,11 +156,9 @@ public class CustomerServiceImpl implements CustomerService {
 
         requireOwner();
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        Long messId = customerSecurity.getCurrentMessId();
 
-        Customer customer =
-                findCustomer(customerId, messId);
+        Customer customer = findCustomerForUpdate(customerId, messId);
 
         customerSecurity.checkCustomerAccess(customerId);
 
@@ -190,23 +170,32 @@ public class CustomerServiceImpl implements CustomerService {
 
         customer.setStatus(CustomerStatus.ACTIVE);
 
-        Customer reactivatedCustomer =
-                customerRepository.save(customer);
+        Customer reactivatedCustomer = customerRepository.save(customer);
 
         return customerMapper.toResponse(reactivatedCustomer);
     }
 
+    /*
+     * Retains the existing method and endpoint contract.
+     * Approved customers are deactivated, not permanently deleted.
+     *
+     * Bill generation remains a separate action.
+     * Outstanding bills and unbilled meals do not block deactivation.
+     */
     @Transactional
     @Override
     public void deleteCustomer(Long customerId) {
 
         requireOwner();
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        Long messId = customerSecurity.getCurrentMessId();
 
-        Customer customer =
-                findCustomer(customerId, messId);
+        /*
+         * Same customer lock used by collection and response submission.
+         * Operations acquiring this lock after deactivation commits
+         * see INACTIVE and reject daily participation.
+         */
+        Customer customer = findCustomerForUpdate(customerId, messId);
 
         customerSecurity.checkCustomerAccess(customerId);
 
@@ -229,20 +218,12 @@ public class CustomerServiceImpl implements CustomerService {
 
     private void scheduleApprovalEmail(Customer customer) {
 
-        Long customerId =
-                customer.getCustomerId();
+        Long customerId = customer.getCustomerId();
+        Long messId = customer.getMess().getMessId();
 
-        Long messId =
-                customer.getMess().getMessId();
-
-        String recipientEmail =
-                customer.getEmail();
-
-        String customerName =
-                customer.getFullName();
-
-        String messName =
-                customer.getMess().getMessName();
+        String recipientEmail = customer.getEmail();
+        String customerName = customer.getFullName();
+        String messName = customer.getMess().getMessName();
 
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
@@ -313,21 +294,26 @@ public class CustomerServiceImpl implements CustomerService {
             Long messId) {
 
         return customerRepository
-                .findByCustomerIdAndMess_MessId(
-                        customerId,
-                        messId
-                )
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Customer not found."
-                        ));
+                .findByCustomerIdAndMess_MessId(customerId, messId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Customer not found."
+                ));
+    }
+
+    private Customer findCustomerForUpdate(
+            Long customerId,
+            Long messId) {
+
+        return customerRepository
+                .findByCustomerIdAndMessIdForUpdate(customerId, messId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Customer not found."
+                ));
     }
 
     private void requireOwner() {
 
-        if (customerSecurity.getCurrentUserRole()
-                != UserRole.OWNER) {
-
+        if (customerSecurity.getCurrentUserRole() != UserRole.OWNER) {
             throw new AccessDeniedException(
                     "Only mess owners can manage customer accounts."
             );

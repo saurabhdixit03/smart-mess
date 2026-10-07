@@ -13,7 +13,26 @@ public record MealPricingResponse(
 
         BigDecimal extraRotiPrice,
 
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+
+        LocalDateTime effectiveFrom
 
 ) {
+
+    public MealPricingResponse(
+            Long mealPricingId,
+            BigDecimal halfMealPrice,
+            BigDecimal fullMealPrice,
+            BigDecimal extraRotiPrice,
+            LocalDateTime updatedAt) {
+
+        this(
+                mealPricingId,
+                halfMealPrice,
+                fullMealPrice,
+                extraRotiPrice,
+                updatedAt,
+                null
+        );
+    }
 }

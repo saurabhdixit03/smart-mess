@@ -8,10 +8,12 @@ import type { Bill } from "../types";
 
 interface BillsListProps {
   bills: Bill[];
+  onPaymentConfirmed: () => void;
 }
 
 export default function BillsList({
   bills,
+  onPaymentConfirmed,
 }: BillsListProps) {
   const [selectedBillId, setSelectedBillId] =
     useState<number | null>(null);
@@ -25,9 +27,7 @@ export default function BillsList({
   const [paymentModalOpen, setPaymentModalOpen] =
     useState(false);
 
-  function handleView(
-    billId: number
-  ) {
+  function handleView(billId: number) {
     setSelectedBillId(billId);
     setDetailsModalOpen(true);
   }
@@ -37,9 +37,7 @@ export default function BillsList({
     setSelectedBillId(null);
   }
 
-  function handlePay(
-    billId: number
-  ) {
+  function handlePay(billId: number) {
     setSelectedPaymentBillId(billId);
     setPaymentModalOpen(true);
   }
@@ -51,14 +49,7 @@ export default function BillsList({
 
   return (
     <>
-      <div
-        className="
-          grid
-          gap-5
-          sm:grid-cols-2
-          xl:grid-cols-3
-        "
-      >
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {bills.map((bill) => (
           <BillCard
             key={bill.billId}
@@ -79,6 +70,7 @@ export default function BillsList({
         billId={selectedPaymentBillId}
         open={paymentModalOpen}
         onClose={handleClosePayment}
+        onPaid={onPaymentConfirmed}
       />
     </>
   );

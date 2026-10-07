@@ -6,12 +6,17 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-type HttpMethod =
-  | "GET"
-  | "POST"
-  | "PUT"
-  | "PATCH"
-  | "DELETE";
+type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
 
 async function request<T>(
   endpoint: string,
@@ -31,7 +36,7 @@ async function request<T>(
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
   const data = await response.json();
@@ -47,20 +52,18 @@ async function request<T>(
           ? "/owner/login"
           : "/customer/login";
 
-      throw new Error(
-        "Session expired. Please login again."
+      throw new ApiError(
+        "Session expired. Please login again.",
+        response.status
       );
     }
 
-    if (response.status === 403) {
-      throw new Error(
-        data.message ||
-          "You are not authorized to perform this action."
-      );
-    }
-
-    throw new Error(
-      data.message || "Something went wrong"
+    throw new ApiError(
+      data.message ||
+        (response.status === 403
+          ? "You are not authorized to perform this action."
+          : "Something went wrong."),
+      response.status
     );
   }
 
@@ -69,50 +72,23 @@ async function request<T>(
 
 const api = {
   get<T>(endpoint: string) {
-    return request<T>(
-      endpoint,
-      "GET"
-    );
+    return request<T>(endpoint, "GET");
   },
 
-  post<T>(
-    endpoint: string,
-    body: unknown
-  ) {
-    return request<T>(
-      endpoint,
-      "POST",
-      body
-    );
+  post<T>(endpoint: string, body?: unknown) {
+    return request<T>(endpoint, "POST", body);
   },
 
-  put<T>(
-    endpoint: string,
-    body: unknown
-  ) {
-    return request<T>(
-      endpoint,
-      "PUT",
-      body
-    );
+  put<T>(endpoint: string, body: unknown) {
+    return request<T>(endpoint, "PUT", body);
   },
 
-  patch<T>(
-    endpoint: string,
-    body?: unknown
-  ) {
-    return request<T>(
-      endpoint,
-      "PATCH",
-      body
-    );
+  patch<T>(endpoint: string, body?: unknown) {
+    return request<T>(endpoint, "PATCH", body);
   },
 
   delete<T>(endpoint: string) {
-    return request<T>(
-      endpoint,
-      "DELETE"
-    );
+    return request<T>(endpoint, "DELETE");
   },
 };
 

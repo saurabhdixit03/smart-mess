@@ -1,8 +1,10 @@
 # Smart Mess
 
-Smart Mess is a full-stack meal planning and mess operations platform designed for local mess and tiffin services.
+Smart Mess is a full-stack meal planning and mess operations platform designed for local mess and tiffin services. It supports multiple independent messes, with separate Owner and Customer portals and access scoped to each user's mess.
 
-It provides separate Owner and Customer portals for publishing menus, collecting meal responses, recording meal collections, generating monthly bills, tracking payments, and delivering real-time operational updates.
+Owners manage customer approvals, publish menus, monitor meal responses, record meal collections, configure schedules and pricing, generate bills manually or through automated monthly billing, and track payments through Cashfree. Customers join through their mess's registration link, participate in daily meals after approval, review their meal history and bills, and complete payments through gateway checkout.
+
+The platform also provides billing insights, persistent notifications, email delivery, and real-time operational updates.
 
 ## Features
 
@@ -11,14 +13,17 @@ It provides separate Owner and Customer portals for publishing menus, collecting
 - Dashboard with live meal-response summaries
 - Kitchen preparation estimates
 - Lunch and dinner menu publishing
-- Customer registration and account management
+- Mess-specific customer registration links and approval management
+- Customer activation, rejection, and reactivation
 - Customer meal-response monitoring
-- Meal collection recording
-- Monthly bill generation
-- Cash payment collection
-- UPI payment verification
+- Meal collection recording, including customers without a prior response
+- Recorded meal prices preserved for billing
+- Bill generation for selected customers and date ranges
+- Automated billing for completed months with retryable jobs
+- Cashfree payment tracking and reconciliation
 - Billing and revenue insights
-- Meal pricing configuration
+- Initial meal pricing configuration
+- Scheduled meal price changes
 - Response-window configuration
 - Weekly schedule management
 - Temporary mess closure management
@@ -26,17 +31,21 @@ It provides separate Owner and Customer portals for publishing menus, collecting
 
 ### Customer Portal
 
+- Register through a mess registration link
+- Access the portal after owner approval
 - View published lunch and dinner menus
 - Accept or decline meals
 - Select full or half meals
 - Request extra rotis
 - Review collected meal history
-- View monthly bills and bill details
-- Pay through a UPI QR code or UPI application
-- Submit UPI payment verification requests
+- View bills, meal breakdowns, and payment details
+- Download bills
+- Pay through Cashfree checkout
 - View mess schedules, pricing, and closure information
 - Receive persistent real-time notifications
+- Receive email notifications for bills, payments, and pricing changes
 - View profile and account information
+- Access historical records, bills, and payments while inactive
 - Reset forgotten passwords through email
 
 ## System Workflow

@@ -29,16 +29,13 @@ public class BillController {
 
     private final BillService billService;
 
-    public BillController(
-            BillService billService) {
-
+    public BillController(BillService billService) {
         this.billService = billService;
     }
 
     /*
-     * Generate Bills
-     *
-     * Owner only.
+     * Manual generation from unbilled collected meals.
+     * Supports one customer or all eligible customers.
      */
     @PostMapping("/generate")
     @PreAuthorize("hasRole('OWNER')")
@@ -49,24 +46,19 @@ public class BillController {
         List<BillResponse> bills =
                 billService.generateBills(request);
 
-        ApiResponse<List<BillResponse>> response =
-                ApiResponse.success(
-                        "Bills generated successfully.",
-                        httpRequest.getRequestURI(),
-                        bills
-                );
-
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(response);
+                .body(
+                        ApiResponse.success(
+                                "Bills generated successfully.",
+                                httpRequest.getRequestURI(),
+                                bills
+                        )
+                );
     }
 
     /*
-     * Customer Bill History
-     *
-     * Owner only.
-     *
-     * Owner can request bills for any customer.
+     * Owner access is restricted to customers in their own mess.
      */
     @GetMapping("/customer/{customerId}")
     @PreAuthorize("hasRole('OWNER')")
@@ -77,23 +69,17 @@ public class BillController {
         List<BillResponse> bills =
                 billService.getCustomerBills(customerId);
 
-        ApiResponse<List<BillResponse>> response =
+        return ResponseEntity.ok(
                 ApiResponse.success(
                         "Customer bills retrieved successfully.",
                         request.getRequestURI(),
                         bills
-                );
-
-        return ResponseEntity.ok(response);
+                )
+        );
     }
 
     /*
-     * Authenticated Customer Bill History
-     *
-     * Customer only.
-     *
-     * Customer ID comes from the JWT.
-     * The client does NOT provide a customer ID.
+     * Customer identity comes from the authenticated session.
      */
     @GetMapping("/me")
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -103,26 +89,18 @@ public class BillController {
         List<BillResponse> bills =
                 billService.getMyBills();
 
-        ApiResponse<List<BillResponse>> response =
+        return ResponseEntity.ok(
                 ApiResponse.success(
                         "Your bills retrieved successfully.",
                         request.getRequestURI(),
                         bills
-                );
-
-        return ResponseEntity.ok(response);
+                )
+        );
     }
 
     /*
-     * Bill Details
-     *
-     * Owner + Customer.
-     *
-     * Owner can view any bill.
-     *
-     * Customer can view only their own bill.
-     *
-     * Ownership validation is handled inside BillServiceImpl.
+     * Shared bill document, including recorded payment details.
+     * The service validates tenant and customer ownership.
      */
     @GetMapping("/{billId}")
     @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
@@ -133,26 +111,25 @@ public class BillController {
         BillDetailResponse bill =
                 billService.getBillDetails(billId);
 
-        ApiResponse<BillDetailResponse> response =
+        return ResponseEntity.ok(
                 ApiResponse.success(
                         "Bill details retrieved successfully.",
                         request.getRequestURI(),
                         bill
-                );
-
-        return ResponseEntity.ok(response);
+                )
+        );
     }
 
     /*
-     * Billing Overview
-     *
-     * Owner only.
+     * Both parameters omitted: all billing periods.
+     * Both supplied: one billing period.
+     * The service rejects incomplete or invalid periods.
      */
     @GetMapping("/overview")
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<BillingOverviewResponse>> getBillingOverview(
-            @RequestParam Integer billingMonth,
-            @RequestParam Integer billingYear,
+            @RequestParam(required = false) Integer billingMonth,
+            @RequestParam(required = false) Integer billingYear,
             HttpServletRequest request) {
 
         BillingOverviewResponse overview =
@@ -161,13 +138,12 @@ public class BillController {
                         billingYear
                 );
 
-        ApiResponse<BillingOverviewResponse> response =
+        return ResponseEntity.ok(
                 ApiResponse.success(
                         "Billing overview retrieved successfully.",
                         request.getRequestURI(),
                         overview
-                );
-
-        return ResponseEntity.ok(response);
+                )
+        );
     }
 }

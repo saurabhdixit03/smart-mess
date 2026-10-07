@@ -15,13 +15,33 @@ public interface NotificationService {
     );
 
     /*
-     * Notify a specific customer.
+     * Notify a customer within the authenticated mess.
      */
     void notifyCustomer(
             Customer customer,
             NotificationType notificationType,
             String title,
             String message
+    );
+
+    /*
+     * Internal notification validated against a running billing job.
+     * Not exposed through a controller.
+     */
+    void notifyAutomatedBill(
+            Long jobId,
+            String leaseToken,
+            Long billId
+    );
+
+    /*
+     * Internal notification for a verified, settled payment order.
+     * Implementation must validate its payment, bill and tenant.
+     * Must join the settlement transaction.
+     * Not exposed through a controller.
+     */
+    void notifyVerifiedPayment(
+            Long paymentOrderId
     );
 
     List<NotificationResponse> getMyNotifications();

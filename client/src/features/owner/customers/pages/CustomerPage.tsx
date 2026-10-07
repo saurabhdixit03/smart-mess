@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -79,7 +79,7 @@ const ACTION_DETAILS = {
     progress: "Deactivating...",
     success: "Customer deactivated successfully.",
     explanation:
-      "The customer will become inactive and can no longer sign in or participate in active operations.",
+      "The customer will become inactive and cannot participate in daily meal operations. They can still sign in to view their history and pay outstanding bills.",
   },
 } as const;
 
@@ -94,8 +94,8 @@ function newestFirst(
     second.createdAt || second.joiningDate;
 
   return (
-    secondDate.localeCompare(firstDate)
-    || second.customerId - first.customerId
+    secondDate.localeCompare(firstDate) ||
+    second.customerId - first.customerId
   );
 }
 
@@ -137,7 +137,7 @@ export default function CustomerPage() {
   const [search, setSearch] = useState("");
 
   const [statusFilter, setStatusFilter] =
-    useState<TableStatusFilter>("ALL")
+    useState<TableStatusFilter>("ALL");
 
   const [currentPage, setCurrentPage] =
     useState(1);
@@ -145,10 +145,15 @@ export default function CustomerPage() {
   const [rowsPerPage, setRowsPerPage] =
     useState(10);
 
-  /*
-   * Pending requests are reviewed separately from the
-   * main customer table.
-   */
+  const paginationKey = JSON.stringify([
+    search,
+    statusFilter,
+    rowsPerPage,
+  ]);
+
+  const [previousPaginationKey, setPreviousPaginationKey] =
+    useState(paginationKey);
+
   const pendingCustomers = useMemo(
     () =>
       customers
@@ -167,30 +172,27 @@ export default function CustomerPage() {
     (customer) => customer.status === "INACTIVE"
   ).length;
 
-  /*
-   * Only active and inactive accounts appear in the table.
-   */
   const filteredCustomers = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
     return customers
       .filter((customer) => {
         if (
-          customer.status !== "ACTIVE"
-          && customer.status !== "INACTIVE"
+          customer.status !== "ACTIVE" &&
+          customer.status !== "INACTIVE"
         ) {
           return false;
         }
 
         const matchesStatus =
-          statusFilter === "ALL"
-          || customer.status === statusFilter;
+          statusFilter === "ALL" ||
+          customer.status === statusFilter;
 
         const matchesSearch =
-          !keyword
-          || customer.fullName.toLowerCase().includes(keyword)
-          || customer.mobileNumber.includes(keyword)
-          || (customer.email ?? "")
+          !keyword ||
+          customer.fullName.toLowerCase().includes(keyword) ||
+          customer.mobileNumber.includes(keyword) ||
+          (customer.email ?? "")
             .toLowerCase()
             .includes(keyword);
 
@@ -199,20 +201,10 @@ export default function CustomerPage() {
       .sort(newestFirst);
   }, [customers, search, statusFilter]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, statusFilter, rowsPerPage]);
-
   const totalPages = Math.max(
     1,
     Math.ceil(filteredCustomers.length / rowsPerPage)
   );
-
-  useEffect(() => {
-    setCurrentPage((page) =>
-      Math.min(page, totalPages)
-    );
-  }, [totalPages]);
 
   const paginatedCustomers = useMemo(() => {
     const start =
@@ -227,6 +219,14 @@ export default function CustomerPage() {
     currentPage,
     rowsPerPage,
   ]);
+
+  // Keep pagination valid before committing the updated table.
+  if (previousPaginationKey !== paginationKey) {
+    setPreviousPaginationKey(paginationKey);
+    setCurrentPage(1);
+  } else if (currentPage > totalPages) {
+    setCurrentPage(totalPages);
+  }
 
   function handleManageCustomer(
     customer: CustomerResponse
@@ -251,10 +251,6 @@ export default function CustomerPage() {
     type: CustomerAction,
     customer: CustomerResponse
   ) {
-    /*
-     * Close the review modal before opening confirmation,
-     * so two modal dialogs are not stacked.
-     */
     if (isRegistrationAction(type)) {
       setIsPendingReviewOpen(false);
     }
@@ -269,8 +265,8 @@ export default function CustomerPage() {
     }
 
     const returnToReview =
-      pendingAction !== null
-      && isRegistrationAction(pendingAction.type);
+      pendingAction !== null &&
+      isRegistrationAction(pendingAction.type);
 
     setPendingAction(null);
     setActionError(null);
@@ -317,9 +313,7 @@ export default function CustomerPage() {
           break;
       }
 
-      toast.success(
-        ACTION_DETAILS[type].success
-      );
+      toast.success(ACTION_DETAILS[type].success);
 
       await fetchCustomers();
 
@@ -346,23 +340,22 @@ export default function CustomerPage() {
     : null;
 
   const isDestructiveAction =
-    pendingAction?.type === "reject"
-    || pendingAction?.type === "deactivate";
+    pendingAction?.type === "reject" ||
+    pendingAction?.type === "deactivate";
 
   const showRegistrationDetails =
-    pendingAction !== null
-    && isRegistrationAction(pendingAction.type);
+    pendingAction !== null &&
+    isRegistrationAction(pendingAction.type);
 
   const reviewDisabled =
-    loading
-    || savingAction
-    || Boolean(error)
-    || pendingCustomers.length === 0;
+    loading ||
+    savingAction ||
+    Boolean(error) ||
+    pendingCustomers.length === 0;
 
   return (
     <>
       <div className="space-y-6">
-        {/* Page header */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <PageHeader
             title="Customers"
@@ -374,9 +367,7 @@ export default function CustomerPage() {
               variant="outline"
               disabled={loading || savingAction}
               title="Fetch the latest customers and registrations"
-              onClick={() => {
-                void fetchCustomers();
-              }}
+              onClick={() => void fetchCustomers()}
             >
               <RefreshCw
                 size={16}
@@ -386,9 +377,7 @@ export default function CustomerPage() {
             </Button>
 
             <Button
-              onClick={() =>
-                setIsRegistrationOpen(true)
-              }
+              onClick={() => setIsRegistrationOpen(true)}
             >
               <QrCode size={18} />
               Registration QR
@@ -396,7 +385,6 @@ export default function CustomerPage() {
           </div>
         </div>
 
-        {/* Three customer statistics and one pending-review card */}
         <div className="grid items-stretch gap-5 md:grid-cols-2 xl:grid-cols-4">
           <div className="h-full [&>*]:h-full">
             <StatsCard
@@ -458,9 +446,7 @@ export default function CustomerPage() {
               <button
                 type="button"
                 disabled={reviewDisabled}
-                onClick={() =>
-                  setIsPendingReviewOpen(true)
-                }
+                onClick={() => setIsPendingReviewOpen(true)}
                 className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600 disabled:cursor-default disabled:opacity-40"
               >
                 Review
@@ -470,7 +456,6 @@ export default function CustomerPage() {
           </section>
         </div>
 
-        {/* Main-table search and filters */}
         <SearchToolbar>
           <SearchToolbar.Left>
             <Input
@@ -583,19 +568,14 @@ export default function CustomerPage() {
         />
       </div>
 
-      {/* Pending registrations are reviewed in a bounded list */}
       <Modal
         open={isPendingReviewOpen}
         title={`Pending Registrations (${pendingCustomers.length})`}
-        onClose={() =>
-          setIsPendingReviewOpen(false)
-        }
+        onClose={() => setIsPendingReviewOpen(false)}
         footer={
           <Button
             variant="secondary"
-            onClick={() =>
-              setIsPendingReviewOpen(false)
-            }
+            onClick={() => setIsPendingReviewOpen(false)}
           >
             Close
           </Button>
@@ -613,9 +593,7 @@ export default function CustomerPage() {
             <Button
               variant="outline"
               disabled={loading}
-              onClick={() => {
-                void fetchCustomers();
-              }}
+              onClick={() => void fetchCustomers()}
             >
               Try Again
             </Button>
@@ -691,9 +669,7 @@ export default function CustomerPage() {
 
       <CustomerRegistrationLinkModal
         open={isRegistrationOpen}
-        onClose={() =>
-          setIsRegistrationOpen(false)
-        }
+        onClose={() => setIsRegistrationOpen(false)}
       />
 
       <CustomerForm
@@ -703,7 +679,6 @@ export default function CustomerPage() {
         onCancel={handleCancel}
       />
 
-      {/* Confirmation is shown separately from the review modal */}
       <Modal
         open={pendingAction !== null}
         title={actionDetails?.title ?? "Update Customer"}
@@ -727,9 +702,7 @@ export default function CustomerPage() {
                   : "primary"
               }
               disabled={savingAction || !pendingAction}
-              onClick={() => {
-                void confirmAction();
-              }}
+              onClick={() => void confirmAction()}
             >
               {savingAction
                 ? actionDetails?.progress

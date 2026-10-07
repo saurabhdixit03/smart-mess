@@ -1,97 +1,76 @@
-export type BillStatus =
-  | "UNPAID"
-  | "PAYMENT_PENDING"
-  | "PAID";
+import type {
+  BillDocumentData,
+} from "@/features/billing/types";
 
-export type MealSession =
-  | "LUNCH"
-  | "DINNER";
+export type BillStatus = "UNPAID" | "PAID";
 
-export type MealOption =
-  | "FULL"
-  | "HALF";
+export type MealSession = "LUNCH" | "DINNER";
+
+export type MealOption = "FULL" | "HALF";
 
 export interface MealRecord {
   mealRecordId: number;
-
   customerId: number;
-
   customerName: string;
-
   menuId: number;
-
   mealResponseId: number | null;
-
   mealSession: MealSession;
-
   mealOption: MealOption;
-
   mealPrice: number;
-
   extraRotiCount: number;
-
   extraRotiPrice: number;
-
   totalAmount: number;
-
   collectedAt: string;
 }
 
 export interface Bill {
   billId: number;
-
   customerId: number;
-
   customerName: string;
-
   billingMonth: number;
-
   billingYear: number;
-
   mealRecordCount: number;
-
   totalAmount: number;
-
   billStatus: BillStatus;
-
   generatedAt: string;
 }
 
-export interface BillDetail extends Bill {
-  mealRecords: MealRecord[];
-}
+export type BillDetail = BillDocumentData;
 
-/* ---------- UPI Payment ---------- */
+export type PaymentOrderStatus =
+  | "CREATING"
+  | "ACTIVE"
+  | "PAID"
+  | "EXPIRED"
+  | "TERMINATION_REQUESTED"
+  | "TERMINATED"
+  | "CREATION_FAILED"
+  | "RECONCILIATION_REQUIRED";
 
-export interface UpiPayment {
-  upiUrl: string;
+export type PaymentEnvironment = "SANDBOX" | "PRODUCTION";
 
-  upiId: string;
-
-  receiverName: string;
-
-  amount: number;
-
+export interface PaymentCheckout {
+  paymentOrderId: number;
   billId: number;
+  gatewayOrderId: string;
+  paymentSessionId: string | null;
+  amount: number;
+  currency: string;
+  environment: PaymentEnvironment;
+  status: PaymentOrderStatus;
+  expiresAt: string | null;
 }
-
-/* ---------- Common API ---------- */
 
 export interface ApiResponse<T> {
   success: boolean;
-
   message: string;
-
   path: string;
-
   data: T;
 }
 
-export type BillsResponse =
-  ApiResponse<Bill[]>;
+export type BillsResponse = ApiResponse<Bill[]>;
 
-export type BillDetailResponse =
-  ApiResponse<BillDetail>;
+export type BillDetailResponse = ApiResponse<BillDetail>;
 
-export type UpiPaymentResponse =
-  ApiResponse<UpiPayment>;
+export type PaymentCheckoutResponse =
+  ApiResponse<PaymentCheckout>;

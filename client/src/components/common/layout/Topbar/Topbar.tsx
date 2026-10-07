@@ -6,7 +6,9 @@ import {
   getOwner,
 } from "@/features/auth/utils/auth.utils";
 
-import { useMobileNavigation } from "../MobileNavigation/MobileNavigationContext";
+import {
+  useMobileNavigation,
+} from "../MobileNavigation/useMobileNavigation";
 
 type TopbarProps = {
   title?: string;

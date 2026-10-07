@@ -23,83 +23,105 @@ import type {
   MealSession,
 } from "../types/dashboard.types";
 
+type DashboardState = {
+  key: string;
+  dashboard: DashboardSummary | null;
+  loading: boolean;
+  error: string | null;
+};
+
 export function useDashboard(
   mealSession: MealSession,
   enabled = true
 ) {
-  const [dashboard, setDashboard] =
-    useState<DashboardSummary | null>(null);
+  const [state, setState] =
+    useState<DashboardState | null>(null);
 
-  const [loading, setLoading] =
-    useState(false);
-
-  const [error, setError] =
-    useState<string | null>(null);
+  const requestVersionRef = useRef(0);
 
   const subscriptionRef = useRef<
     ReturnType<typeof subscribeTopic> | null
   >(null);
 
   const messId = getCurrentOwnerMessId();
+  const stateKey =
+    `${messId}-${mealSession}-${enabled}`;
+
+  const loadDashboard = useCallback(
+    (): Promise<void> => {
+      const version = ++requestVersionRef.current;
+
+      if (!enabled || messId === null) {
+        return Promise.resolve();
+      }
+
+      return dashboardApi
+        .getDashboardSummary(mealSession)
+        .then((response) => {
+          if (requestVersionRef.current !== version) {
+            return;
+          }
+
+          setState({
+            key: stateKey,
+            dashboard: response.data,
+            loading: false,
+            error: null,
+          });
+        })
+        .catch(() => {
+          if (requestVersionRef.current !== version) {
+            return;
+          }
+
+          setState((previous) => ({
+            key: stateKey,
+            dashboard:
+              previous?.key === stateKey
+                ? previous.dashboard
+                : null,
+            loading: false,
+            error: "Failed to load dashboard.",
+          }));
+        });
+    },
+    [mealSession, enabled, messId, stateKey]
+  );
 
   const fetchDashboard = useCallback(
-    async () => {
-      if (!enabled) {
-        setDashboard(null);
-        setLoading(false);
-        setError(null);
-        return;
+    (): Promise<void> => {
+      if (!enabled || messId === null) {
+        setState(null);
+      } else {
+        setState((previous) => ({
+          key: stateKey,
+          dashboard:
+            previous?.key === stateKey
+              ? previous.dashboard
+              : null,
+          loading: true,
+          error: null,
+        }));
       }
 
-      if (messId === null) {
-        setDashboard(null);
-        setLoading(false);
-        setError(
-          "Please sign out and sign in again to load your mess dashboard."
-        );
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-
-        const response =
-          await dashboardApi.getDashboardSummary(
-            mealSession
-          );
-
-        setDashboard(response.data);
-      } catch {
-        setError(
-          "Failed to load dashboard."
-        );
-      } finally {
-        setLoading(false);
-      }
+      return loadDashboard();
     },
-    [mealSession, enabled, messId]
+    [enabled, messId, stateKey, loadDashboard]
   );
 
   useEffect(() => {
-    if (!enabled) {
-      return;
-    }
-
-    void fetchDashboard();
-
-    if (messId === null) {
+    if (!enabled || messId === null) {
       return;
     }
 
     let disposed = false;
 
+    void loadDashboard();
+
     /*
      * Each owner subscribes only to their own mess.
      * The backend independently authorizes the destination.
-     *
-     * This listener also restores the subscription
-     * after a WebSocket reconnection.
+     * Restore the subscription after reconnecting.
      */
     const onConnected = () => {
       if (disposed) {
@@ -108,7 +130,7 @@ export function useDashboard(
 
       /*
        * A reconnected socket has new subscriptions.
-       * Do not send an unsubscribe for an old socket's ID.
+       * Do not unsubscribe using an old socket's ID.
        */
       subscriptionRef.current =
         subscribeTopic<DashboardSummary>(
@@ -118,7 +140,18 @@ export function useDashboard(
               return;
             }
 
-            setDashboard(updatedDashboard);
+            setState((previous) => ({
+              key: stateKey,
+              dashboard: updatedDashboard,
+              loading:
+                previous?.key === stateKey
+                  ? previous.loading
+                  : true,
+              error:
+                previous?.key === stateKey
+                  ? previous.error
+                  : null,
+            }));
           }
         );
     };
@@ -127,6 +160,7 @@ export function useDashboard(
 
     return () => {
       disposed = true;
+      requestVersionRef.current += 1;
 
       removeWebSocketConnectionListener(
         onConnected
@@ -139,16 +173,34 @@ export function useDashboard(
       subscriptionRef.current = null;
     };
   }, [
-    fetchDashboard,
+    loadDashboard,
     mealSession,
     enabled,
     messId,
+    stateKey,
   ]);
 
+  const currentState =
+    state?.key === stateKey ? state : null;
+
   return {
-    dashboard,
-    loading,
-    error,
+    dashboard:
+      enabled && messId !== null
+        ? currentState?.dashboard ?? null
+        : null,
+
+    loading:
+      enabled &&
+      messId !== null &&
+      (currentState === null || currentState.loading),
+
+    error:
+      !enabled
+        ? null
+        : messId === null
+          ? "Please sign out and sign in again to load your mess dashboard."
+          : currentState?.error ?? null,
+
     refresh: fetchDashboard,
   };
 }

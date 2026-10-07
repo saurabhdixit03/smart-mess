@@ -8,10 +8,6 @@ public record MessSettingsResponse(
 
         Long settingsId,
 
-        String upiId,
-
-        String receiverName,
-
         LocalTime lunchResponseCutoff,
 
         LocalTime dinnerResponseCutoff,
@@ -27,5 +23,4 @@ public record MessSettingsResponse(
         LocalDateTime updatedAt
 
 ) {
-
 }

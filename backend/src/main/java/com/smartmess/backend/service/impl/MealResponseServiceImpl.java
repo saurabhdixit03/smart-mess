@@ -7,7 +7,12 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.smartmess.backend.dto.request.SubmitMealResponseRequest;
 import com.smartmess.backend.dto.response.MealResponseAvailabilityResponse;
@@ -18,6 +23,7 @@ import com.smartmess.backend.entity.Menu;
 import com.smartmess.backend.entity.MessSettings;
 import com.smartmess.backend.enums.CustomerStatus;
 import com.smartmess.backend.enums.MealResponseStatus;
+import com.smartmess.backend.enums.MealSession;
 import com.smartmess.backend.exception.BusinessException;
 import com.smartmess.backend.exception.ResourceNotFoundException;
 import com.smartmess.backend.mapper.MealResponseMapper;
@@ -31,8 +37,10 @@ import com.smartmess.backend.service.DashboardWebSocketService;
 import com.smartmess.backend.service.MealResponseService;
 
 @Service
-public class MealResponseServiceImpl
-        implements MealResponseService {
+public class MealResponseServiceImpl implements MealResponseService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(MealResponseServiceImpl.class);
 
     private static final DateTimeFormatter TIME_FORMAT =
             DateTimeFormatter.ofPattern("h:mm a");
@@ -69,347 +77,265 @@ public class MealResponseServiceImpl
         this.clock = clock;
     }
 
+    @Transactional
     @Override
     public MealResponseResponse submitMealResponse(
             Long customerId,
             SubmitMealResponseRequest request) {
 
-        // Customer can only submit for themselves.
-        // Existing owner access is restricted to their own mess.
+        if (customerId == null || request == null
+                || request.getMenuId() == null) {
+            throw new BusinessException(
+                    "Customer and menu are required."
+            );
+        }
+
+        Long messId = customerSecurity.getCurrentMessId();
+
+        /*
+         * Acquire the same customer lock used by meal collection.
+         * Response changes and collection are serialized.
+         */
+        Customer customer = customerRepository
+                .findByCustomerIdAndMessIdForUpdate(customerId, messId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Customer not found with ID: " + customerId
+                ));
+
         customerSecurity.checkCustomerAccess(customerId);
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
-
-        Customer customer =
-                findCustomer(customerId, messId);
-
         if (customer.getStatus() != CustomerStatus.ACTIVE) {
-
             throw new BusinessException(
                     "Only active customers can submit or update meal responses."
             );
         }
 
-        Menu menu =
-                findMenu(request.getMenuId(), messId);
+        Menu menu = findMenu(request.getMenuId(), messId);
 
         if (mealRecordRepository.existsByMess_MessIdAndCustomerAndMenu(
-                messId,
-                customer,
-                menu
-        )) {
-
+                messId, customer, menu)) {
             throw new BusinessException(
                     "Meal response cannot be changed because the meal has already been recorded."
             );
         }
 
-        validateResponseWindow(messId, menu);
+        LocalDateTime now = LocalDateTime.now(clock);
+        validateResponseWindow(messId, menu, now);
 
-        MealResponse mealResponse =
-                mealResponseRepository
-                        .findByMess_MessIdAndCustomerAndMenu(
-                                messId,
-                                customer,
-                                menu
-                        )
-                        .orElseGet(() -> {
+        if (request.getResponseStatus() == null) {
+            throw new BusinessException(
+                    "Meal response status is required."
+            );
+        }
 
-                            MealResponse response =
-                                    new MealResponse();
-
-                            response.setCustomer(customer);
-                            response.setMenu(menu);
-                            response.setMess(menu.getMess());
-
-                            return response;
-                        });
-
-        // Business Validation
-
-        if (request.getResponseStatus()
-                == MealResponseStatus.ACCEPTED
+        if (request.getResponseStatus() == MealResponseStatus.ACCEPTED
                 && request.getMealOption() == null) {
-
             throw new BusinessException(
                     "Meal option is required when response status is ACCEPTED."
             );
         }
 
-        if (request.getResponseStatus()
-                == MealResponseStatus.DECLINED
+        if (request.getResponseStatus() == MealResponseStatus.DECLINED
                 && request.getMealOption() != null) {
-
             throw new BusinessException(
                     "Meal option must be empty when response status is DECLINED."
             );
         }
 
-        if (request.getResponseStatus()
-                == MealResponseStatus.DECLINED
-                && request.getExtraRotiCount() > 0) {
+        Integer extraRotiCount = request.getExtraRotiCount();
 
+        if (extraRotiCount == null
+                || extraRotiCount < 0
+                || extraRotiCount > 5) {
+            throw new BusinessException(
+                    "Extra roti count must be between 0 and 5."
+            );
+        }
+
+        if (request.getResponseStatus() == MealResponseStatus.DECLINED
+                && extraRotiCount > 0) {
             throw new BusinessException(
                     "Extra roti count must be zero when response status is DECLINED."
             );
         }
 
+        MealResponse mealResponse = mealResponseRepository
+                .findByMess_MessIdAndCustomerAndMenu(messId, customer, menu)
+                .orElseGet(() -> {
+                    MealResponse response = new MealResponse();
+                    response.setCustomer(customer);
+                    response.setMenu(menu);
+                    response.setMess(menu.getMess());
+                    return response;
+                });
+
         mealResponseMapper.updateMealResponseFromRequest(
-                request,
-                mealResponse
+                request, mealResponse
         );
 
-        mealResponse.setRespondedAt(
-                LocalDateTime.now(clock)
-        );
+        mealResponse.setRespondedAt(now);
 
         MealResponse savedMealResponse =
-                mealResponseRepository.save(
-                        mealResponse
-                );
+                mealResponseRepository.saveAndFlush(mealResponse);
 
-        dashboardWebSocketService.broadcastDashboard(
-                menu.getMealSession()
-        );
+        broadcastAfterCommit(menu.getMealSession());
 
-        return mealResponseMapper.toResponse(
-                savedMealResponse
-        );
+        return mealResponseMapper.toResponse(savedMealResponse);
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public List<MealResponseResponse> getResponsesByMenu(
-            Long menuId) {
+    public List<MealResponseResponse> getResponsesByMenu(Long menuId) {
+        Long messId = customerSecurity.getCurrentMessId();
+        Menu menu = findMenu(menuId, messId);
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        List<MealResponse> responses =
+                mealResponseRepository.findByMess_MessIdAndMenu(messId, menu);
 
-        Menu menu =
-                findMenu(menuId, messId);
-
-        List<MealResponse> mealResponses =
-                mealResponseRepository.findByMess_MessIdAndMenu(
-                        messId,
-                        menu
-                );
-
-        return mealResponseMapper.toResponseList(
-                mealResponses
-        );
+        return mealResponseMapper.toResponseList(responses);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public MealResponseResponse getCustomerResponse(
             Long customerId,
             Long menuId) {
 
-        // OWNER can access customers within their own mess.
-        // CUSTOMER can access only their own response.
-        customerSecurity.checkCustomerAccess(
-                customerId
-        );
+        customerSecurity.checkCustomerAccess(customerId);
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
-
-        Customer customer =
-                findCustomer(customerId, messId);
-
-        Menu menu =
-                findMenu(menuId, messId);
+        Long messId = customerSecurity.getCurrentMessId();
+        Customer customer = findCustomer(customerId, messId);
+        Menu menu = findMenu(menuId, messId);
 
         return mealResponseRepository
-                .findByMess_MessIdAndCustomerAndMenu(
-                        messId,
-                        customer,
-                        menu
-                )
+                .findByMess_MessIdAndCustomerAndMenu(messId, customer, menu)
                 .map(mealResponseMapper::toResponse)
                 .orElse(null);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public MealResponseAvailabilityResponse getResponseAvailability(
             Long menuId) {
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        Long messId = customerSecurity.getCurrentMessId();
+        Menu menu = findMenu(menuId, messId);
 
-        Menu menu =
-                findMenu(menuId, messId);
+        Long customerId = customerSecurity.getCurrentUserId();
+        Customer customer = findCustomer(customerId, messId);
 
-        Long customerId =
-                customerSecurity.getCurrentUserId();
-
-        Customer customer =
-                findCustomer(customerId, messId);
-
-        if (mealRecordRepository.existsByMess_MessIdAndCustomerAndMenu(
-                messId,
-                customer,
-                menu
-        )) {
-
-            return new MealResponseAvailabilityResponse(
-                    menu.getMenuId(),
-                    menu.getMealSession(),
+        if (customer.getStatus() != CustomerStatus.ACTIVE) {
+            return availability(
+                    menu,
                     false,
-                    "Meal already recorded."
+                    "Only active customers can submit or update meal responses."
             );
         }
 
-        LocalDate today =
-                LocalDate.now(clock);
+        if (mealRecordRepository.existsByMess_MessIdAndCustomerAndMenu(
+                messId, customer, menu)) {
+            return availability(menu, false, "Meal already recorded.");
+        }
 
-        if (!today.equals(menu.getMenuDate())) {
+        LocalDateTime now = LocalDateTime.now(clock);
 
-            return new MealResponseAvailabilityResponse(
-                    menu.getMenuId(),
-                    menu.getMealSession(),
+        if (!now.toLocalDate().equals(menu.getMenuDate())) {
+            return availability(
+                    menu,
                     false,
                     "Meal responses are only available for today's menu."
             );
         }
 
-        MessSettings settings =
-                getMessSettings(messId);
-
-        LocalTime cutoffTime =
-                getResponseCutoff(
-                        settings,
-                        menu
-                );
+        MessSettings settings = getMessSettings(messId);
+        LocalTime cutoffTime = getResponseCutoff(settings, menu);
 
         if (cutoffTime == null) {
-
-            return new MealResponseAvailabilityResponse(
-                    menu.getMenuId(),
-                    menu.getMealSession(),
-                    false,
-                    "Response cutoff is not configured."
+            return availability(
+                    menu, false, "Response cutoff is not configured."
             );
         }
 
-        LocalTime currentTime =
-                LocalTime.now(clock);
-
-        if (!currentTime.isBefore(cutoffTime)) {
-
-            return new MealResponseAvailabilityResponse(
-                    menu.getMenuId(),
-                    menu.getMealSession(),
+        if (!now.toLocalTime().isBefore(cutoffTime)) {
+            return availability(
+                    menu,
                     false,
                     "Response cutoff passed at "
-                            + cutoffTime.format(TIME_FORMAT)
-                            + "."
+                            + cutoffTime.format(TIME_FORMAT) + "."
             );
         }
+
+        return availability(menu, true, null);
+    }
+
+    private MealResponseAvailabilityResponse availability(
+            Menu menu,
+            boolean canRespond,
+            String reason) {
 
         return new MealResponseAvailabilityResponse(
                 menu.getMenuId(),
                 menu.getMealSession(),
-                true,
-                null
+                canRespond,
+                reason
         );
     }
 
     /*
-     * Customers can submit or update responses only for today's menu
-     * and only before the configured cutoff time for that meal session.
-     *
-     * Settings are resolved within the same mess as the menu.
+     * Preserves today's-menu and session-cutoff rules.
      */
     private void validateResponseWindow(
             Long messId,
-            Menu menu) {
+            Menu menu,
+            LocalDateTime now) {
 
-        LocalDate today =
-                LocalDate.now(clock);
+        LocalDate today = now.toLocalDate();
 
         if (!today.equals(menu.getMenuDate())) {
-
             throw new BusinessException(
                     "Meal responses can only be submitted for today's menu."
             );
         }
 
-        MessSettings settings =
-                getMessSettings(messId);
-
-        LocalTime cutoffTime =
-                getResponseCutoff(
-                        settings,
-                        menu
-                );
+        MessSettings settings = getMessSettings(messId);
+        LocalTime cutoffTime = getResponseCutoff(settings, menu);
 
         if (cutoffTime == null) {
-
             throw new BusinessException(
                     "Response cutoff time is not configured for this meal session."
             );
         }
 
-        LocalTime currentTime =
-                LocalTime.now(clock);
-
-        if (!currentTime.isBefore(cutoffTime)) {
-
+        if (!now.toLocalTime().isBefore(cutoffTime)) {
             throw new BusinessException(
                     "Meal response cannot be submitted because the response cutoff passed at "
-                            + cutoffTime.format(TIME_FORMAT)
-                            + "."
+                            + cutoffTime.format(TIME_FORMAT) + "."
             );
         }
     }
 
-    /*
-     * Resolves a customer only within the authenticated mess.
-     */
-    private Customer findCustomer(
-            Long customerId,
-            Long messId) {
-
+    private Customer findCustomer(Long customerId, Long messId) {
         return customerRepository
-                .findByCustomerIdAndMess_MessId(
-                        customerId,
-                        messId
-                )
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Customer not found with ID: "
-                                        + customerId
-                        ));
+                .findByCustomerIdAndMess_MessId(customerId, messId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Customer not found with ID: " + customerId
+                ));
     }
 
-    /*
-     * Resolves a menu only within the authenticated mess.
-     */
-    private Menu findMenu(
-            Long menuId,
-            Long messId) {
-
+    private Menu findMenu(Long menuId, Long messId) {
         return menuRepository
-                .findByMenuIdAndMess_MessId(
-                        menuId,
-                        messId
-                )
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Menu not found with ID: "
-                                        + menuId
-                        ));
+                .findByMenuIdAndMess_MessId(menuId, messId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Menu not found with ID: " + menuId
+                ));
     }
 
-    private MessSettings getMessSettings(
-            Long messId) {
-
+    private MessSettings getMessSettings(Long messId) {
         return messSettingsRepository
                 .findByMess_MessId(messId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Mess settings not found."
-                        ));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Mess settings not found."
+                ));
     }
 
     private LocalTime getResponseCutoff(
@@ -417,12 +343,33 @@ public class MealResponseServiceImpl
             Menu menu) {
 
         return switch (menu.getMealSession()) {
-
-            case LUNCH ->
-                    settings.getLunchResponseCutoff();
-
-            case DINNER ->
-                    settings.getDinnerResponseCutoff();
+            case LUNCH -> settings.getLunchResponseCutoff();
+            case DINNER -> settings.getDinnerResponseCutoff();
         };
+    }
+
+    /*
+     * A dashboard delivery failure must not turn a saved
+     * response into an apparent failed submission.
+     */
+    private void broadcastAfterCommit(MealSession mealSession) {
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        try {
+                            dashboardWebSocketService.broadcastDashboard(
+                                    mealSession
+                            );
+                        } catch (RuntimeException exception) {
+                            log.error(
+                                    "Dashboard broadcast failed after saving meal response for {}.",
+                                    mealSession,
+                                    exception
+                            );
+                        }
+                    }
+                }
+        );
     }
 }

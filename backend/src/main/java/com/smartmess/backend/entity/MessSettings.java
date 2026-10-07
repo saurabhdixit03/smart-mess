@@ -26,33 +26,14 @@ public class MessSettings extends BaseEntity {
     private Long settingsId;
 
     /*
-     * Tenant Ownership
-     *
-     * Each mess has its own settings record.
-     * The unique mess_id prevents multiple settings records
-     * from being created for the same mess.
+     * Each mess has one settings record.
      */
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "mess_id", nullable = false, unique = true)
     private Mess mess;
 
     /*
-     * Payment Settings
-     *
-     * Payment details are optional until the owner
-     * configures UPI payment settings.
-     */
-    @Column(unique = true)
-    private String upiId;
-
-    @Column
-    private String receiverName;
-
-    /*
-     * Customer Response Cutoff Settings
-     *
-     * The response window starts automatically
-     * when the menu is published.
+     * The response window starts when the menu is published.
      */
     @Column
     private LocalTime lunchResponseCutoff;
@@ -60,19 +41,6 @@ public class MessSettings extends BaseEntity {
     @Column
     private LocalTime dinnerResponseCutoff;
 
-    /*
-     * Weekly Off Settings
-     *
-     * Example:
-     * weeklyClosedDay = SUNDAY
-     * weeklyLunchClosed = false
-     * weeklyDinnerClosed = true
-     *
-     * This represents Sunday dinner as the weekly off.
-     *
-     * The owner can change the configured day and
-     * sessions whenever the weekly schedule changes.
-     */
     @Enumerated(EnumType.STRING)
     @Column
     private DayOfWeek weeklyClosedDay;
@@ -97,22 +65,6 @@ public class MessSettings extends BaseEntity {
 
     public void setMess(Mess mess) {
         this.mess = mess;
-    }
-
-    public String getUpiId() {
-        return upiId;
-    }
-
-    public void setUpiId(String upiId) {
-        this.upiId = upiId;
-    }
-
-    public String getReceiverName() {
-        return receiverName;
-    }
-
-    public void setReceiverName(String receiverName) {
-        this.receiverName = receiverName;
     }
 
     public LocalTime getLunchResponseCutoff() {

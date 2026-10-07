@@ -1,4 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { insightsApi } from "../api";
 
@@ -10,11 +15,8 @@ export function useInsights(
   initialMonth: number,
   initialYear: number
 ) {
-
   const [insights, setInsights] =
-    useState<MonthlyInsightsResponse | null>(
-      null
-    );
+    useState<MonthlyInsightsResponse | null>(null);
 
   const [loading, setLoading] =
     useState(true);
@@ -22,66 +24,64 @@ export function useInsights(
   const [error, setError] =
     useState<string | null>(null);
 
-  const fetchInsights =
-    useCallback(
-      async (
-        month: number = initialMonth,
-        year: number = initialYear
-      ) => {
+  const requestVersionRef = useRef(0);
 
-        try {
+  const loadInsights = useCallback(
+    (
+      month: number,
+      year: number
+    ): Promise<void> => {
+      const version = ++requestVersionRef.current;
 
-          setLoading(true);
-
-          setError(null);
-
-          const response =
-            await insightsApi.getMonthlyInsights(
-              month,
-              year
-            );
+      return insightsApi
+        .getMonthlyInsights(month, year)
+        .then((response) => {
+          if (requestVersionRef.current !== version) {
+            return;
+          }
 
           setInsights(response.data);
+          setError(null);
+        })
+        .catch(() => {
+          if (requestVersionRef.current === version) {
+            setError("Failed to load insights.");
+          }
+        })
+        .finally(() => {
+          if (requestVersionRef.current === version) {
+            setLoading(false);
+          }
+        });
+    },
+    []
+  );
 
-        } catch {
+  const fetchInsights = useCallback(
+    (
+      month: number = initialMonth,
+      year: number = initialYear
+    ): Promise<void> => {
+      setLoading(true);
+      setError(null);
 
-          setError(
-            "Failed to load insights."
-          );
-
-        } finally {
-
-          setLoading(false);
-
-        }
-
-      },
-      [initialMonth, initialYear]
-    );
+      return loadInsights(month, year);
+    },
+    [initialMonth, initialYear, loadInsights]
+  );
 
   useEffect(() => {
+    void loadInsights(initialMonth, initialYear);
 
-    fetchInsights(
-      initialMonth,
-      initialYear
-    );
-
-  }, [
-    fetchInsights,
-    initialMonth,
-    initialYear,
-  ]);
+    return () => {
+      requestVersionRef.current += 1;
+    };
+  }, [loadInsights, initialMonth, initialYear]);
 
   return {
-
     insights,
-
     loading,
-
     error,
-
     fetchInsights,
-
   };
-
 }

@@ -5,7 +5,6 @@ import {
   ClipboardList,
   HandPlatter,
   Receipt,
-  Wallet,
   BarChart3,
   Settings,
   Building2,
@@ -41,14 +40,6 @@ export const ownerNavigation: NavigationItem[] = [
     path: ROUTES.MENU,
     icon: UtensilsCrossed,
   },
-
-  // {
-  //   label: "Live Responses",
-  //   title: "Live Responses",
-  //   path: ROUTES.MEALS,
-  //   icon: ClipboardList,
-  // },
-
   {
     label: "Meal Collection",
     title: "Meal Records",
@@ -56,16 +47,10 @@ export const ownerNavigation: NavigationItem[] = [
     icon: HandPlatter,
   },
   {
-    label: "Billing",
-    title: "Billing",
+    label: "Bills",
+    title: "Bills",
     path: ROUTES.BILLING,
     icon: Receipt,
-  },
-  {
-    label: "Payments",
-    title: "Payment Management",
-    path: ROUTES.PAYMENTS,
-    icon: Wallet,
   },
   {
     label: "Insights",

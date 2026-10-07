@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -11,73 +12,112 @@ import type {
   TodayMealRecord,
 } from "../types";
 
+type MealRecordsState = {
+  key: string;
+  mealRecords: TodayMealRecord[];
+  loading: boolean;
+  error: string | null;
+};
+
 export function useTodayMealRecords(
   mealSession: MealSession,
   enabled = true
 ) {
-  const [
-    mealRecords,
-    setMealRecords,
-  ] = useState<TodayMealRecord[]>([]);
+  const [state, setState] =
+    useState<MealRecordsState | null>(null);
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(false);
+  const requestVersionRef = useRef(0);
 
-  const [
-    error,
-    setError,
-  ] = useState<string | null>(null);
+  const stateKey = `${mealSession}-${enabled}`;
 
-  const fetchTodayMealRecords =
-    useCallback(async () => {
+  const loadTodayMealRecords = useCallback(
+    (): Promise<void> => {
+      const version = ++requestVersionRef.current;
+
       if (!enabled) {
-        setMealRecords([]);
-        setLoading(false);
-        setError(null);
-        return;
+        return Promise.resolve();
       }
 
-      try {
-        setLoading(true);
-        setError(null);
+      return getTodayMealRecords(mealSession)
+        .then((response) => {
+          if (requestVersionRef.current !== version) {
+            return;
+          }
 
-        const response =
-          await getTodayMealRecords(
-            mealSession
-          );
+          setState({
+            key: stateKey,
+            mealRecords: response.data,
+            loading: false,
+            error: null,
+          });
+        })
+        .catch(() => {
+          if (requestVersionRef.current !== version) {
+            return;
+          }
 
-        setMealRecords(
-          response.data
-        );
-      } catch {
-        setError(
-          "Failed to load today's meal records."
-        );
-      } finally {
-        setLoading(false);
-      }
-    }, [mealSession, enabled]);
+          setState((previous) => ({
+            key: stateKey,
+            mealRecords:
+              previous?.key === stateKey
+                ? previous.mealRecords
+                : [],
+            loading: false,
+            error: "Failed to load today's meal records.",
+          }));
+        });
+    },
+    [mealSession, enabled, stateKey]
+  );
+
+  const refetch = useCallback((): Promise<void> => {
+    if (!enabled) {
+      setState(null);
+    } else {
+      setState((previous) => ({
+        key: stateKey,
+        mealRecords:
+          previous?.key === stateKey
+            ? previous.mealRecords
+            : [],
+        loading: true,
+        error: null,
+      }));
+    }
+
+    return loadTodayMealRecords();
+  }, [enabled, stateKey, loadTodayMealRecords]);
 
   useEffect(() => {
     if (!enabled) {
-      setMealRecords([]);
-      setLoading(false);
-      setError(null);
       return;
     }
 
-    fetchTodayMealRecords();
-  }, [
-    fetchTodayMealRecords,
-    enabled,
-  ]);
+    void loadTodayMealRecords();
+
+    return () => {
+      requestVersionRef.current += 1;
+    };
+  }, [enabled, loadTodayMealRecords]);
+
+  const currentState =
+    state?.key === stateKey ? state : null;
 
   return {
-    mealRecords,
-    loading,
-    error,
-    refetch: fetchTodayMealRecords,
+    mealRecords:
+      enabled
+        ? currentState?.mealRecords ?? []
+        : [],
+
+    loading:
+      enabled &&
+      (currentState === null || currentState.loading),
+
+    error:
+      enabled
+        ? currentState?.error ?? null
+        : null,
+
+    refetch,
   };
 }

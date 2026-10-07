@@ -1,54 +1,123 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { mealResponseApi } from "../api";
 
 import type { MealResponse } from "../types";
 
+type ResponseState = {
+  customerId: number;
+  menuId: number;
+  mealResponse: MealResponse | null;
+  error: string | null;
+};
+
 export function useCustomerMealResponse(
   customerId: number,
   menuId: number
 ) {
-  const [mealResponse, setMealResponse] =
-    useState<MealResponse | null>(null);
+  const [state, setState] =
+    useState<ResponseState | null>(null);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [refreshing, setRefreshing] =
+    useState(false);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const requestVersionRef = useRef(0);
 
-  const fetchMealResponse =
-    useCallback(async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const loadMealResponse = useCallback(
+    (): Promise<void> => {
+      const requestVersion =
+        ++requestVersionRef.current;
 
-        const response =
-          await mealResponseApi.getCustomerMealResponse(
+      return mealResponseApi
+        .getCustomerMealResponse(customerId, menuId)
+        .then((response) => {
+          if (
+            requestVersion !== requestVersionRef.current
+          ) {
+            return;
+          }
+
+          setState({
             customerId,
-            menuId
-          );
+            menuId,
+            mealResponse: response.data,
+            error: null,
+          });
+        })
+        .catch((err: unknown) => {
+          if (
+            requestVersion !== requestVersionRef.current
+          ) {
+            return;
+          }
 
-        setMealResponse(response.data);
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load meal response."
-        );
-      } finally {
-        setLoading(false);
-      }
-    }, [customerId, menuId]);
+          setState((previous) => ({
+            customerId,
+            menuId,
+            mealResponse:
+              previous !== null &&
+              previous.customerId === customerId &&
+              previous.menuId === menuId
+                ? previous.mealResponse
+                : null,
+            error:
+              err instanceof Error
+                ? err.message
+                : "Failed to load meal response.",
+          }));
+        })
+        .finally(() => {
+          if (
+            requestVersion === requestVersionRef.current
+          ) {
+            setRefreshing(false);
+          }
+        });
+    },
+    [customerId, menuId]
+  );
+
+  const fetchMealResponse = useCallback(
+    (): Promise<void> => {
+      setRefreshing(true);
+
+      setState((previous) =>
+        previous !== null &&
+        previous.customerId === customerId &&
+        previous.menuId === menuId
+          ? { ...previous, error: null }
+          : previous
+      );
+
+      return loadMealResponse();
+    },
+    [customerId, menuId, loadMealResponse]
+  );
 
   useEffect(() => {
-    fetchMealResponse();
-  }, [fetchMealResponse]);
+    void loadMealResponse();
+
+    return () => {
+      requestVersionRef.current += 1;
+    };
+  }, [loadMealResponse]);
+
+  const currentState =
+    state !== null &&
+    state.customerId === customerId &&
+    state.menuId === menuId
+      ? state
+      : null;
 
   return {
-    mealResponse,
-    loading,
-    error,
+    mealResponse: currentState?.mealResponse ?? null,
+    loading: currentState === null || refreshing,
+    error: currentState?.error ?? null,
     refetch: fetchMealResponse,
   };
 }

@@ -1,4 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { mealResponseApi } from "../api";
 
@@ -6,54 +11,108 @@ import type {
   MealResponseAvailability,
 } from "../types";
 
+type AvailabilityState = {
+  menuId: number;
+  availability: MealResponseAvailability | null;
+  error: string | null;
+};
+
 export function useMealResponseAvailability(
   menuId: number
 ) {
-  const [availability, setAvailability] =
-    useState<MealResponseAvailability | null>(null);
+  const [state, setState] =
+    useState<AvailabilityState | null>(null);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [refreshing, setRefreshing] =
+    useState(false);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const requestVersionRef = useRef(0);
 
-  const fetchAvailability =
-    useCallback(async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const loadAvailability = useCallback(
+    (): Promise<void> => {
+      const requestVersion =
+        ++requestVersionRef.current;
 
-        const response =
-          await mealResponseApi.getResponseAvailability(
-            menuId
-          );
+      return mealResponseApi
+        .getResponseAvailability(menuId)
+        .then((response) => {
+          if (
+            requestVersion !== requestVersionRef.current
+          ) {
+            return;
+          }
 
-        setAvailability(response.data);
+          setState({
+            menuId,
+            availability: response.data,
+            error: null,
+          });
+        })
+        .catch((err: unknown) => {
+          if (
+            requestVersion !== requestVersionRef.current
+          ) {
+            return;
+          }
 
-      } catch (err) {
+          setState((previous) => ({
+            menuId,
+            availability:
+              previous !== null &&
+              previous.menuId === menuId
+                ? previous.availability
+                : null,
+            error:
+              err instanceof Error
+                ? err.message
+                : "Failed to load response availability.",
+          }));
+        })
+        .finally(() => {
+          if (
+            requestVersion === requestVersionRef.current
+          ) {
+            setRefreshing(false);
+          }
+        });
+    },
+    [menuId]
+  );
 
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load response availability."
-        );
+  const fetchAvailability = useCallback(
+    (): Promise<void> => {
+      setRefreshing(true);
 
-      } finally {
+      setState((previous) =>
+        previous !== null &&
+        previous.menuId === menuId
+          ? { ...previous, error: null }
+          : previous
+      );
 
-        setLoading(false);
-
-      }
-    }, [menuId]);
+      return loadAvailability();
+    },
+    [menuId, loadAvailability]
+  );
 
   useEffect(() => {
-    fetchAvailability();
-  }, [fetchAvailability]);
+    void loadAvailability();
+
+    return () => {
+      requestVersionRef.current += 1;
+    };
+  }, [loadAvailability]);
+
+  const currentState =
+    state !== null &&
+    state.menuId === menuId
+      ? state
+      : null;
 
   return {
-    availability,
-    loading,
-    error,
+    availability: currentState?.availability ?? null,
+    loading: currentState === null || refreshing,
+    error: currentState?.error ?? null,
     refetch: fetchAvailability,
   };
 }

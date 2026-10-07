@@ -14,6 +14,7 @@ public enum NotificationType {
 
     BILL_GENERATED,
 
-    GENERAL
+    PAYMENT_RECEIVED,
 
+    GENERAL
 }

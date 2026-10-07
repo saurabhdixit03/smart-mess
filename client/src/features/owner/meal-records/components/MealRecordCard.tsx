@@ -1,114 +1,87 @@
-import {
-  CircleCheckBig,
-  Pizza,
-} from "lucide-react";
-
-import Card from "@/components/common/ui/Card/Card";
 import StatusBadge from "@/components/common/ui/StatusBadge/StatusBadge";
 
-import type { CollectionQueueItem } from "../types";
+import type { MealCollectionSelection } from "../types";
 
 type MealRecordCardProps = {
-  item: CollectionQueueItem;
+  item: MealCollectionSelection & {
+    mobileNumber?: string;
+    collected?: boolean;
+  };
 
-  onRecord: (
-    item: CollectionQueueItem
-  ) => void;
+  onRecord: (item: MealCollectionSelection) => void;
 };
 
 export default function MealRecordCard({
   item,
   onRecord,
 }: MealRecordCardProps) {
+  const collected = item.collected === true;
+  const hasResponse = item.mealResponseId !== null;
 
   return (
-
-    <Card
-      className="
-        w-72
-        shrink-0
-        snap-start
-        cursor-pointer
-        p-5
-        transition-all
-        duration-200
-        hover:-translate-y-1
-        hover:border-[var(--color-primary)]
-        hover:shadow-lg
-      "
+    <button
+      type="button"
+      disabled={collected}
+      aria-label={
+        collected
+          ? `${item.customerName}: meal already collected`
+          : `Record meal for ${item.customerName}`
+      }
       onClick={() => onRecord(item)}
+      className="flex h-full w-full min-w-0 flex-col rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 text-left transition-colors enabled:cursor-pointer enabled:hover:border-[var(--color-primary)] enabled:hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] disabled:cursor-default disabled:opacity-70"
     >
-
-      <div className="flex items-start justify-between">
-
-        <div className="min-w-0">
-
-          <p
-            className="
-              truncate
-              text-lg
-              font-semibold
-              text-[var(--color-text)]
-            "
-          >
-            {item.customerName}
-          </p>
-
-        </div>
-
-        <CircleCheckBig
-          size={22}
-          className="
-            shrink-0
-            text-green-600
-          "
-        />
-
-      </div>
-
-      <div className="mt-5 space-y-3">
-
-        <StatusBadge
-          label={
-            item.mealOption === "FULL"
-              ? "Full Meal"
-              : "Half Meal"
-          }
-          variant={
-            item.mealOption === "FULL"
-              ? "full"
-              : "half"
-          }
-        />
-
-        <div
-          className="
-            flex
-            items-center
-            gap-2
-            text-sm
-            text-[var(--color-text-secondary)]
-          "
+      <span className="block w-full min-w-0">
+        <span
+          title={item.customerName}
+          className="block truncate text-base font-semibold text-[var(--color-text)]"
         >
+          {item.customerName}
+        </span>
 
-          <Pizza
-            size={16}
+        {item.mobileNumber && (
+          <span className="mt-1 block text-xs text-[var(--color-text-secondary)]">
+            {item.mobileNumber}
+          </span>
+        )}
+      </span>
+
+      <span className="mt-4 block w-full border-t border-[var(--color-border)] pt-3">
+        {collected ? (
+          <StatusBadge
+            label="Collected"
+            variant="success"
           />
+        ) : hasResponse ? (
+          <span className="flex items-center justify-between gap-3">
+            <StatusBadge
+              label={
+                item.mealOption === "FULL"
+                  ? "Full Meal"
+                  : "Half Meal"
+              }
+              variant={
+                item.mealOption === "FULL"
+                  ? "full"
+                  : "half"
+              }
+            />
 
-          <span>
-            Extra Rotis
+            <span className="text-right">
+              <span className="block text-xs text-[var(--color-text-secondary)]">
+                Extra rotis
+              </span>
+
+              <span className="mt-0.5 block text-sm font-semibold tabular-nums text-[var(--color-text)]">
+                {item.extraRotiCount}
+              </span>
+            </span>
           </span>
-
-          <span className="font-semibold">
-            {item.extraRotiCount}
+        ) : (
+          <span className="text-xs text-[var(--color-text-secondary)]">
+            No meal response submitted
           </span>
-
-        </div>
-
-      </div>
-
-    </Card>
-
+        )}
+      </span>
+    </button>
   );
-
 }

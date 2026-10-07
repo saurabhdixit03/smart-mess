@@ -42,7 +42,9 @@ public class SecurityConfig {
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS))
+                                SessionCreationPolicy.STATELESS
+                        )
+                )
 
                 .exceptionHandling(exception ->
                         exception.accessDeniedHandler(
@@ -60,14 +62,21 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**")
                         .permitAll()
 
-                        // Public mess information for customer registration
+                        // Signed Cashfree webhook
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/webhooks/cashfree"
+                        )
+                        .permitAll()
+
+                        // Public mess information for registration
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/public/messes/registration/*"
                         )
                         .permitAll()
 
-                        // Owner's registration link for sharing and QR rendering
+                        // Owner's registration link
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/mess/registration-link"

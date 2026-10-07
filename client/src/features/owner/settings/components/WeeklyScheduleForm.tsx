@@ -1,6 +1,6 @@
 import {
-  useEffect,
   useState,
+  type FormEvent,
 } from "react";
 
 import { toast } from "sonner";
@@ -32,43 +32,49 @@ const dayOptions = [
   { label: "Sunday", value: "SUNDAY" },
 ];
 
-export default function WeeklyScheduleForm({
+export default function WeeklyScheduleForm(
+  props: WeeklyScheduleFormProps
+) {
+  const formKey = JSON.stringify([
+    props.settings?.settingsId ?? null,
+    props.settings?.weeklyClosedDay ?? null,
+    props.settings?.weeklyLunchClosed ?? false,
+    props.settings?.weeklyDinnerClosed ?? false,
+  ]);
+
+  return (
+    <WeeklyScheduleFormContent
+      key={formKey}
+      {...props}
+    />
+  );
+}
+
+function WeeklyScheduleFormContent({
   settings,
   onSuccess,
 }: WeeklyScheduleFormProps) {
   const [weeklyClosedDay, setWeeklyClosedDay] =
-    useState<DayOfWeek | "">("");
+    useState<DayOfWeek | "">(
+      settings?.weeklyClosedDay ?? ""
+    );
 
   const [weeklyLunchClosed, setWeeklyLunchClosed] =
-    useState(false);
+    useState(
+      settings?.weeklyLunchClosed ?? false
+    );
 
   const [weeklyDinnerClosed, setWeeklyDinnerClosed] =
-    useState(false);
+    useState(
+      settings?.weeklyDinnerClosed ?? false
+    );
 
   const [saving, setSaving] =
     useState(false);
 
-  useEffect(() => {
-    if (!settings) {
-      return;
-    }
-
-    setWeeklyClosedDay(
-      settings.weeklyClosedDay ?? ""
-    );
-
-    setWeeklyLunchClosed(
-      settings.weeklyLunchClosed
-    );
-
-    setWeeklyDinnerClosed(
-      settings.weeklyDinnerClosed
-    );
-  }, [settings]);
-
-  const handleSubmit = async (
-    e: React.FormEvent
-  ) => {
+  async function handleSubmit(
+    e: FormEvent<HTMLFormElement>
+  ) {
     e.preventDefault();
 
     if (
@@ -98,13 +104,12 @@ export default function WeeklyScheduleForm({
     try {
       setSaving(true);
 
-      const payload:
-        UpdateWeeklyScheduleRequest = {
-          weeklyClosedDay:
-            weeklyClosedDay || null,
-          weeklyLunchClosed,
-          weeklyDinnerClosed,
-        };
+      const payload: UpdateWeeklyScheduleRequest = {
+        weeklyClosedDay:
+          weeklyClosedDay || null,
+        weeklyLunchClosed,
+        weeklyDinnerClosed,
+      };
 
       await settingsApi.updateWeeklySchedule(
         payload
@@ -124,7 +129,7 @@ export default function WeeklyScheduleForm({
     } finally {
       setSaving(false);
     }
-  };
+  }
 
   return (
     <form
@@ -140,9 +145,7 @@ export default function WeeklyScheduleForm({
           value={weeklyClosedDay}
           onChange={(e) =>
             setWeeklyClosedDay(
-              e.target.value as
-                | DayOfWeek
-                | ""
+              e.target.value as DayOfWeek | ""
             )
           }
         >
@@ -157,13 +160,7 @@ export default function WeeklyScheduleForm({
         </Select>
       </div>
 
-      <div
-        className="
-          grid
-          gap-4
-          sm:grid-cols-2
-        "
-      >
+      <div className="grid gap-4 sm:grid-cols-2">
         <label
           className="
             flex

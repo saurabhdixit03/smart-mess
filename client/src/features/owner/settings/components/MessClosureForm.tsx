@@ -1,10 +1,8 @@
 import {
-  useEffect,
-  useMemo,
+  useRef,
   useState,
+  type FormEvent,
 } from "react";
-
-import { toast } from "sonner";
 
 import Button from "@/components/common/ui/Button/Button";
 import Input from "@/components/common/ui/Input/Input";
@@ -34,120 +32,120 @@ type MessClosureFormProps = {
   onCancelEdit?: () => void;
 };
 
-const sessionOptions: {
-  label: string;
-  value: MealSession;
-}[] = [
-  {
-    label: "Lunch",
-    value: "LUNCH",
-  },
-  {
-    label: "Dinner",
-    value: "DINNER",
-  },
-];
+function getTodayDate(): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
 
-function getTodayDate() {
-  return new Date()
-    .toISOString()
-    .slice(0, 10);
+  const year = parts.find(
+    (part) => part.type === "year"
+  )!.value;
+
+  const month = parts.find(
+    (part) => part.type === "month"
+  )!.value;
+
+  const day = parts.find(
+    (part) => part.type === "day"
+  )!.value;
+
+  return `${year}-${month}-${day}`;
 }
 
-export default function MessClosureForm({
+function isValidDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+
+  const date = new Date(`${value}T00:00:00Z`);
+
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.toISOString().slice(0, 10) === value
+  );
+}
+
+export default function MessClosureForm(
+  props: MessClosureFormProps
+) {
+  const closure = props.closure;
+
+  const formKey = JSON.stringify([
+    closure?.closureId ?? null,
+    closure?.startDate ?? null,
+    closure?.startSession ?? null,
+    closure?.endDate ?? null,
+    closure?.endSession ?? null,
+    closure?.reason ?? null,
+  ]);
+
+  return (
+    <MessClosureFormContent
+      key={formKey}
+      {...props}
+    />
+  );
+}
+
+function MessClosureFormContent({
   closure,
   saving = false,
   onCreate,
   onUpdate,
   onCancelEdit,
 }: MessClosureFormProps) {
-  const isEditMode =
-    closure != null;
+  const isEditMode = closure != null;
 
   const [startDate, setStartDate] =
-    useState("");
+    useState(closure?.startDate ?? "");
 
   const [startSession, setStartSession] =
-    useState<MealSession>("LUNCH");
+    useState<MealSession>(
+      closure?.startSession ?? "LUNCH"
+    );
 
   const [endDate, setEndDate] =
-    useState("");
+    useState(closure?.endDate ?? "");
 
   const [endSession, setEndSession] =
-    useState<MealSession>("DINNER");
+    useState<MealSession>(
+      closure?.endSession ?? "DINNER"
+    );
 
   const [reason, setReason] =
-    useState("");
+    useState(closure?.reason ?? "");
 
-  const today =
-    useMemo(
-      () => getTodayDate(),
-      []
-    );
+  const [validationError, setValidationError] =
+    useState<string | null>(null);
 
-  useEffect(() => {
-    if (!closure) {
-      setStartDate("");
-      setStartSession("LUNCH");
-      setEndDate("");
-      setEndSession("DINNER");
-      setReason("");
+  const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
-      return;
+  const busy = saving || submitting;
+  const today = getTodayDate();
+
+  function clearError() {
+    setValidationError(null);
+  }
+
+  function validateForm(): string | null {
+    if (!isValidDate(startDate)) {
+      return "Select a valid start date.";
     }
 
-    setStartDate(
-      closure.startDate
-    );
-
-    setStartSession(
-      closure.startSession
-    );
-
-    setEndDate(
-      closure.endDate
-    );
-
-    setEndSession(
-      closure.endSession
-    );
-
-    setReason(
-      closure.reason
-    );
-  }, [closure]);
-
-  function validateForm() {
-    if (!startDate) {
-      toast.error(
-        "Start date is required."
-      );
-
-      return false;
+    if (!isValidDate(endDate)) {
+      return "Select a valid end date.";
     }
 
-    if (!endDate) {
-      toast.error(
-        "End date is required."
-      );
-
-      return false;
-    }
-
-    if (startDate < today) {
-      toast.error(
-        "Closure start date cannot be in the past."
-      );
-
-      return false;
+    if (startDate < getTodayDate()) {
+      return "Closure start date cannot be in the past.";
     }
 
     if (endDate < startDate) {
-      toast.error(
-        "Closure end date cannot be before the start date."
-      );
-
-      return false;
+      return "Closure end date cannot be before the start date.";
     }
 
     if (
@@ -155,47 +153,38 @@ export default function MessClosureForm({
       startSession === "DINNER" &&
       endSession === "LUNCH"
     ) {
-      toast.error(
-        "Closure end session cannot be before the start session on the same date."
-      );
-
-      return false;
+      return "For a single-day closure, the ending meal cannot be before the starting meal.";
     }
 
-    const trimmedReason =
-      reason.trim();
-
-    if (!trimmedReason) {
-      toast.error(
-        "Closure reason is required."
-      );
-
-      return false;
+    if (!reason.trim()) {
+      return "Enter a reason for the closure.";
     }
 
-    if (
-      trimmedReason.length > 255
-    ) {
-      toast.error(
-        "Closure reason must not exceed 255 characters."
-      );
-
-      return false;
+    if (reason.trim().length > 255) {
+      return "Closure reason must not exceed 255 characters.";
     }
 
-    return true;
+    return null;
   }
 
   async function handleSubmit(
-    e: React.FormEvent
+    event: FormEvent<HTMLFormElement>
   ) {
-    e.preventDefault();
+    event.preventDefault();
 
-    if (!validateForm()) {
+    if (saving || submittingRef.current) {
       return;
     }
 
-    const payload = {
+    const message = validateForm();
+
+    setValidationError(message);
+
+    if (message) {
+      return;
+    }
+
+    const payload: CreateMessClosureRequest = {
       startDate,
       startSession,
       endDate,
@@ -203,33 +192,30 @@ export default function MessClosureForm({
       reason: reason.trim(),
     };
 
-    let success = false;
+    submittingRef.current = true;
+    setSubmitting(true);
 
-    if (
-      isEditMode &&
-      closure
-    ) {
-      success =
-        await onUpdate(
-          closure.closureId,
-          payload
-        );
-    } else {
-      success =
-        await onCreate(
-          payload
-        );
-    }
+    try {
+      const success = closure
+        ? await onUpdate(closure.closureId, payload)
+        : await onCreate(payload);
 
-    if (
-      success &&
-      !isEditMode
-    ) {
-      setStartDate("");
-      setStartSession("LUNCH");
-      setEndDate("");
-      setEndSession("DINNER");
-      setReason("");
+      if (success && !isEditMode) {
+        setStartDate("");
+        setStartSession("LUNCH");
+        setEndDate("");
+        setEndSession("DINNER");
+        setReason("");
+      }
+    } catch (error: unknown) {
+      setValidationError(
+        error instanceof Error
+          ? error.message
+          : "Unable to save the closure."
+      );
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
     }
   }
 
@@ -238,149 +224,178 @@ export default function MessClosureForm({
       onSubmit={handleSubmit}
       className="space-y-5"
     >
-      <div
-        className="
-          grid
-          gap-4
-          md:grid-cols-2
-        "
+      <fieldset
+        disabled={busy}
+        className="space-y-5"
       >
-        <div>
-          <label className="mb-2 block text-sm font-medium">
-            Start Date
-          </label>
+        <legend className="sr-only">
+          Temporary mess closure
+        </legend>
 
-          <Input
-            fullWidth
-            type="date"
-            min={today}
-            value={startDate}
-            onChange={(e) =>
-              setStartDate(
-                e.target.value
-              )
-            }
-          />
-        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <section className="min-w-0 rounded-xl border border-[var(--color-border)] p-4">
+            <h3 className="mb-4 text-sm font-semibold">
+              Closure Starts
+            </h3>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium">
-            Start Session
-          </label>
-
-          <Select
-            value={startSession}
-            onChange={(e) =>
-              setStartSession(
-                e.target
-                  .value as MealSession
-              )
-            }
-          >
-            {sessionOptions.map(
-              (option) => (
-                <option
-                  key={option.value}
-                  value={option.value}
+            <div className="space-y-3">
+              <div>
+                <label
+                  htmlFor="closure-start-date"
+                  className="mb-1.5 block text-xs font-medium text-[var(--color-text-secondary)]"
                 >
-                  {option.label}
-                </option>
-              )
-            )}
-          </Select>
-        </div>
+                  Date
+                </label>
 
-        <div>
-          <label className="mb-2 block text-sm font-medium">
-            End Date
-          </label>
+                <Input
+                  id="closure-start-date"
+                  fullWidth
+                  required
+                  type="date"
+                  min={today}
+                  value={startDate}
+                  onChange={(event) => {
+                    setStartDate(event.target.value);
+                    clearError();
+                  }}
+                />
+              </div>
 
-          <Input
-            fullWidth
-            type="date"
-            min={
-              startDate || today
-            }
-            value={endDate}
-            onChange={(e) =>
-              setEndDate(
-                e.target.value
-              )
-            }
-          />
-        </div>
-
-        <div>
-          <label className="mb-2 block text-sm font-medium">
-            End Session
-          </label>
-
-          <Select
-            value={endSession}
-            onChange={(e) =>
-              setEndSession(
-                e.target
-                  .value as MealSession
-              )
-            }
-          >
-            {sessionOptions.map(
-              (option) => (
-                <option
-                  key={option.value}
-                  value={option.value}
+              <div>
+                <label
+                  htmlFor="closure-start-session"
+                  className="mb-1.5 block text-xs font-medium text-[var(--color-text-secondary)]"
                 >
-                  {option.label}
-                </option>
-              )
-            )}
-          </Select>
+                  From Meal
+                </label>
+
+                <Select
+                  id="closure-start-session"
+                  className="w-full"
+                  value={startSession}
+                  onChange={(event) => {
+                    setStartSession(
+                      event.target.value as MealSession
+                    );
+                    clearError();
+                  }}
+                >
+                  <option value="LUNCH">Lunch</option>
+                  <option value="DINNER">Dinner</option>
+                </Select>
+              </div>
+            </div>
+          </section>
+
+          <section className="min-w-0 rounded-xl border border-[var(--color-border)] p-4">
+            <h3 className="mb-4 text-sm font-semibold">
+              Closure Ends
+            </h3>
+
+            <div className="space-y-3">
+              <div>
+                <label
+                  htmlFor="closure-end-date"
+                  className="mb-1.5 block text-xs font-medium text-[var(--color-text-secondary)]"
+                >
+                  Date
+                </label>
+
+                <Input
+                  id="closure-end-date"
+                  fullWidth
+                  required
+                  type="date"
+                  min={
+                    startDate && startDate > today
+                      ? startDate
+                      : today
+                  }
+                  value={endDate}
+                  onChange={(event) => {
+                    setEndDate(event.target.value);
+                    clearError();
+                  }}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="closure-end-session"
+                  className="mb-1.5 block text-xs font-medium text-[var(--color-text-secondary)]"
+                >
+                  Through Meal
+                </label>
+
+                <Select
+                  id="closure-end-session"
+                  className="w-full"
+                  value={endSession}
+                  onChange={(event) => {
+                    setEndSession(
+                      event.target.value as MealSession
+                    );
+                    clearError();
+                  }}
+                >
+                  <option value="LUNCH">Lunch</option>
+                  <option value="DINNER">Dinner</option>
+                </Select>
+              </div>
+            </div>
+          </section>
         </div>
-      </div>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium">
-          Closure Reason
-        </label>
+        <div>
+          <label
+            htmlFor="closure-reason"
+            className="mb-2 block text-sm font-medium"
+          >
+            Reason
+          </label>
 
-        <Textarea
-          value={reason}
-          maxLength={255}
-          rows={3}
-          placeholder="e.g. Festival holiday, maintenance, emergency closure..."
-          onChange={(e) =>
-            setReason(
-              e.target.value
-            )
-          }
-        />
+          <Textarea
+            id="closure-reason"
+            required
+            className="w-full"
+            value={reason}
+            maxLength={255}
+            rows={3}
+            placeholder="For example, festival holiday or maintenance."
+            onChange={(event) => {
+              setReason(event.target.value);
+              clearError();
+            }}
+          />
 
-        <div
-          className="
-            mt-1
-            text-right
-            text-xs
-            text-[var(--color-text-secondary)]
-          "
-        >
-          {reason.length}/255
+          <p className="mt-1 text-right text-xs text-[var(--color-text-secondary)]">
+            {reason.length}/255
+          </p>
         </div>
-      </div>
+      </fieldset>
 
       <p className="text-xs leading-5 text-[var(--color-text-secondary)]">
-        If a menu is already published for the selected starting session,
-        the closure will begin from the next available meal session.
+        The selected starting and ending meals are included.
+        If the starting meal already has a published menu,
+        the closure begins from the next available meal session.
       </p>
 
-      <div className="flex justify-end gap-3">
-        {isEditMode && (
+      {validationError && (
+        <p
+          role="alert"
+          className="text-sm text-red-500"
+        >
+          {validationError}
+        </p>
+      )}
+
+      <div className="flex justify-end gap-3 border-t border-[var(--color-border)] pt-4">
+        {onCancelEdit && (
           <Button
             type="button"
             variant="secondary"
-            disabled={saving}
-            onClick={
-              onCancelEdit
-            }
+            disabled={busy}
+            onClick={onCancelEdit}
           >
             Cancel
           </Button>
@@ -388,12 +403,12 @@ export default function MessClosureForm({
 
         <Button
           type="submit"
-          disabled={saving}
+          disabled={busy}
         >
-          {saving
+          {busy
             ? "Saving..."
             : isEditMode
-              ? "Update Closure"
+              ? "Save Changes"
               : "Schedule Closure"}
         </Button>
       </div>

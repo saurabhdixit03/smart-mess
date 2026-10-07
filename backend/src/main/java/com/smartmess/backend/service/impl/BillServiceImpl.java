@@ -5,13 +5,16 @@ import java.text.NumberFormat;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.Month;
+import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +29,7 @@ import com.smartmess.backend.entity.MealRecord;
 import com.smartmess.backend.enums.BillStatus;
 import com.smartmess.backend.enums.CustomerStatus;
 import com.smartmess.backend.enums.NotificationType;
+import com.smartmess.backend.enums.UserRole;
 import com.smartmess.backend.exception.BusinessException;
 import com.smartmess.backend.exception.ResourceNotFoundException;
 import com.smartmess.backend.mapper.BillMapper;
@@ -34,6 +38,7 @@ import com.smartmess.backend.repository.BillRepository;
 import com.smartmess.backend.repository.CustomerRepository;
 import com.smartmess.backend.repository.MealRecordRepository;
 import com.smartmess.backend.security.CustomerSecurity;
+import com.smartmess.backend.service.BillPaymentReceiptService;
 import com.smartmess.backend.service.BillService;
 import com.smartmess.backend.service.NotificationService;
 
@@ -43,6 +48,9 @@ public class BillServiceImpl implements BillService {
     private static final Locale INDIA_LOCALE =
             Locale.forLanguageTag("en-IN");
 
+    private static final BigDecimal MAX_BILL_AMOUNT =
+            new BigDecimal("99999999.99");
+
     private final BillRepository billRepository;
     private final CustomerRepository customerRepository;
     private final MealRecordRepository mealRecordRepository;
@@ -51,6 +59,7 @@ public class BillServiceImpl implements BillService {
     private final CustomerSecurity customerSecurity;
     private final NotificationService notificationService;
     private final Clock clock;
+    private final BillPaymentReceiptService billPaymentReceiptService;
 
     public BillServiceImpl(
             BillRepository billRepository,
@@ -60,7 +69,8 @@ public class BillServiceImpl implements BillService {
             MealRecordMapper mealRecordMapper,
             CustomerSecurity customerSecurity,
             NotificationService notificationService,
-            Clock clock) {
+            Clock clock,
+            BillPaymentReceiptService billPaymentReceiptService) {
 
         this.billRepository = billRepository;
         this.customerRepository = customerRepository;
@@ -70,511 +80,432 @@ public class BillServiceImpl implements BillService {
         this.customerSecurity = customerSecurity;
         this.notificationService = notificationService;
         this.clock = clock;
+        this.billPaymentReceiptService = billPaymentReceiptService;
     }
 
     /*
-     * Generate Bills
-     *
-     * Owner only.
-     * Customers and meal records are restricted to the owner's mess.
+     * Generates additional bills from unbilled collected meals.
+     * Existing bills and their meal associations remain unchanged.
      */
     @Transactional
     @Override
     public List<BillResponse> generateBills(
             GenerateBillRequest request) {
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        if (customerSecurity.getCurrentUserRole() != UserRole.OWNER) {
+            throw new AccessDeniedException(
+                    "Only mess owners can generate bills."
+            );
+        }
 
-        List<Customer> customers =
-                customerRepository.findAllByMess_MessIdAndStatus(
-                        messId,
-                        CustomerStatus.ACTIVE
+        if (request == null) {
+            throw new BusinessException(
+                    "Billing request is required."
+            );
+        }
+
+        YearMonth period = validateBillingPeriod(
+                request.billingMonth(),
+                request.billingYear()
+        );
+
+        LocalDateTime now = LocalDateTime.now(clock);
+        LocalDate today = now.toLocalDate();
+
+        if (period.isAfter(YearMonth.from(today))) {
+            throw new BusinessException(
+                    "Bills cannot be generated for a future month."
+            );
+        }
+
+        LocalDate startDate = request.startDate() == null
+                ? period.atDay(1)
+                : request.startDate();
+
+        LocalDate defaultEndDate = period.atEndOfMonth();
+
+        if (defaultEndDate.isAfter(today)) {
+            defaultEndDate = today;
+        }
+
+        LocalDate endDate = request.endDate() == null
+                ? defaultEndDate
+                : request.endDate();
+
+        validateDateRange(period, startDate, endDate, today);
+
+        Long messId = customerSecurity.getCurrentMessId();
+        Long selectedCustomerId = request.customerId();
+
+        if (selectedCustomerId != null) {
+            if (selectedCustomerId <= 0) {
+                throw new BusinessException(
+                        "Customer ID must be positive."
                 );
-
-        List<BillResponse> generatedBills =
-                new ArrayList<>();
-
-        int existingBillCount = 0;
-        int noMealRecordCount = 0;
-
-        LocalDate startDate =
-                LocalDate.of(
-                        request.billingYear(),
-                        request.billingMonth(),
-                        1
-                );
-
-        LocalDate endDate =
-                startDate.withDayOfMonth(
-                        startDate.lengthOfMonth()
-                );
-
-        LocalDateTime start =
-                startDate.atStartOfDay();
-
-        LocalDateTime end =
-                endDate.atTime(
-                        LocalTime.MAX
-                );
-
-        for (Customer customer : customers) {
-
-            /*
-             * Skip duplicate Bills.
-             */
-            boolean billExists =
-                    billRepository
-                            .existsByMess_MessIdAndCustomerAndBillingMonthAndBillingYear(
-                                    messId,
-                                    customer,
-                                    request.billingMonth(),
-                                    request.billingYear()
-                            );
-
-            if (billExists) {
-
-                existingBillCount++;
-                continue;
             }
 
-            /*
-             * Get meal records for the customer's
-             * selected billing period.
-             *
-             * Records are restricted to the same mess.
-             */
-            List<MealRecord> mealRecords =
-                    mealRecordRepository
-                            .findByMess_MessIdAndCustomerAndCollectedAtBetween(
-                                    messId,
-                                    customer,
-                                    start,
-                                    end
-                            );
+            Customer selectedCustomer =
+                    findCustomer(selectedCustomerId, messId);
 
-            /*
-             * Skip customers having no meal records.
-             */
-            if (mealRecords.isEmpty()) {
+            if (!isBillingEligible(selectedCustomer)) {
+                throw new BusinessException(
+                        "Bills can only be generated for active or inactive customers."
+                );
+            }
+        }
 
-                noMealRecordCount++;
-                continue;
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime endExclusive =
+                endDate.plusDays(1).atStartOfDay();
+
+        /*
+         * Individual generation locks only the selected customer's
+         * unbilled records. Bulk generation locks the selected period.
+         */
+        List<MealRecord> lockedRecords =
+                selectedCustomerId == null
+                        ? mealRecordRepository.findUnbilledForPeriodForUpdate(
+                                messId,
+                                start,
+                                endExclusive
+                        )
+                        : mealRecordRepository.findUnbilledForCustomerForUpdate(
+                                messId,
+                                selectedCustomerId,
+                                start,
+                                endExclusive
+                        );
+
+        List<MealRecord> unbilledRecords = lockedRecords.stream()
+                .filter(record ->
+                        isBillingEligible(record.getCustomer()))
+                .toList();
+
+        if (unbilledRecords.isEmpty()) {
+            throw new BusinessException(
+                    "No unbilled meal records were found"
+                            + (selectedCustomerId == null
+                                    ? ""
+                                    : " for the selected customer")
+                            + " between "
+                            + startDate
+                            + " and "
+                            + endDate
+                            + "."
+            );
+        }
+
+        Map<Long, List<MealRecord>> recordsByCustomer =
+                new LinkedHashMap<>();
+
+        for (MealRecord record : unbilledRecords) {
+            recordsByCustomer
+                    .computeIfAbsent(
+                            record.getCustomer().getCustomerId(),
+                            ignored -> new ArrayList<>()
+                    )
+                    .add(record);
+        }
+
+        List<BillResponse> generatedBills = new ArrayList<>();
+
+        for (List<MealRecord> records : recordsByCustomer.values()) {
+            Customer customer = records.get(0).getCustomer();
+            BigDecimal totalAmount = BigDecimal.ZERO;
+
+            for (MealRecord record : records) {
+                BigDecimal amount = record.getTotalAmount();
+
+                if (amount == null || amount.signum() < 0) {
+                    throw new BusinessException(
+                            "Meal record "
+                                    + record.getMealRecordId()
+                                    + " has an invalid amount."
+                    );
+                }
+
+                totalAmount = totalAmount.add(amount);
             }
 
-            BigDecimal totalAmount =
-                    mealRecords.stream()
-                            .map(MealRecord::getTotalAmount)
-                            .reduce(
-                                    BigDecimal.ZERO,
-                                    BigDecimal::add
-                            );
+            if (totalAmount.compareTo(MAX_BILL_AMOUNT) > 0) {
+                throw new BusinessException(
+                        "The bill amount exceeds the supported limit for customer "
+                                + customer.getCustomerId()
+                                + "."
+                );
+            }
 
-            Bill bill =
-                    new Bill();
+            Bill bill = new Bill();
 
             bill.setMess(customer.getMess());
             bill.setCustomer(customer);
-            bill.setBillingMonth(request.billingMonth());
-            bill.setBillingYear(request.billingYear());
-            bill.setMealRecordCount(mealRecords.size());
+            bill.setBillingMonth(period.getMonthValue());
+            bill.setBillingYear(period.getYear());
+            bill.setMealRecordCount(records.size());
             bill.setTotalAmount(totalAmount);
             bill.setBillStatus(BillStatus.UNPAID);
-            bill.setGeneratedAt(LocalDateTime.now(clock));
+            bill.setGeneratedAt(now);
 
-            Bill savedBill =
-                    billRepository.save(bill);
+            Bill savedBill = billRepository.save(bill);
 
-            /*
-             * Link Meal Records to the generated Bill.
-             */
-            for (MealRecord mealRecord : mealRecords) {
-                mealRecord.setBill(savedBill);
+            for (MealRecord record : records) {
+                record.setBill(savedBill);
             }
 
-            mealRecordRepository.saveAll(
-                    mealRecords
-            );
+            mealRecordRepository.saveAll(records);
 
             /*
-             * Notify the customer only after the bill
-             * and its meal records have been saved.
-             *
-             * Saving occurs within this transaction;
-             * commit happens after the method completes.
+             * Notification persistence joins this transaction.
+             * Live delivery happens after commit.
              */
             notificationService.notifyCustomer(
                     customer,
                     NotificationType.BILL_GENERATED,
                     "New Bill Generated",
-                    buildBillNotificationMessage(
-                            savedBill
-                    )
+                    buildBillNotificationMessage(savedBill)
             );
 
-            generatedBills.add(
-                    billMapper.toResponse(savedBill)
-            );
-        }
-
-        if (generatedBills.isEmpty()) {
-
-            throw new BusinessException(
-                    buildNoBillsGeneratedMessage(
-                            request,
-                            customers.size(),
-                            existingBillCount,
-                            noMealRecordCount
-                    )
-            );
+            generatedBills.add(billMapper.toResponse(savedBill));
         }
 
         return generatedBills;
     }
 
-    /*
-     * Customer Bill History
-     *
-     * Owner use case.
-     *
-     * The owner can request bills for any customer within their mess.
-     * Role authorization is handled at the controller level.
-     * Customer ownership is also validated in the service.
-     */
     @Transactional(readOnly = true)
     @Override
-    public List<BillResponse> getCustomerBills(
-            Long customerId) {
-
-        Long messId =
-                customerSecurity.getCurrentMessId();
-
-        Customer customer =
-                findCustomer(customerId, messId);
+    public List<BillResponse> getCustomerBills(Long customerId) {
+        Long messId = customerSecurity.getCurrentMessId();
+        Customer customer = findCustomer(customerId, messId);
 
         customerSecurity.checkCustomerAccess(customerId);
 
-        List<Bill> bills =
-                billRepository
-                        .findByMess_MessIdAndCustomerOrderByGeneratedAtDesc(
-                                messId,
-                                customer
-                        );
+        List<Bill> bills = billRepository
+                .findByMess_MessIdAndCustomerOrderByGeneratedAtDesc(
+                        messId,
+                        customer
+                );
 
-        return billMapper.toResponseList(
-                bills
-        );
+        return billMapper.toResponseList(bills);
     }
 
-    /*
-     * Authenticated Customer Bill History
-     *
-     * Customer ID comes directly from the JWT-backed principal.
-     *
-     * The client does NOT provide a customer ID.
-     */
     @Transactional(readOnly = true)
     @Override
     public List<BillResponse> getMyBills() {
+        Long customerId = customerSecurity.getCurrentUserId();
+        Long messId = customerSecurity.getCurrentMessId();
 
-        Long customerId =
-                customerSecurity.getCurrentUserId();
+        Customer customer = findCustomer(customerId, messId);
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        List<Bill> bills = billRepository
+                .findByMess_MessIdAndCustomerOrderByGeneratedAtDesc(
+                        messId,
+                        customer
+                );
 
-        Customer customer =
-                findCustomer(customerId, messId);
-
-        List<Bill> bills =
-                billRepository
-                        .findByMess_MessIdAndCustomerOrderByGeneratedAtDesc(
-                                messId,
-                                customer
-                        );
-
-        return billMapper.toResponseList(
-                bills
-        );
+        return billMapper.toResponseList(bills);
     }
 
-    /*
-     * Bill Details
-     *
-     * Owner can view any bill within their mess.
-     *
-     * Customer can view only their own bill.
-     */
     @Transactional(readOnly = true)
     @Override
-    public BillDetailResponse getBillDetails(
-            Long billId) {
+    public BillDetailResponse getBillDetails(Long billId) {
+        Long messId = customerSecurity.getCurrentMessId();
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        Bill bill = billRepository
+                .findByBillIdAndMess_MessId(billId, messId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Bill not found with ID: " + billId
+                ));
 
-        Bill bill =
-                billRepository
-                        .findByBillIdAndMess_MessId(
-                                billId,
-                                messId
-                        )
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Bill not found with ID: "
-                                                + billId
-                                ));
-
-        /*
-         * Ownership validation.
-         *
-         * OWNER:
-         *     checkCustomerAccess() permits customers in their mess.
-         *
-         * CUSTOMER:
-         *     checkCustomerAccess() verifies that
-         *     the bill belongs to the authenticated customer.
-         */
         customerSecurity.checkCustomerAccess(
                 bill.getCustomer().getCustomerId()
         );
 
-        List<MealRecord> mealRecords =
-                mealRecordRepository
-                        .findByMess_MessIdAndBillOrderByCollectedAtAsc(
-                                messId,
-                                bill
-                        );
-
-        BillDetailResponse response =
-                billMapper.toDetailResponse(
+        List<MealRecord> records = mealRecordRepository
+                .findByMess_MessIdAndBillOrderByCollectedAtAsc(
+                        messId,
                         bill
                 );
 
+        BillDetailResponse response =
+                billMapper.toDetailResponse(bill);
+
         response.setMealRecords(
-                mealRecordMapper.toResponseList(
-                        mealRecords
-                )
+                mealRecordMapper.toResponseList(records)
+        );
+
+        response.setPayment(
+                billPaymentReceiptService.getReceipt(bill)
         );
 
         return response;
     }
 
-    /*
-     * Billing Overview
-     *
-     * Owner only.
-     * Bills and financial summaries are restricted to their mess.
-     */
     @Transactional(readOnly = true)
     @Override
     public BillingOverviewResponse getBillingOverview(
             Integer billingMonth,
             Integer billingYear) {
 
-        validateBillingMonth(
-                billingMonth
-        );
-
-        Long messId =
-                customerSecurity.getCurrentMessId();
-
-        List<Bill> bills =
-                billRepository
-                        .findByMess_MessIdAndBillingMonthAndBillingYearOrderByGeneratedAtDesc(
-                                messId,
-                                billingMonth,
-                                billingYear
-                        );
-
-        if (bills.isEmpty()) {
-
-            throw new BusinessException(
-                    "No bills found for the selected billing period."
+        if (customerSecurity.getCurrentUserRole() != UserRole.OWNER) {
+            throw new AccessDeniedException(
+                    "Only mess owners can access billing reporting."
             );
         }
 
-        List<Object[]> summaryResult =
-                billRepository.getMonthlyFinancialInsightsByMess(
+        boolean hasMonth = billingMonth != null;
+        boolean hasYear = billingYear != null;
+
+        if (hasMonth != hasYear) {
+            throw new BusinessException(
+                    "Supply both billing month and year, or omit both for all periods."
+            );
+        }
+
+        if (hasMonth) {
+            validateBillingPeriod(billingMonth, billingYear);
+        }
+
+        Long messId = customerSecurity.getCurrentMessId();
+
+        List<Bill> bills = billRepository.findForOverview(
+                messId,
+                billingMonth,
+                billingYear
+        );
+
+        BillingSummaryResponse summary =
+                new BillingSummaryResponse();
+
+        summary.setTotalBills(0L);
+        summary.setPaidBills(0L);
+        summary.setUnpaidBills(0L);
+        summary.setTotalRevenue(BigDecimal.ZERO);
+        summary.setCollectedRevenue(BigDecimal.ZERO);
+        summary.setPendingRevenue(BigDecimal.ZERO);
+
+        List<Object[]> summaryRows = billRepository
+                .getFinancialSummaryForOverview(
                         messId,
                         billingMonth,
                         billingYear
                 );
 
-        BillingSummaryResponse summary =
-                new BillingSummaryResponse();
+        if (!summaryRows.isEmpty()) {
+            Object[] row = summaryRows.get(0);
 
-        Object[] row =
-                summaryResult.get(0);
-
-        summary.setTotalBills(
-                ((Number) row[1]).longValue()
-        );
-
-        summary.setPaidBills(
-                ((Number) row[2]).longValue()
-        );
-
-        summary.setUnpaidBills(
-                ((Number) row[3]).longValue()
-        );
-
-        summary.setTotalRevenue(
-                (BigDecimal) row[4]
-        );
-
-        summary.setCollectedRevenue(
-                (BigDecimal) row[5]
-        );
-
-        summary.setPendingRevenue(
-                (BigDecimal) row[6]
-        );
-
-        List<BillResponse> billResponses =
-                billMapper.toResponseList(
-                        bills
-                );
+            summary.setTotalBills(asLong(row[0]));
+            summary.setPaidBills(asLong(row[1]));
+            summary.setUnpaidBills(asLong(row[2]));
+            summary.setTotalRevenue(asAmount(row[3]));
+            summary.setCollectedRevenue(asAmount(row[4]));
+            summary.setPendingRevenue(asAmount(row[5]));
+        }
 
         BillingOverviewResponse response =
                 new BillingOverviewResponse();
 
-        response.setSummary(
-                summary
-        );
-
-        response.setBills(
-                billResponses
-        );
+        response.setSummary(summary);
+        response.setBills(billMapper.toResponseList(bills));
 
         return response;
     }
 
-    /*
-     * Resolves a customer only within the authenticated mess.
-     */
-    private Customer findCustomer(
-            Long customerId,
-            Long messId) {
-
-        return customerRepository
-                .findByCustomerIdAndMess_MessId(
-                        customerId,
-                        messId
-                )
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Customer not found with ID: "
-                                        + customerId
-                        ));
+    private boolean isBillingEligible(Customer customer) {
+        return customer.getStatus() == CustomerStatus.ACTIVE
+                || customer.getStatus() == CustomerStatus.INACTIVE;
     }
 
-    /*
-     * Build the customer-facing bill notification.
-     */
-    private String buildBillNotificationMessage(
-            Bill bill) {
+    private void validateDateRange(
+            YearMonth period,
+            LocalDate startDate,
+            LocalDate endDate,
+            LocalDate today) {
 
-        String billingPeriod =
-                buildBillingPeriod(
+        if (!YearMonth.from(startDate).equals(period)
+                || !YearMonth.from(endDate).equals(period)) {
+            throw new BusinessException(
+                    "Billing dates must belong to the selected billing month and year."
+            );
+        }
+
+        if (startDate.isAfter(endDate)) {
+            throw new BusinessException(
+                    "Billing start date must not be after the end date."
+            );
+        }
+
+        if (startDate.isAfter(today) || endDate.isAfter(today)) {
+            throw new BusinessException(
+                    "Billing dates cannot be in the future."
+            );
+        }
+    }
+
+    private Customer findCustomer(Long customerId, Long messId) {
+        return customerRepository
+                .findByCustomerIdAndMess_MessId(customerId, messId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Customer not found with ID: " + customerId
+                ));
+    }
+
+    private String buildBillNotificationMessage(Bill bill) {
+        String amount = NumberFormat
+                .getCurrencyInstance(INDIA_LOCALE)
+                .format(bill.getTotalAmount());
+
+        return "Bill #"
+                + bill.getBillId()
+                + " for "
+                + buildBillingPeriod(
                         bill.getBillingMonth(),
                         bill.getBillingYear()
-                );
-
-        String formattedAmount =
-                NumberFormat
-                        .getCurrencyInstance(
-                                INDIA_LOCALE
-                        )
-                        .format(
-                                bill.getTotalAmount()
-                        );
-
-        return "Your bill for "
-                + billingPeriod
-                + " has been generated. Amount due: "
-                + formattedAmount
+                )
+                + " has been generated for "
+                + bill.getMealRecordCount()
+                + " collected meals. Amount due: "
+                + amount
                 + ".";
     }
 
-    /*
-     * Explain why no new bills were generated.
-     */
-    private String buildNoBillsGeneratedMessage(
-            GenerateBillRequest request,
-            int activeCustomerCount,
-            int existingBillCount,
-            int noMealRecordCount) {
-
-        String billingPeriod =
-                buildBillingPeriod(
-                        request.billingMonth(),
-                        request.billingYear()
-                );
-
-        if (activeCustomerCount == 0) {
-            return "No active customers were found.";
-        }
-
-        if (existingBillCount == activeCustomerCount) {
-
-            return "Bills have already been generated for all active customers for "
-                    + billingPeriod
-                    + ".";
-        }
-
-        if (noMealRecordCount == activeCustomerCount) {
-
-            return "No meal records were found for active customers for "
-                    + billingPeriod
-                    + ".";
-        }
-
-        return "No new bills were generated for "
-                + billingPeriod
-                + ". Bills already exist for "
-                + existingBillCount
-                + (existingBillCount == 1
-                        ? " customer"
-                        : " customers")
-                + ", and "
-                + noMealRecordCount
-                + (noMealRecordCount == 1
-                        ? " customer has"
-                        : " customers have")
-                + " no meal records.";
-    }
-
-    /*
-     * Format a billing period for customer-facing messages.
-     */
     private String buildBillingPeriod(
             Integer billingMonth,
             Integer billingYear) {
 
-        String monthName =
-                Month.of(
-                        billingMonth
-                ).getDisplayName(
-                        TextStyle.FULL,
-                        Locale.ENGLISH
-                );
-
-        return monthName
+        return Month.of(billingMonth)
+                .getDisplayName(TextStyle.FULL, Locale.ENGLISH)
                 + " "
                 + billingYear;
     }
 
-    private void validateBillingMonth(
-            Integer billingMonth) {
+    private YearMonth validateBillingPeriod(
+            Integer billingMonth,
+            Integer billingYear) {
 
         if (billingMonth == null
                 || billingMonth < 1
                 || billingMonth > 12) {
-
             throw new BusinessException(
                     "Billing month must be between 1 and 12."
             );
         }
+
+        if (billingYear == null
+                || billingYear < 1000
+                || billingYear > 9998) {
+            throw new BusinessException(
+                    "Billing year must be between 1000 and 9998."
+            );
+        }
+
+        return YearMonth.of(billingYear, billingMonth);
+    }
+
+    private long asLong(Object value) {
+        return value == null ? 0L : ((Number) value).longValue();
+    }
+
+    private BigDecimal asAmount(Object value) {
+        return value == null ? BigDecimal.ZERO : (BigDecimal) value;
     }
 }

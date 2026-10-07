@@ -1,1 +1,0 @@
-export const PAYMENT_API_ENDPOINT = "/payments";

@@ -1,36 +1,78 @@
-import { useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { menuApi } from "../api";
+
 import type { Menu } from "../types";
 
 export function useMenus() {
-  const [todayMenus, setTodayMenus] = useState<Menu[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [todayMenus, setTodayMenus] =
+    useState<Menu[]>([]);
 
-  const fetchTodayMenus = async () => {
-    try {
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  const requestVersionRef = useRef(0);
+
+  const loadTodayMenus = useCallback(
+    (): Promise<void> => {
+      const requestVersion =
+        ++requestVersionRef.current;
+
+      return menuApi
+        .getTodayMenus()
+        .then((response) => {
+          if (
+            requestVersion !== requestVersionRef.current
+          ) {
+            return;
+          }
+
+          setTodayMenus(response.data);
+          setError(null);
+        })
+        .catch(() => {
+          if (
+            requestVersion === requestVersionRef.current
+          ) {
+            setError("Failed to load today's menus.");
+          }
+        })
+        .finally(() => {
+          if (
+            requestVersion === requestVersionRef.current
+          ) {
+            setLoading(false);
+          }
+        });
+    },
+    []
+  );
+
+  const fetchTodayMenus = useCallback(
+    (): Promise<void> => {
       setLoading(true);
       setError(null);
 
-      const apiResponse = await menuApi.getTodayMenus();
-
-      setTodayMenus(apiResponse.data);
-
-    } catch {
-
-      setError("Failed to load today's menus.");
-
-    } finally {
-
-      setLoading(false);
-
-    }
-  };
+      return loadTodayMenus();
+    },
+    [loadTodayMenus]
+  );
 
   useEffect(() => {
-    fetchTodayMenus();
-  }, []);
+    void loadTodayMenus();
+
+    return () => {
+      requestVersionRef.current += 1;
+    };
+  }, [loadTodayMenus]);
 
   return {
     todayMenus,

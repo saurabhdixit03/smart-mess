@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
 
-import {
-  PageHeader,
-} from "@/components/common/ui";
+import { PageHeader } from "@/components/common/ui";
 
 import {
   MealRecordGrid,
@@ -24,59 +22,58 @@ export default function MyMealsPage() {
     );
   }
 
+  return (
+    <CustomerMealHistory
+      key={customer.customerId}
+      customerId={customer.customerId}
+    />
+  );
+}
+
+function CustomerMealHistory({
+  customerId,
+}: {
+  customerId: number;
+}) {
   const {
     mealRecords,
     loading,
     error,
     fetchMealRecords,
-  } = useMealRecords(customer.customerId);
+  } = useMealRecords(customerId);
 
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
 
-  const filteredMealRecords =
-    useMemo(() => {
+  const filteredMealRecords = useMemo(() => {
+    const query = search.trim().toLowerCase();
 
-      const query =
-        search.trim().toLowerCase();
+    if (!query) {
+      return mealRecords;
+    }
 
-      if (!query) {
-        return mealRecords;
-      }
+    return mealRecords.filter((mealRecord) => {
+      const collectedDate = new Date(
+        mealRecord.collectedAt
+      )
+        .toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+        .toLowerCase();
 
-      return mealRecords.filter(
-        (mealRecord) => {
+      const mealSession =
+        mealRecord.mealSession.toLowerCase();
 
-          const collectedDate =
-            new Date(
-              mealRecord.collectedAt
-            )
-              .toLocaleDateString(
-                "en-IN",
-                {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                }
-              )
-              .toLowerCase();
-
-          const mealSession =
-            mealRecord.mealSession.toLowerCase();
-
-          return (
-            collectedDate.includes(query) ||
-            mealSession.includes(query)
-          );
-
-        }
+      return (
+        collectedDate.includes(query) ||
+        mealSession.includes(query)
       );
-
-    }, [mealRecords, search]);
+    });
+  }, [mealRecords, search]);
 
   return (
     <div className="space-y-6">
-
       <PageHeader
         title="My Meals"
         description="View your collected meal history."
@@ -88,14 +85,11 @@ export default function MyMealsPage() {
       />
 
       <MealRecordGrid
-        mealRecords={
-          filteredMealRecords
-        }
+        mealRecords={filteredMealRecords}
         loading={loading}
         error={error}
         onRefresh={fetchMealRecords}
       />
-
     </div>
   );
 }

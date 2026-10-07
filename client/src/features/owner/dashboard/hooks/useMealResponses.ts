@@ -1,87 +1,129 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { dashboardApi } from "../api/dashboard.api";
 
-import type { MealResponse } from "../types/dashboard.types";
+import type {
+  MealResponse,
+} from "../types/dashboard.types";
 
 const REFRESH_INTERVAL = 5000;
 
+type ResponsesState = {
+  menuId: number;
+  mealResponses: MealResponse[];
+  error: string | null;
+};
+
 export function useMealResponses(menuId?: number) {
+  const [state, setState] =
+    useState<ResponsesState | null>(null);
 
-  const [mealResponses, setMealResponses] = useState<
-    MealResponse[]
-  >([]);
-
-  const [loading, setLoading] =
+  const [refreshing, setRefreshing] =
     useState(false);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const requestVersionRef = useRef(0);
 
-  const fetchMealResponses = useCallback(
-    async (showLoader = true) => {
+  const loadMealResponses = useCallback(
+    (): Promise<void> => {
+      const version = ++requestVersionRef.current;
 
       if (!menuId) {
-        setMealResponses([]);
-        return;
+        return Promise.resolve();
       }
 
-      try {
+      return dashboardApi
+        .getResponsesByMenu(menuId)
+        .then((response) => {
+          if (requestVersionRef.current !== version) {
+            return;
+          }
 
-        if (showLoader) {
-          setLoading(true);
-        }
+          setState({
+            menuId,
+            mealResponses: response.data,
+            error: null,
+          });
+        })
+        .catch(() => {
+          if (requestVersionRef.current !== version) {
+            return;
+          }
 
-        setError(null);
-
-        const response =
-          await dashboardApi.getResponsesByMenu(
-            menuId
-          );
-
-        setMealResponses(response.data);
-
-      } catch {
-
-        setError(
-          "Failed to load meal responses."
-        );
-
-      } finally {
-
-        if (showLoader) {
-          setLoading(false);
-        }
-
-      }
-
+          setState((previous) => ({
+            menuId,
+            mealResponses:
+              previous?.menuId === menuId
+                ? previous.mealResponses
+                : [],
+            error: "Failed to load meal responses.",
+          }));
+        })
+        .finally(() => {
+          if (requestVersionRef.current === version) {
+            setRefreshing(false);
+          }
+        });
     },
     [menuId]
   );
 
-  useEffect(() => {
+  const refresh = useCallback((): Promise<void> => {
+    if (!menuId) {
+      setRefreshing(false);
+      return loadMealResponses();
+    }
 
-    fetchMealResponses(true);
+    setRefreshing(true);
+
+    setState((previous) =>
+      previous?.menuId === menuId
+        ? { ...previous, error: null }
+        : previous
+    );
+
+    return loadMealResponses();
+  }, [menuId, loadMealResponses]);
+
+  useEffect(() => {
+    if (!menuId) {
+      return;
+    }
+
+    void loadMealResponses();
 
     const interval = setInterval(() => {
-      fetchMealResponses(false);
+      void loadMealResponses();
     }, REFRESH_INTERVAL);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      requestVersionRef.current += 1;
+    };
+  }, [menuId, loadMealResponses]);
 
-  }, [fetchMealResponses]);
+  const currentState =
+    state?.menuId === menuId ? state : null;
 
   return {
+    mealResponses:
+      menuId
+        ? currentState?.mealResponses ?? []
+        : [],
 
-    mealResponses,
+    loading:
+      Boolean(menuId) &&
+      (currentState === null || refreshing),
 
-    loading,
+    error:
+      menuId
+        ? currentState?.error ?? null
+        : null,
 
-    error,
-
-    refresh: () =>
-      fetchMealResponses(true),
-
+    refresh,
   };
-
 }

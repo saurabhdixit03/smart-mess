@@ -18,6 +18,8 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,6 +29,16 @@ import lombok.Setter;
 @Entity
 @Table(
         name = "meal_records",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_meal_records_mess_customer_menu",
+                        columnNames = {
+                                "mess_id",
+                                "customer_id",
+                                "menu_id"
+                        }
+                )
+        },
         indexes = {
                 @Index(
                         name = "idx_meal_records_mess_customer_collected",
@@ -50,8 +62,6 @@ public class MealRecord extends BaseEntity {
     private Long mealRecordId;
 
     /*
-     * Tenant Ownership
-     *
      * The record, customer, menu and any linked response or bill
      * must belong to the same mess.
      */
@@ -59,18 +69,16 @@ public class MealRecord extends BaseEntity {
     @JoinColumn(name = "mess_id", nullable = false)
     private Mess mess;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "menu_id", nullable = false)
     private Menu menu;
 
     /*
-     * Optional.
-     * Null when the owner manually creates a meal record
-     * for a customer who did not submit a meal response.
+     * Optional for manual collection without a meal response.
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "meal_response_id")

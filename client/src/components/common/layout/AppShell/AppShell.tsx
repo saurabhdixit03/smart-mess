@@ -4,8 +4,11 @@ import { useLocation } from "react-router-dom";
 import MobileDrawer from "../MobileNavigation/MobileDrawer";
 import {
   MobileNavigationProvider,
-  useMobileNavigation,
 } from "../MobileNavigation/MobileNavigationContext";
+
+import {
+  useMobileNavigation,
+} from "../MobileNavigation/useMobileNavigation";
 
 type AppShellProps = {
   sidebar: ReactNode;

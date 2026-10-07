@@ -15,28 +15,24 @@ export default function BillingPage() {
     bills,
     loading,
     error,
+    fetchBills,
   } = useBills();
 
   return (
     <div className="space-y-6">
-
       <PageHeader
         title="My Bills"
-        description="View your monthly billing history."
+        description="View your bills and payment history."
       />
 
       <SearchToolbar>
-
         <SearchToolbar.Left>
-
           <Input
             placeholder="Search bills..."
             leftIcon={<Search size={18} />}
             className="max-w-sm"
           />
-
         </SearchToolbar.Left>
-
       </SearchToolbar>
 
       {loading && (
@@ -50,9 +46,11 @@ export default function BillingPage() {
       )}
 
       {!loading && !error && (
-        <BillsList bills={bills} />
+        <BillsList
+          bills={bills}
+          onPaymentConfirmed={fetchBills}
+        />
       )}
-
     </div>
   );
 }

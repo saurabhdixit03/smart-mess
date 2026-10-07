@@ -1,4 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { messDetailsApi } from "../api/messDetails.api";
 
@@ -20,48 +25,69 @@ export function useMessDetails() {
   const [error, setError] =
     useState<string | null>(null);
 
-  const fetchMessDetails =
-    useCallback(async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const requestVersionRef = useRef(0);
 
-        const [
-          settingsResponse,
-          pricingResponse,
-        ] = await Promise.all([
-          messDetailsApi.getSettings(),
-          messDetailsApi.getMealPricing(),
-        ]);
+  const loadMessDetails = useCallback(
+    (): Promise<void> => {
+      const requestVersion =
+        ++requestVersionRef.current;
 
-        setSettings(
-          settingsResponse.data
-        );
+      return Promise.all([
+        messDetailsApi.getSettings(),
+        messDetailsApi.getMealPricing(),
+      ])
+        .then(([settingsResponse, pricingResponse]) => {
+          if (
+            requestVersion !== requestVersionRef.current
+          ) {
+            return;
+          }
 
-        setPricing(
-          pricingResponse.data
-        );
-      } catch (err) {
-        console.error(err);
+          setSettings(settingsResponse.data);
+          setPricing(pricingResponse.data);
+          setError(null);
+        })
+        .catch(() => {
+          if (
+            requestVersion === requestVersionRef.current
+          ) {
+            setError("Failed to load mess details.");
+          }
+        })
+        .finally(() => {
+          if (
+            requestVersion === requestVersionRef.current
+          ) {
+            setLoading(false);
+          }
+        });
+    },
+    []
+  );
 
-        setError(
-          "Failed to load mess details."
-        );
-      } finally {
-        setLoading(false);
-      }
-    }, []);
+  const fetchMessDetails = useCallback(
+    (): Promise<void> => {
+      setLoading(true);
+      setError(null);
+
+      return loadMessDetails();
+    },
+    [loadMessDetails]
+  );
 
   useEffect(() => {
-    fetchMessDetails();
-  }, [fetchMessDetails]);
+    void loadMessDetails();
+
+    return () => {
+      requestVersionRef.current += 1;
+    };
+  }, [loadMessDetails]);
 
   return {
     settings,
     pricing,
     loading,
     error,
-    refreshMessDetails:
-      fetchMessDetails,
+    refreshMessDetails: fetchMessDetails,
   };
 }

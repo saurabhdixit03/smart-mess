@@ -1,7 +1,9 @@
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { useMobileNavigation } from "./MobileNavigationContext";
+import {
+  useMobileNavigation,
+} from "./useMobileNavigation";
 
 type MobileDrawerProps = {
   children: ReactNode;

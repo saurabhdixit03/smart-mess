@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -15,15 +16,11 @@ import type {
 } from "../types";
 
 export function useMessClosures() {
-  const [
-    closures,
-    setClosures,
-  ] = useState<MessClosureResponse[]>([]);
+  const [closures, setClosures] =
+    useState<MessClosureResponse[]>([]);
 
-  const [
-    history,
-    setHistory,
-  ] = useState<MessClosureResponse[]>([]);
+  const [history, setHistory] =
+    useState<MessClosureResponse[]>([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -34,62 +31,105 @@ export function useMessClosures() {
   const [error, setError] =
     useState<string | null>(null);
 
-  const fetchClosures =
-    useCallback(async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const mountedRef = useRef(false);
+  const closuresVersionRef = useRef(0);
+  const historyVersionRef = useRef(0);
 
-        const response =
-          await messClosureApi
-            .getCurrentAndUpcomingClosures();
+  const loadClosures = useCallback((): Promise<void> => {
+    const version = ++closuresVersionRef.current;
 
-        setClosures(response.data);
-      } catch (error) {
-        console.error(error);
+    return messClosureApi
+      .getCurrentAndUpcomingClosures()
+      .then((response) => {
+        if (
+          mountedRef.current &&
+          closuresVersionRef.current === version
+        ) {
+          setClosures(response.data);
+        }
+      })
+      .catch((err: unknown) => {
+        if (
+          mountedRef.current &&
+          closuresVersionRef.current === version
+        ) {
+          console.error(err);
 
-        setError(
-          "Failed to load temporary closures."
-        );
-      } finally {
-        setLoading(false);
-      }
-    }, []);
+          setError(
+            "Failed to load temporary closures."
+          );
+        }
+      })
+      .finally(() => {
+        if (
+          mountedRef.current &&
+          closuresVersionRef.current === version
+        ) {
+          setLoading(false);
+        }
+      });
+  }, []);
 
-  const fetchHistory =
-    useCallback(async () => {
-      try {
-        const response =
-          await messClosureApi
-            .getClosureHistory();
+  const fetchClosures = useCallback((): Promise<void> => {
+    if (mountedRef.current) {
+      setLoading(true);
+      setError(null);
+    }
 
-        setHistory(response.data);
-      } catch (error) {
-        console.error(error);
+    return loadClosures();
+  }, [loadClosures]);
 
-        setError(
-          "Failed to load closure history."
-        );
-      }
-    }, []);
+  const fetchHistory = useCallback((): Promise<void> => {
+    const version = ++historyVersionRef.current;
+
+    return messClosureApi
+      .getClosureHistory()
+      .then((response) => {
+        if (
+          mountedRef.current &&
+          historyVersionRef.current === version
+        ) {
+          setHistory(response.data);
+        }
+      })
+      .catch((err: unknown) => {
+        if (
+          mountedRef.current &&
+          historyVersionRef.current === version
+        ) {
+          console.error(err);
+
+          setError(
+            "Failed to load closure history."
+          );
+        }
+      });
+  }, []);
 
   useEffect(() => {
-    fetchClosures();
-    fetchHistory();
-  }, [
-    fetchClosures,
-    fetchHistory,
-  ]);
+    mountedRef.current = true;
+
+    void loadClosures();
+    void fetchHistory();
+
+    return () => {
+      mountedRef.current = false;
+      closuresVersionRef.current += 1;
+      historyVersionRef.current += 1;
+    };
+  }, [loadClosures, fetchHistory]);
 
   async function createClosure(
     payload: CreateMessClosureRequest
-  ) {
+  ): Promise<boolean> {
     try {
       setSaving(true);
 
-      await messClosureApi.createClosure(
-        payload
-      );
+      await messClosureApi.createClosure(payload);
+
+      if (!mountedRef.current) {
+        return true;
+      }
 
       toast.success(
         "Temporary closure created successfully."
@@ -101,23 +141,27 @@ export function useMessClosures() {
       ]);
 
       return true;
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      if (mountedRef.current) {
+        console.error(err);
 
-      toast.error(
-        "Failed to create temporary closure."
-      );
+        toast.error(
+          "Failed to create temporary closure."
+        );
+      }
 
       return false;
     } finally {
-      setSaving(false);
+      if (mountedRef.current) {
+        setSaving(false);
+      }
     }
   }
 
   async function updateClosure(
     closureId: number,
     payload: UpdateMessClosureRequest
-  ) {
+  ): Promise<boolean> {
     try {
       setSaving(true);
 
@@ -125,6 +169,10 @@ export function useMessClosures() {
         closureId,
         payload
       );
+
+      if (!mountedRef.current) {
+        return true;
+      }
 
       toast.success(
         "Temporary closure updated successfully."
@@ -136,28 +184,34 @@ export function useMessClosures() {
       ]);
 
       return true;
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      if (mountedRef.current) {
+        console.error(err);
 
-      toast.error(
-        "Failed to update temporary closure."
-      );
+        toast.error(
+          "Failed to update temporary closure."
+        );
+      }
 
       return false;
     } finally {
-      setSaving(false);
+      if (mountedRef.current) {
+        setSaving(false);
+      }
     }
   }
 
   async function deleteClosure(
     closureId: number
-  ) {
+  ): Promise<boolean> {
     try {
       setSaving(true);
 
-      await messClosureApi.deleteClosure(
-        closureId
-      );
+      await messClosureApi.deleteClosure(closureId);
+
+      if (!mountedRef.current) {
+        return true;
+      }
 
       toast.success(
         "Temporary closure deleted successfully."
@@ -169,16 +223,20 @@ export function useMessClosures() {
       ]);
 
       return true;
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      if (mountedRef.current) {
+        console.error(err);
 
-      toast.error(
-        "Failed to delete temporary closure."
-      );
+        toast.error(
+          "Failed to delete temporary closure."
+        );
+      }
 
       return false;
     } finally {
-      setSaving(false);
+      if (mountedRef.current) {
+        setSaving(false);
+      }
     }
   }
 
