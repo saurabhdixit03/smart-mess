@@ -1,27 +1,21 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+} from "react-router-dom";
 
 import OwnerLayout from "@/layouts/OwnerLayout";
 import CustomerLayout from "@/layouts/CustomerLayout";
 
 import LandingPage from "@/pages/LandingPage";
-
 import NotFoundPage from "@/pages/NotFoundPage";
-//import DesignSystemPage from "@/pages/DesignSystemPage";
 
 import { CustomerPage } from "@/features/owner/customers/pages";
-
-import { MenuPage } from "@/features/owner/menu/";
-
+import { MenuPage } from "@/features/owner/menu";
 import { DashboardPage } from "@/features/owner/dashboard/pages";
-
 import { MealRecordPage } from "@/features/owner/meal-records/pages";
-
 import { BillingPage } from "@/features/owner/billing/pages";
-
-import { PaymentPage } from "@/features/owner/payments/pages";
-
 import { SettingsPage } from "@/features/owner/settings/pages";
-
 import { InsightsPage } from "@/features/owner/insights/pages";
 
 import {
@@ -36,29 +30,24 @@ import {
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
 
-// Customer Portal imports
-
-import { MenuPage as CustomerMenuPage } from "@/features/customer/menu";
+import {
+  MenuPage as CustomerMenuPage,
+} from "@/features/customer/menu";
 
 import { MyMealsPage } from "@/features/customer/my-meals";
 
-import { BillingPage as CustomerBillingPage, } from "@/features/customer/billing";
+import {
+  BillingPage as CustomerBillingPage,
+} from "@/features/customer/billing";
 
 import { MessDetailsPage } from "@/features/customer/mess-details";
-
 import { ProfilePage } from "@/features/customer/profile";
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* ============================================================
-            AUTH — PUBLIC ROUTES
-            ============================================================ */}
-
-        {/* Owner Authentication */}
-
+        {/* Owner authentication */}
         <Route
           element={
             <PublicRoute
@@ -86,12 +75,9 @@ export default function AppRouter() {
             path="/reset-password"
             element={<ResetPasswordPage />}
           />
-
         </Route>
 
-        
-        {/* Customer Authentication */}
-
+        {/* Customer authentication */}
         <Route
           element={
             <PublicRoute
@@ -111,12 +97,7 @@ export default function AppRouter() {
           />
         </Route>
 
-
-        {/* ============================================================
-            OWNER PORTAL — PROTECTED ROUTES
-            Existing owner routes preserved exactly.
-            ============================================================ */}
-
+        {/* Owner portal */}
         <Route
           element={
             <ProtectedRoute
@@ -129,7 +110,6 @@ export default function AppRouter() {
             path="/owner"
             element={<OwnerLayout />}
           >
-
             <Route
               index
               element={<DashboardPage />}
@@ -161,11 +141,6 @@ export default function AppRouter() {
             />
 
             <Route
-              path="payments"
-              element={<PaymentPage />}
-            />
-
-            <Route
               path="settings"
               element={<SettingsPage />}
             />
@@ -174,16 +149,10 @@ export default function AppRouter() {
               path="insights"
               element={<InsightsPage />}
             />
-
           </Route>
         </Route>
 
-
-        {/* ============================================================
-            CUSTOMER PORTAL — PROTECTED ROUTES
-            Existing customer routes preserved exactly.
-            ============================================================ */}
-
+        {/* Customer portal */}
         <Route
           element={
             <ProtectedRoute
@@ -196,58 +165,47 @@ export default function AppRouter() {
             path="/customer"
             element={<CustomerLayout />}
           >
-          <Route
-            index
-            element={<CustomerMenuPage />}
-          />
+            <Route
+              index
+              element={<CustomerMenuPage />}
+            />
 
-          <Route  
-            path="menu"
-            element={<CustomerMenuPage />}
-          />
+            <Route
+              path="menu"
+              element={<CustomerMenuPage />}
+            />
 
-          <Route
-            path="my-meals"
-            element={<MyMealsPage />}
-          />
+            <Route
+              path="my-meals"
+              element={<MyMealsPage />}
+            />
 
-          <Route
-            path="my-bills"
-            element={<CustomerBillingPage />}
-          />
+            <Route
+              path="my-bills"
+              element={<CustomerBillingPage />}
+            />
 
-          <Route
-            path="mess-details"
-            element={<MessDetailsPage />}
-          />
+            <Route
+              path="mess-details"
+              element={<MessDetailsPage />}
+            />
 
-          <Route
-            path="profile"
-            element={<ProfilePage />}
-          />
+            <Route
+              path="profile"
+              element={<ProfilePage />}
+            />
           </Route>
         </Route>
 
+        <Route
+          path="/"
+          element={<LandingPage />}
+        />
 
-        {/* ============================================================
-            LANDING
-            ============================================================ */}
-
-          <Route
-            path="/"
-            element={<LandingPage />}
-          />
-
-        {/* ============================================================
-            FALLBACK
-            ============================================================ */}
-
-          <Route
-            path="*"
-            element={<NotFoundPage />}
-          />
-
-
+        <Route
+          path="*"
+          element={<NotFoundPage />}
+        />
       </Routes>
     </BrowserRouter>
   );

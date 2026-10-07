@@ -18,22 +18,16 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(
         name = "bills",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        columnNames = {
-                                "customer_id",
-                                "billing_month",
-                                "billing_year"
-                        }
-                )
-        },
         indexes = {
+                @Index(
+                        name = "idx_bills_customer",
+                        columnList = "customer_id"
+                ),
                 @Index(
                         name = "idx_bills_mess_period_generated",
                         columnList = "mess_id, billing_month, billing_year, generated_at"
@@ -51,8 +45,6 @@ public class Bill extends BaseEntity {
     private Long billId;
 
     /*
-     * Tenant Ownership
-     *
      * The bill, customer, linked meal records and payment
      * must belong to the same mess.
      */
@@ -60,30 +52,17 @@ public class Bill extends BaseEntity {
     @JoinColumn(name = "mess_id", nullable = false)
     private Mess mess;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "customer_id",
-            nullable = false
-    )
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    @Column(
-            name = "billing_month",
-            nullable = false
-    )
+    @Column(name = "billing_month", nullable = false)
     private Integer billingMonth;
 
-    @Column(
-            name = "billing_year",
-            nullable = false
-    )
+    @Column(name = "billing_year", nullable = false)
     private Integer billingYear;
 
-    @Column(
-            nullable = false,
-            precision = 10,
-            scale = 2
-    )
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
     @Column(nullable = false)
@@ -91,6 +70,7 @@ public class Bill extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @NotNull
+    @Column(name = "bill_status", nullable = false)
     private BillStatus billStatus;
 
     @Column(nullable = false)

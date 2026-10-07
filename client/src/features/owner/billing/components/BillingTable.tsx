@@ -1,86 +1,126 @@
-import { Button, DataTable, StatusBadge } from "@/components/common/ui";
+import Button from "@/components/common/ui/Button/Button";
+import DataTable from "@/components/common/ui/DataTable/DataTable";
 
 import type { Column } from "@/components/common/ui/DataTable/DataTable";
-import type { BillResponse } from "../types";
 
-type BillingTableProps = {
-  bills: BillResponse[];
+import { StatusBadge } from "@/components/common/ui";
+
+import type { Bill } from "../types";
+
+interface BillingTableProps {
+  bills: Bill[];
   onViewBill: (billId: number) => void;
-};
+}
 
-function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("en-IN", {
+const currencyFormat = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+});
+
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+function formatDate(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
 }
 
-function getBillStatusVariant(
-  status: BillResponse["billStatus"]
-): "success" | "warning" | "info" {
-  switch (status) {
-    case "PAID":
-      return "success";
-
-    case "UNPAID":
-    case "PAYMENT_PENDING":
-      return "warning";
-
-    default:
-      return "info";
-  }
-}
-
 export default function BillingTable({
   bills,
   onViewBill,
 }: BillingTableProps) {
-  const columns: readonly Column<BillResponse>[] = [
+  const columns: Column<Bill>[] = [
+    {
+      key: "billId",
+      header: "Bill",
+      render: (bill) => (
+        <span className="font-medium">
+          #{bill.billId}
+        </span>
+      ),
+    },
     {
       key: "customerName",
       header: "Customer",
     },
-    
+    {
+      key: "billingPeriod",
+      header: "Billing Period",
+      render: (bill) =>
+        `${MONTHS[bill.billingMonth - 1]} ${bill.billingYear}`,
+    },
     {
       key: "mealRecordCount",
       header: "Meals",
+      className: "text-right",
+      headerClassName: "text-right",
     },
     {
       key: "totalAmount",
       header: "Amount",
-      render: (bill) => `₹${bill.totalAmount}`,
+      className: "text-right font-medium",
+      headerClassName: "text-right",
+      render: (bill) =>
+        currencyFormat.format(bill.totalAmount),
     },
     {
       key: "billStatus",
       header: "Status",
+      className: "text-center",
+      headerClassName: "text-center",
       render: (bill) => (
         <StatusBadge
-          label={bill.billStatus}
-          variant={getBillStatusVariant(
-            bill.billStatus
-          )}
+          label={
+            bill.billStatus === "PAID"
+              ? "Paid"
+              : "Unpaid"
+          }
+          variant={
+            bill.billStatus === "PAID"
+              ? "success"
+              : "warning"
+          }
         />
       ),
     },
     {
       key: "generatedAt",
-      header: "Generated",
-      render: (bill) =>
-        formatDate(bill.generatedAt),
+      header: "Issued",
+      render: (bill) => formatDate(bill.generatedAt),
     },
     {
       key: "actions",
-      header: "Actions",
+      header: "Document",
+      className: "text-center",
+      headerClassName: "text-center",
       render: (bill) => (
         <Button
-          variant="outline"
           size="sm"
-          onClick={() =>
-            onViewBill(bill.billId)
-          }
+          variant="secondary"
+          onClick={() => onViewBill(bill.billId)}
         >
-          View Details
+          View Bill
         </Button>
       ),
     },

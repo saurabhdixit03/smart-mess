@@ -1,69 +1,90 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
 import { messClosureApi } from "@/features/owner/settings/api/messClosure.api";
 
-import type { MessClosureResponse } from "@/features/owner/settings/types";
+import type {
+  MessClosureResponse,
+} from "@/features/owner/settings/types";
 
 export function useCustomerClosure() {
-  const [
-    closure,
-    setClosure,
-  ] = useState<MessClosureResponse | null>(
-    null
+  const [closure, setClosure] =
+    useState<MessClosureResponse | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  const requestVersionRef = useRef(0);
+
+  const loadClosure = useCallback(
+    (): Promise<void> => {
+      const requestVersion =
+        ++requestVersionRef.current;
+
+      return messClosureApi
+        .getCurrentAndUpcomingClosures()
+        .then((response) => {
+          if (
+            requestVersion !== requestVersionRef.current
+          ) {
+            return;
+          }
+
+          setClosure(response.data[0] ?? null);
+          setError(null);
+        })
+        .catch((err: unknown) => {
+          if (
+            requestVersion !== requestVersionRef.current
+          ) {
+            return;
+          }
+
+          console.error(
+            "Failed to load customer closure notice.",
+            err
+          );
+
+          setClosure(null);
+          setError(
+            "Failed to load closure information."
+          );
+        })
+        .finally(() => {
+          if (
+            requestVersion === requestVersionRef.current
+          ) {
+            setLoading(false);
+          }
+        });
+    },
+    []
   );
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
+  const fetchClosure = useCallback(
+    (): Promise<void> => {
+      setLoading(true);
+      setError(null);
 
-  const [
-    error,
-    setError,
-  ] = useState<string | null>(
-    null
+      return loadClosure();
+    },
+    [loadClosure]
   );
-
-  const fetchClosure =
-    useCallback(async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const response =
-          await messClosureApi
-            .getCurrentAndUpcomingClosures();
-
-        const closures =
-          response.data;
-
-        setClosure(
-          closures.length > 0
-            ? closures[0]
-            : null
-        );
-      } catch (err) {
-        console.error(
-          "Failed to load customer closure notice.",
-          err
-        );
-
-        setClosure(null);
-        setError(
-          "Failed to load closure information."
-        );
-      } finally {
-        setLoading(false);
-      }
-    }, []);
 
   useEffect(() => {
-    fetchClosure();
-  }, [fetchClosure]);
+    void loadClosure();
+
+    return () => {
+      requestVersionRef.current += 1;
+    };
+  }, [loadClosure]);
 
   return {
     closure,

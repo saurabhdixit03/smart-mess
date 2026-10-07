@@ -119,14 +119,6 @@ public class MealRecordSeeder {
             }
         }
 
-        MealPricing pricing =
-                mealPricingRepository
-                        .findByMess_MessId(messId)
-                        .orElseThrow(() ->
-                                new IllegalStateException(
-                                        "Meal pricing is missing."
-                                ));
-
         LocalDate today = LocalDate.now(clock);
 
         int recordsCreated = 0;
@@ -136,12 +128,8 @@ public class MealRecordSeeder {
         for (Menu menu : menus) {
 
             /*
-             * Today's meal records are intentionally
-             * not seeded.
-             *
-             * This keeps today's accepted customers in
-             * the collection queue so the owner can test
-             * meal recording manually.
+             * Today's records are intentionally not seeded.
+             * Accepted customers remain available for manual testing.
              */
             if (!menu.getMenuDate().isBefore(today)) {
                 continue;
@@ -162,10 +150,6 @@ public class MealRecordSeeder {
                                 )
                                 .orElse(null);
 
-                /*
-                 * No response means there is no
-                 * response-based record to process.
-                 */
                 if (mealResponse == null) {
                     continue;
                 }
@@ -183,10 +167,6 @@ public class MealRecordSeeder {
                     /*
                      * Approximately 80% of accepted responses
                      * become collected meal records.
-                     *
-                     * The remaining responses represent
-                     * customers who accepted but did not
-                     * collect their meal.
                      */
                     if (pattern <= 1) {
                         continue;
@@ -206,7 +186,6 @@ public class MealRecordSeeder {
                                     mealResponse,
                                     servedMeal,
                                     extraRotis,
-                                    pricing,
                                     customerIndex
                             );
 
@@ -218,11 +197,8 @@ public class MealRecordSeeder {
                 }
 
                 /*
-                 * A small number of declined responses
-                 * become walk-in meal records.
-                 *
-                 * The record is intentionally not connected
-                 * to the declined response.
+                 * Some declined responses become walk-in records.
+                 * These records are not linked to the declined response.
                  */
                 if (mealResponse.getResponseStatus()
                         == MealResponseStatus.DECLINED
@@ -233,7 +209,8 @@ public class MealRecordSeeder {
                                     ? MealOption.FULL
                                     : MealOption.HALF;
 
-                    int extraRotis = customerIndex % 4 == 0 ? 1 : 0;
+                    int extraRotis =
+                            customerIndex % 4 == 0 ? 1 : 0;
 
                     MealRecord mealRecord =
                             createMealRecord(
@@ -243,7 +220,6 @@ public class MealRecordSeeder {
                                     null,
                                     servedMeal,
                                     extraRotis,
-                                    pricing,
                                     customerIndex
                             );
 
@@ -269,7 +245,8 @@ public class MealRecordSeeder {
             MealResponse mealResponse,
             int pattern) {
 
-        MealOption requestedMeal = mealResponse.getMealOption();
+        MealOption requestedMeal =
+                mealResponse.getMealOption();
 
         /*
          * Occasionally serve the opposite meal option
@@ -292,12 +269,9 @@ public class MealRecordSeeder {
             MealResponse mealResponse,
             int pattern) {
 
-        int requestedRotis = mealResponse.getExtraRotiCount();
+        int requestedRotis =
+                mealResponse.getExtraRotiCount();
 
-        /*
-         * Occasionally add one extra roti during
-         * meal collection.
-         */
         if (pattern == 5) {
             return requestedRotis + 1;
         }
@@ -312,22 +286,7 @@ public class MealRecordSeeder {
             MealResponse mealResponse,
             MealOption servedMeal,
             int extraRotis,
-            MealPricing pricing,
             int customerIndex) {
-
-        BigDecimal mealPrice =
-                servedMeal == MealOption.FULL
-                        ? pricing.getFullMealPrice()
-                        : pricing.getHalfMealPrice();
-
-        BigDecimal extraRotiPrice = pricing.getExtraRotiPrice();
-
-        BigDecimal totalAmount =
-                mealPrice.add(
-                        extraRotiPrice.multiply(
-                                BigDecimal.valueOf(extraRotis)
-                        )
-                );
 
         LocalTime collectionTime =
                 getCollectionTime(
@@ -339,6 +298,41 @@ public class MealRecordSeeder {
                 LocalDateTime.of(
                         menu.getMenuDate(),
                         collectionTime
+                );
+
+        /*
+         * Historical demo meals use the pricing effective
+         * at their collection time, excluding later changes.
+         */
+        MealPricing pricing =
+                mealPricingRepository
+                        .findTopByMess_MessIdAndEffectiveFromLessThanEqualOrderByEffectiveFromDesc(
+                                mess.getMessId(),
+                                collectedAt
+                        )
+                        .orElseThrow(() ->
+                                new IllegalStateException(
+                                        "Meal pricing is missing for demo mess "
+                                                + mess.getMessId()
+                                                + " at "
+                                                + collectedAt
+                                                + "."
+                                )
+                        );
+
+        BigDecimal mealPrice =
+                servedMeal == MealOption.FULL
+                        ? pricing.getFullMealPrice()
+                        : pricing.getHalfMealPrice();
+
+        BigDecimal extraRotiPrice =
+                pricing.getExtraRotiPrice();
+
+        BigDecimal totalAmount =
+                mealPrice.add(
+                        extraRotiPrice.multiply(
+                                BigDecimal.valueOf(extraRotis)
+                        )
                 );
 
         return MealRecord.builder()

@@ -1,212 +1,123 @@
-
 package com.smartmess.backend.controller;
 
-import java.util.List;
-
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.smartmess.backend.dto.request.CreatePaymentRequest;
 import com.smartmess.backend.dto.response.ApiResponse;
+import com.smartmess.backend.dto.response.PaymentCheckoutResponse;
 import com.smartmess.backend.dto.response.PaymentOverviewResponse;
 import com.smartmess.backend.dto.response.PaymentResponse;
-import com.smartmess.backend.dto.response.PendingPaymentResponse;
-import com.smartmess.backend.dto.response.UpiPaymentResponse;
+import com.smartmess.backend.service.PaymentOrderService;
 import com.smartmess.backend.service.PaymentService;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final PaymentOrderService paymentOrderService;
 
     public PaymentController(
-            PaymentService paymentService) {
+            PaymentService paymentService,
+            PaymentOrderService paymentOrderService) {
 
         this.paymentService = paymentService;
+        this.paymentOrderService = paymentOrderService;
     }
 
     /*
-     * Customer requests UPI payment verification.
-     * Customer only.
+     * Start or reuse checkout for the customer's own bill.
+     * Amount comes from the backend bill.
      */
-    @PostMapping("/request/{billId}")
+    @PostMapping("/checkout/bill/{billId}")
     @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<ApiResponse<Void>> requestUpiPayment(
-
+    public ResponseEntity<ApiResponse<PaymentCheckoutResponse>> createCheckout(
             @PathVariable Long billId,
-
             HttpServletRequest request) {
 
-        paymentService.requestUpiPayment(billId);
+        PaymentCheckoutResponse checkout =
+                paymentOrderService.createCheckout(billId);
 
-        ApiResponse<Void> response =
+        return ResponseEntity.ok(
                 ApiResponse.success(
-                        "Payment request submitted successfully.",
+                        "Payment checkout state retrieved successfully.",
                         request.getRequestURI(),
-                        null
-                );
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(response);
+                        checkout
+                )
+        );
     }
 
     /*
-     * View pending payment requests.
-     * Owner only.
+     * Verify against the gateway.
+     * No client-provided success flag is accepted.
      */
-    @GetMapping("/pending")
-    @PreAuthorize("hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<List<PendingPaymentResponse>>> getPendingPayments(
+    @PostMapping("/orders/{paymentOrderId}/verify")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<PaymentCheckoutResponse>> verifyCheckout(
+            @PathVariable Long paymentOrderId,
             HttpServletRequest request) {
 
-        List<PendingPaymentResponse> pendingPayments =
-                paymentService.getPendingPayments();
+        PaymentCheckoutResponse checkout =
+                paymentOrderService.verifyCheckout(
+                        paymentOrderId
+                );
 
-        ApiResponse<List<PendingPaymentResponse>> response =
+        return ResponseEntity.ok(
                 ApiResponse.success(
-                        "Pending payment requests fetched successfully.",
+                        "Payment order state retrieved successfully.",
                         request.getRequestURI(),
-                        pendingPayments
-                );
-
-        return ResponseEntity.ok(response);
+                        checkout
+                )
+        );
     }
 
     /*
-     * Collect Payment.
-     * Owner only.
-     */
-    @PostMapping
-    @PreAuthorize("hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<PaymentResponse>> collectPayment(
-
-            @Valid
-            @RequestBody
-            CreatePaymentRequest request,
-
-            HttpServletRequest httpRequest) {
-
-        PaymentResponse payment =
-                paymentService.collectPayment(request);
-
-        ApiResponse<PaymentResponse> response =
-                ApiResponse.success(
-                        "Payment collected successfully.",
-                        httpRequest.getRequestURI(),
-                        payment
-                );
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
-    }
-
-    /*
-     * View Payment.
-     * Owner only.
+     * Owner: payments within their mess.
+     * Customer: payments belonging to their own bills.
      */
     @GetMapping("/{paymentId}")
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPayment(
-
             @PathVariable Long paymentId,
-
             HttpServletRequest request) {
 
         PaymentResponse payment =
                 paymentService.getPayment(paymentId);
 
-        ApiResponse<PaymentResponse> response =
+        return ResponseEntity.ok(
                 ApiResponse.success(
                         "Payment retrieved successfully.",
                         request.getRequestURI(),
                         payment
-                );
-
-        return ResponseEntity.ok(response);
+                )
+        );
     }
 
-    /*
-     * View Payment by Bill.
-     * Owner only.
-     */
     @GetMapping("/bill/{billId}")
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'CUSTOMER')")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentByBill(
-
             @PathVariable Long billId,
-
             HttpServletRequest request) {
 
         PaymentResponse payment =
                 paymentService.getPaymentByBill(billId);
 
-        ApiResponse<PaymentResponse> response =
+        return ResponseEntity.ok(
                 ApiResponse.success(
                         "Payment retrieved successfully.",
                         request.getRequestURI(),
                         payment
-                );
-
-        return ResponseEntity.ok(response);
+                )
+        );
     }
 
-    /*
-     * Pending payment count.
-     * Owner only.
-     */
-    @GetMapping("/pending/count")
-    @PreAuthorize("hasRole('OWNER')")
-    public ResponseEntity<ApiResponse<Long>> getPendingPaymentCount(
-            HttpServletRequest request) {
-
-        long pendingCount =
-                paymentService.getPendingPaymentCount();
-
-        ApiResponse<Long> response =
-                ApiResponse.success(
-                        "Pending payment count fetched successfully.",
-                        request.getRequestURI(),
-                        pendingCount
-                );
-
-        return ResponseEntity.ok(response);
-    }
-
-    /*
-     * Generate UPI payment link / QR data.
-     * Customer only.
-     */
-    @GetMapping("/upi/{billId}")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<ApiResponse<UpiPaymentResponse>> generateUpiPayment(
-            @PathVariable Long billId,
-            HttpServletRequest request) {
-
-        UpiPaymentResponse response =
-                paymentService.generateUpiPayment(billId);
-
-        ApiResponse<UpiPaymentResponse> apiResponse =
-                ApiResponse.success(
-                        "UPI payment link generated successfully.",
-                        request.getRequestURI(),
-                        response
-                );
-
-        return ResponseEntity.ok(apiResponse);
-    }
-
-    /*
-     * Payment overview.
-     * Owner only.
-     */
     @GetMapping("/overview")
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<PaymentOverviewResponse>> getPaymentOverview(
@@ -215,13 +126,12 @@ public class PaymentController {
         PaymentOverviewResponse overview =
                 paymentService.getPaymentOverview();
 
-        ApiResponse<PaymentOverviewResponse> response =
+        return ResponseEntity.ok(
                 ApiResponse.success(
-                        "Payment overview fetched successfully.",
+                        "Payment overview retrieved successfully.",
                         request.getRequestURI(),
                         overview
-                );
-
-        return ResponseEntity.ok(response);
+                )
+        );
     }
 }

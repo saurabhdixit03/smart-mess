@@ -1,7 +1,6 @@
 import { PageHeader } from "@/components/common/ui";
 
 import { ProfileCard } from "../components";
-
 import { useProfile } from "../hooks";
 
 import { getCustomer } from "@/features/auth/utils/auth.utils";
@@ -17,11 +16,24 @@ export default function ProfilePage() {
     );
   }
 
+  return (
+    <CustomerProfileContent
+      key={customer.customerId}
+      customerId={customer.customerId}
+    />
+  );
+}
+
+function CustomerProfileContent({
+  customerId,
+}: {
+  customerId: number;
+}) {
   const {
     profile,
     loading,
     error,
-  } = useProfile(customer.customerId);
+  } = useProfile(customerId);
 
   if (loading) {
     return (
@@ -49,14 +61,12 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-8">
-
       <PageHeader
         title="My Profile"
         description="View your account information."
       />
 
       <ProfileCard profile={profile} />
-
     </div>
   );
 }

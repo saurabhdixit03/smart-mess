@@ -1,48 +1,115 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { billingApi } from "../api";
 
 import type { BillDetailResponse } from "../types";
 
+type DetailsState = {
+  billId: number;
+  bill: BillDetailResponse | null;
+  loading: boolean;
+  error: string | null;
+};
+
 export function useBillDetails(
   billId: number | null
 ) {
-  const [bill, setBill] =
-    useState<BillDetailResponse | null>(null);
+  const [state, setState] =
+    useState<DetailsState | null>(null);
 
-  const [loading, setLoading] =
-    useState(false);
+  const requestVersionRef = useRef(0);
 
-  const fetchBillDetails =
-    useCallback(async () => {
+  const loadBillDetails = useCallback(
+    (): Promise<void> => {
+      const requestVersion =
+        ++requestVersionRef.current;
+
       if (billId === null) {
-        setBill(null);
-        return;
+        return Promise.resolve();
       }
 
-      try {
-        setLoading(true);
+      return billingApi
+        .getBillDetails(billId)
+        .then((response) => {
+          if (
+            requestVersion !== requestVersionRef.current
+          ) {
+            return;
+          }
 
-        const response =
-          await billingApi.getBillDetails(
-            billId
-          );
+          setState({
+            billId,
+            bill: response.data,
+            loading: false,
+            error: null,
+          });
+        })
+        .catch((error: unknown) => {
+          if (
+            requestVersion !== requestVersionRef.current
+          ) {
+            return;
+          }
 
-        setBill(response.data);
+          setState({
+            billId,
+            bill: null,
+            loading: false,
+            error:
+              error instanceof Error
+                ? error.message
+                : "Failed to load bill details.",
+          });
+        });
+    },
+    [billId]
+  );
 
-      } finally {
-        setLoading(false);
+  const refreshBillDetails = useCallback(
+    (): Promise<void> => {
+      if (billId === null) {
+        setState(null);
+      } else {
+        setState({
+          billId,
+          bill: null,
+          loading: true,
+          error: null,
+        });
       }
-    }, [billId]);
+
+      return loadBillDetails();
+    },
+    [billId, loadBillDetails]
+  );
 
   useEffect(() => {
-    fetchBillDetails();
-  }, [fetchBillDetails]);
+    void loadBillDetails();
+
+    return () => {
+      requestVersionRef.current += 1;
+    };
+  }, [loadBillDetails]);
+
+  const currentState =
+    billId !== null && state?.billId === billId
+      ? state
+      : null;
 
   return {
-    bill,
-    loading,
-    refreshBillDetails:
-      fetchBillDetails,
+    bill: currentState?.bill ?? null,
+
+    loading:
+      billId !== null &&
+      (currentState === null || currentState.loading),
+
+    error: currentState?.error ?? null,
+
+    refreshBillDetails,
   };
 }

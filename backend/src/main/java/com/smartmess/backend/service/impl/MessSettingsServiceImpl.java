@@ -7,8 +7,6 @@ import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 
-import com.smartmess.backend.dto.request.CreateMessSettingsRequest;
-import com.smartmess.backend.dto.request.UpdatePaymentSettingsRequest;
 import com.smartmess.backend.dto.request.UpdateResponseWindowRequest;
 import com.smartmess.backend.dto.request.UpdateWeeklyScheduleRequest;
 import com.smartmess.backend.dto.response.MessSettingsResponse;
@@ -22,13 +20,13 @@ import com.smartmess.backend.repository.MessSettingsRepository;
 import com.smartmess.backend.security.CustomerSecurity;
 import com.smartmess.backend.service.MessSettingsService;
 import com.smartmess.backend.service.NotificationService;
-
+import java.util.Locale;
 @Service
 public class MessSettingsServiceImpl
         implements MessSettingsService {
 
-    private static final DateTimeFormatter NOTIFICATION_TIME_FORMAT =
-            DateTimeFormatter.ofPattern("h:mm a");
+	private static final DateTimeFormatter NOTIFICATION_TIME_FORMAT =
+	        DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
 
     private final MessSettingsRepository messSettingsRepository;
     private final MessSettingsMapper messSettingsMapper;
@@ -51,36 +49,6 @@ public class MessSettingsServiceImpl
     }
 
     @Override
-    public MessSettingsResponse createSettings(
-            CreateMessSettingsRequest request) {
-
-        Long messId =
-                customerSecurity.getCurrentMessId();
-
-        if (messSettingsRepository
-                .existsByMess_MessId(messId)) {
-
-            throw new BusinessException(
-                    "Mess settings already exist. Please update the existing settings."
-            );
-        }
-
-        MessSettings settings =
-                messSettingsMapper.toEntity(request);
-
-        settings.setMess(
-                getMess(messId)
-        );
-
-        MessSettings savedSettings =
-                messSettingsRepository.save(settings);
-
-        return messSettingsMapper.toResponse(
-                savedSettings
-        );
-    }
-
-    @Override
     public MessSettingsResponse getSettings() {
 
         Long messId =
@@ -93,26 +61,6 @@ public class MessSettingsServiceImpl
 
         return messSettingsMapper.toResponse(
                 settings
-        );
-    }
-
-    @Override
-    public MessSettingsResponse updatePaymentSettings(
-            UpdatePaymentSettingsRequest request) {
-
-        MessSettings settings =
-                getOrCreateSettings();
-
-        messSettingsMapper.updateEntityFromRequest(
-                request,
-                settings
-        );
-
-        MessSettings updatedSettings =
-                messSettingsRepository.save(settings);
-
-        return messSettingsMapper.toResponse(
-                updatedSettings
         );
     }
 

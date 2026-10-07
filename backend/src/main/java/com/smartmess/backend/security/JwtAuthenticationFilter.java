@@ -67,9 +67,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (email != null) {
 
                     /*
-                     * This lookup checks current account status.
-                     * Pending or inactive accounts are not authenticated,
-                     * even when a previously issued JWT still exists.
+                     * Checks current account status and tenant ownership.
+                     * Active and inactive customers may authenticate.
+                     * Pending customers and inactive owners are blocked.
                      */
                     UserDetails userDetails =
                             userDetailsService.loadUserByEmail(

@@ -1,13 +1,12 @@
-import { useEffect } from "react";
-
 import {
+  Button,
   Modal,
-  StatusBadge,
 } from "@/components/common/ui";
 
-import { useBillDetails } from "../hooks";
+import Bill from "@/features/billing/components/Bill";
+import DownloadBillButton from "@/features/billing/components/DownloadBillButton";
 
-import MealBreakdownList from "./MealBreakdownList";
+import { useBillDetails } from "../hooks";
 
 interface BillDetailsModalProps {
   billId: number | null;
@@ -15,143 +14,91 @@ interface BillDetailsModalProps {
   onClose: () => void;
 }
 
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
 export default function BillDetailsModal({
   billId,
   open,
   onClose,
 }: BillDetailsModalProps) {
+  if (!open || billId === null) {
+    return null;
+  }
+
+  return (
+    <BillDetailsContent
+      key={billId}
+      billId={billId}
+      onClose={onClose}
+    />
+  );
+}
+
+interface BillDetailsContentProps {
+  billId: number;
+  onClose: () => void;
+}
+
+function BillDetailsContent({
+  billId,
+  onClose,
+}: BillDetailsContentProps) {
   const {
     billDetail,
     loading,
     error,
     fetchBillDetails,
-  } = useBillDetails();
-
-  useEffect(() => {
-    if (!open || billId === null) {
-      return;
-    }
-
-    fetchBillDetails(billId);
-  }, [
-    open,
-    billId,
-    fetchBillDetails,
-  ]);
+  } = useBillDetails(billId);
 
   return (
     <Modal
-      open={open}
-      onClose={onClose}
-      title="Bill Details"
+      open
+      title={`Bill #${billId}`}
       size="lg"
+      onClose={onClose}
+      footer={
+        <>
+          {!loading && !error && billDetail && (
+            <DownloadBillButton bill={billDetail} />
+          )}
+
+          <Button
+            variant="secondary"
+            onClick={onClose}
+          >
+            Close
+          </Button>
+        </>
+      }
     >
-      <div className="space-y-6">
+      {loading ? (
+        <div
+          role="status"
+          className="py-12 text-center text-sm text-[var(--color-text-secondary)]"
+        >
+          Loading bill...
+        </div>
+      ) : error ? (
+        <div className="space-y-4 py-8 text-center">
+          <p
+            role="alert"
+            className="text-sm text-red-500"
+          >
+            {error}
+          </p>
 
-        {loading && (
-          <div className="flex h-[380px] items-center justify-center">
-            <p className="text-[var(--color-text-secondary)]">
-              Loading bill details...
-            </p>
-          </div>
-        )}
-
-        {!loading && error && (
-          <div className="flex h-[380px] items-center justify-center">
-            <p className="text-red-500">
-              {error}
-            </p>
-          </div>
-        )}
-
-        {!loading && !error && billDetail && (
-          <div className="space-y-6">
-
-            {/* Bill Summary */}
-
-            <div className="rounded-2xl border border-[var(--color-border)] p-4">
-
-              <div className="flex items-start justify-between">
-
-                <div>
-                  <h2 className="text-xl font-bold">
-                    {
-                      MONTHS[
-                        billDetail.billingMonth - 1
-                      ]
-                    }{" "}
-                    {billDetail.billingYear}
-                  </h2>
-
-                  <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                    {billDetail.mealRecordCount} Meals
-                  </p>
-                </div>
-
-                <StatusBadge
-                  label={billDetail.billStatus}
-                  variant={
-                    billDetail.billStatus === "PAID"
-                      ? "success"
-                      : "warning"
-                  }
-                />
-
-              </div>
-
-              <div className="mt-6 border-t border-[var(--color-border)] pt-5">
-
-                <div className="flex items-center justify-between">
-
-                  <span className="text-[var(--color-text-secondary)]">
-                    Total Amount
-                  </span>
-
-                  <span className="text-3xl font-bold">
-                    ₹{billDetail.totalAmount}
-                  </span>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* Meal Breakdown */}
-
-{/* Meal Breakdown */}
-
-<div>
-
-  <h3 className="mb-4 text-lg font-semibold">
-    Meal Breakdown
-  </h3>
-
-  <MealBreakdownList
-    mealRecords={billDetail.mealRecords}
-  />
-
-</div>
-
-          </div>
-        )}
-
-      </div>
+          <Button
+            variant="secondary"
+            onClick={() => void fetchBillDetails()}
+          >
+            Retry
+          </Button>
+        </div>
+      ) : billDetail ? (
+        <Bill bill={billDetail} />
+      ) : (
+        <p className="py-12 text-center text-sm text-[var(--color-text-secondary)]">
+          Bill details are unavailable.
+        </p>
+      )}
     </Modal>
   );
 }

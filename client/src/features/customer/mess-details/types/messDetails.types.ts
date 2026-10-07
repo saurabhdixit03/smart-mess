@@ -8,14 +8,10 @@ export type DayOfWeek =
   | "SUNDAY";
 
 /**
- * Read-only mess operational settings
- * available to customers.
+ * Read-only mess operational settings.
  */
 export interface MessSettingsResponse {
   settingsId: number | null;
-
-  upiId: string | null;
-  receiverName: string | null;
 
   lunchResponseCutoff: string | null;
   dinnerResponseCutoff: string | null;
@@ -29,8 +25,7 @@ export interface MessSettingsResponse {
 }
 
 /**
- * Current meal pricing available
- * to customers.
+ * Current effective meal pricing.
  */
 export interface MealPricingResponse {
   mealPricingId: number;
@@ -39,6 +34,7 @@ export interface MealPricingResponse {
   fullMealPrice: number;
   extraRotiPrice: number;
 
+  effectiveFrom: string;
   updatedAt: string;
 }
 

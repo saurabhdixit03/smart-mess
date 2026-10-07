@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -18,29 +19,60 @@ export function useBills() {
   const [error, setError] =
     useState<string | null>(null);
 
-  const fetchBills =
-    useCallback(async () => {
-      try {
-        setLoading(true);
+  const requestVersionRef = useRef(0);
 
-        setError(null);
+  const loadBills = useCallback(
+    (): Promise<void> => {
+      const requestVersion =
+        ++requestVersionRef.current;
 
-        const response =
-          await billingApi.getCustomerBills();
+      return billingApi
+        .getCustomerBills()
+        .then((response) => {
+          if (
+            requestVersion !== requestVersionRef.current
+          ) {
+            return;
+          }
 
-        setBills(response.data);
-      } catch {
-        setError(
-          "Failed to load bills."
-        );
-      } finally {
-        setLoading(false);
-      }
-    }, []);
+          setBills(response.data);
+          setError(null);
+        })
+        .catch(() => {
+          if (
+            requestVersion === requestVersionRef.current
+          ) {
+            setError("Failed to load bills.");
+          }
+        })
+        .finally(() => {
+          if (
+            requestVersion === requestVersionRef.current
+          ) {
+            setLoading(false);
+          }
+        });
+    },
+    []
+  );
+
+  const fetchBills = useCallback(
+    (): Promise<void> => {
+      setLoading(true);
+      setError(null);
+
+      return loadBills();
+    },
+    [loadBills]
+  );
 
   useEffect(() => {
-    void fetchBills();
-  }, [fetchBills]);
+    void loadBills();
+
+    return () => {
+      requestVersionRef.current += 1;
+    };
+  }, [loadBills]);
 
   return {
     bills,

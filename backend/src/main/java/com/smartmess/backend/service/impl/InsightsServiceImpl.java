@@ -1,6 +1,7 @@
 package com.smartmess.backend.service.impl;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Month;
 import java.time.format.TextStyle;
 import java.util.List;
@@ -22,13 +23,10 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class InsightsServiceImpl
-        implements InsightsService {
+public class InsightsServiceImpl implements InsightsService {
 
     private final BillRepository billRepository;
-
     private final MealRecordRepository mealRecordRepository;
-
     private final CustomerSecurity customerSecurity;
 
     @Override
@@ -37,9 +35,9 @@ public class InsightsServiceImpl
             Integer year) {
 
         validateMonth(month);
+        validateYear(year);
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        Long messId = customerSecurity.getCurrentMessId();
 
         List<Object[]> financialRows =
                 billRepository.getMonthlyFinancialInsightsByMess(
@@ -56,7 +54,6 @@ public class InsightsServiceImpl
                 );
 
         if (financialRows.isEmpty()) {
-
             return new MonthlyInsightsResponse(
                     Month.of(month).getDisplayName(
                             TextStyle.FULL,
@@ -83,27 +80,24 @@ public class InsightsServiceImpl
             );
         }
 
-        Object[] financialData =
-                financialRows.get(0);
+        Object[] financialData = financialRows.get(0);
 
-        Object[] mealData =
-                mealRows.isEmpty()
-                        ? new Object[] {0L, 0L, 0L, 0L, 0L}
-                        : mealRows.get(0);
+        Object[] mealData = mealRows.isEmpty()
+                ? new Object[] {0L, 0L, 0L, 0L, 0L}
+                : mealRows.get(0);
 
+        /*
+         * Preserves the existing API field.
+         * The query counts distinct customers billed in this period.
+         */
         CustomerInsightsResponse customerInsights =
                 new CustomerInsightsResponse(
                         getLong(financialData[0])
                 );
 
-        Long billsGenerated =
-                getLong(financialData[1]);
-
-        Long paidBills =
-                getLong(financialData[2]);
-
-        Long pendingBills =
-                getLong(financialData[3]);
+        Long billsGenerated = getLong(financialData[1]);
+        Long paidBills = getLong(financialData[2]);
+        Long pendingBills = getLong(financialData[3]);
 
         BigDecimal totalRevenue =
                 getBigDecimal(financialData[4]);
@@ -117,16 +111,14 @@ public class InsightsServiceImpl
         double collectionRate = 0.0;
 
         if (totalRevenue.compareTo(BigDecimal.ZERO) > 0) {
-
-            collectionRate =
-                    collectedRevenue
-                            .multiply(BigDecimal.valueOf(100))
-                            .divide(
-                                    totalRevenue,
-                                    2,
-                                    java.math.RoundingMode.HALF_UP
-                            )
-                            .doubleValue();
+            collectionRate = collectedRevenue
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(
+                            totalRevenue,
+                            2,
+                            RoundingMode.HALF_UP
+                    )
+                    .doubleValue();
         }
 
         FinancialInsightsResponse financialInsights =
@@ -161,28 +153,29 @@ public class InsightsServiceImpl
         );
     }
 
-    private void validateMonth(
-            Integer month) {
-
-        if (month == null
-                || month < 1
-                || month > 12) {
-
+    private void validateMonth(Integer month) {
+        if (month == null || month < 1 || month > 12) {
             throw new BusinessException(
                     "Month must be between 1 and 12."
             );
         }
     }
 
-    private Long getLong(Object value) {
+    private void validateYear(Integer year) {
+        if (year == null || year < 1000 || year > 9998) {
+            throw new BusinessException(
+                    "Year must be between 1000 and 9998."
+            );
+        }
+    }
 
+    private Long getLong(Object value) {
         return value == null
                 ? 0L
                 : ((Number) value).longValue();
     }
 
     private BigDecimal getBigDecimal(Object value) {
-
         return value == null
                 ? BigDecimal.ZERO
                 : (BigDecimal) value;

@@ -1,6 +1,6 @@
 import {
-  useEffect,
   useState,
+  type FormEvent,
 } from "react";
 
 import { toast } from "sonner";
@@ -20,41 +20,43 @@ type ResponseWindowFormProps = {
   onSuccess: () => Promise<void>;
 };
 
-export default function ResponseWindowForm({
+export default function ResponseWindowForm(
+  props: ResponseWindowFormProps
+) {
+  const formKey = JSON.stringify([
+    props.settings?.settingsId ?? null,
+    props.settings?.lunchResponseCutoff ?? null,
+    props.settings?.dinnerResponseCutoff ?? null,
+  ]);
+
+  return (
+    <ResponseWindowFormContent
+      key={formKey}
+      {...props}
+    />
+  );
+}
+
+function ResponseWindowFormContent({
   settings,
   onSuccess,
 }: ResponseWindowFormProps) {
   const [lunchResponseCutoff, setLunchResponseCutoff] =
-    useState("");
+    useState(
+      settings?.lunchResponseCutoff?.slice(0, 5) ?? ""
+    );
 
   const [dinnerResponseCutoff, setDinnerResponseCutoff] =
-    useState("");
-
-  const [saving, setSaving] =
-    useState(false);
-
-  useEffect(() => {
-    if (!settings) {
-      return;
-    }
-
-    setLunchResponseCutoff(
-      settings.lunchResponseCutoff
-        ? settings.lunchResponseCutoff.slice(0, 5)
-        : ""
+    useState(
+      settings?.dinnerResponseCutoff?.slice(0, 5) ?? ""
     );
 
-    setDinnerResponseCutoff(
-      settings.dinnerResponseCutoff
-        ? settings.dinnerResponseCutoff.slice(0, 5)
-        : ""
-    );
-  }, [settings]);
+  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = async (
-    e: React.FormEvent
-  ) => {
-    e.preventDefault();
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
 
     if (
       !lunchResponseCutoff ||
@@ -70,15 +72,12 @@ export default function ResponseWindowForm({
     try {
       setSaving(true);
 
-      const payload:
-        UpdateResponseWindowRequest = {
-          lunchResponseCutoff,
-          dinnerResponseCutoff,
-        };
+      const payload: UpdateResponseWindowRequest = {
+        lunchResponseCutoff,
+        dinnerResponseCutoff,
+      };
 
-      await settingsApi.updateResponseWindow(
-        payload
-      );
+      await settingsApi.updateResponseWindow(payload);
 
       toast.success(
         "Response window updated successfully."
@@ -94,20 +93,14 @@ export default function ResponseWindowForm({
     } finally {
       setSaving(false);
     }
-  };
+  }
 
   return (
     <form
       onSubmit={handleSubmit}
       className="space-y-6"
     >
-      <div
-        className="
-          grid
-          gap-5
-          md:grid-cols-2
-        "
-      >
+      <div className="grid gap-5 md:grid-cols-2">
         <div>
           <label className="mb-2 block text-sm font-medium">
             Lunch Response Cutoff
@@ -117,10 +110,8 @@ export default function ResponseWindowForm({
             fullWidth
             type="time"
             value={lunchResponseCutoff}
-            onChange={(e) =>
-              setLunchResponseCutoff(
-                e.target.value
-              )
+            onChange={(event) =>
+              setLunchResponseCutoff(event.target.value)
             }
           />
         </div>
@@ -134,17 +125,17 @@ export default function ResponseWindowForm({
             fullWidth
             type="time"
             value={dinnerResponseCutoff}
-            onChange={(e) =>
-              setDinnerResponseCutoff(
-                e.target.value
-              )
+            onChange={(event) =>
+              setDinnerResponseCutoff(event.target.value)
             }
           />
         </div>
       </div>
 
       <p className="text-sm text-[var(--color-text-secondary)]">
-        Customers can submit or update their meal response only until the configured cutoff time for each session.
+        Customers can submit or update their meal
+        response only until the configured cutoff
+        time for each session.
       </p>
 
       <div className="flex justify-end">

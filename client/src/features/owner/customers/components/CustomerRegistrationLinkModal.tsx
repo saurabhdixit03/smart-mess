@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+
 import QRCode from "react-qr-code";
 import { toast } from "sonner";
 
@@ -23,46 +24,41 @@ interface CustomerRegistrationLinkModalProps {
   onClose: () => void;
 }
 
-const SVG_NAMESPACE =
-  "http://www.w3.org/2000/svg";
+type RegistrationModalContentProps = {
+  onClose: () => void;
+  onRetry: () => void;
+};
+
+const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
 function validateRegistrationLink(
   registration: MessRegistrationLinkResponse,
   currentMessId: number
 ): void {
   if (
-    registration.messId !== currentMessId
-    || !registration.messName?.trim()
-    || !registration.registrationCode?.trim()
-    || !registration.registrationUrl?.trim()
+    registration.messId !== currentMessId ||
+    !registration.messName?.trim() ||
+    !registration.registrationCode?.trim() ||
+    !registration.registrationUrl?.trim()
   ) {
     throw new Error(
       "Unable to load a valid registration link for your mess."
     );
   }
 
-  const url = new URL(
-    registration.registrationUrl
-  );
+  const url = new URL(registration.registrationUrl);
 
   if (
-    !["http:", "https:"].includes(url.protocol)
-    || url.username
-    || url.password
-    || url.searchParams.get("registrationCode")
-      !== registration.registrationCode
+    !["http:", "https:"].includes(url.protocol) ||
+    url.username ||
+    url.password ||
+    url.searchParams.get("registrationCode") !==
+      registration.registrationCode
   ) {
-    throw new Error(
-      "The registration link is invalid."
-    );
+    throw new Error("The registration link is invalid.");
   }
 }
 
-/*
- * Wraps text to fit the poster.
- *
- * Long words and URLs are split when necessary.
- */
 function wrapText(
   context: CanvasRenderingContext2D,
   text: string,
@@ -81,8 +77,8 @@ function wrapText(
     const candidate = currentLine + character;
 
     if (
-      currentLine
-      && context.measureText(candidate).width > maxWidth
+      currentLine &&
+      context.measureText(candidate).width > maxWidth
     ) {
       const spaceIndex = currentLine.lastIndexOf(" ");
 
@@ -92,8 +88,7 @@ function wrapText(
         );
 
         currentLine =
-          currentLine.slice(spaceIndex + 1)
-          + character;
+          currentLine.slice(spaceIndex + 1) + character;
       } else {
         lines.push(currentLine.trim());
         currentLine = character.trimStart();
@@ -122,9 +117,7 @@ function loadSvgImage(
       { type: "image/svg+xml;charset=utf-8" }
     );
 
-    const objectUrl =
-      URL.createObjectURL(blob);
-
+    const objectUrl = URL.createObjectURL(blob);
     const image = new Image();
 
     image.onload = () => {
@@ -134,7 +127,6 @@ function loadSvgImage(
 
     image.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-
       reject(
         new Error("Unable to prepare the QR image.")
       );
@@ -148,20 +140,36 @@ export default function CustomerRegistrationLinkModal({
   open,
   onClose,
 }: CustomerRegistrationLinkModalProps) {
+  const [retryCount, setRetryCount] = useState(0);
+
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <RegistrationModalContent
+      key={retryCount}
+      onClose={onClose}
+      onRetry={() =>
+        setRetryCount((count) => count + 1)
+      }
+    />
+  );
+}
+
+function RegistrationModalContent({
+  onClose,
+  onRetry,
+}: RegistrationModalContentProps) {
   const [registration, setRegistration] =
     useState<MessRegistrationLinkResponse | null>(null);
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [error, setError] =
     useState<string | null>(null);
 
-  const [retryCount, setRetryCount] =
-    useState(0);
-
-  const [copied, setCopied] =
-    useState(false);
+  const [copied, setCopied] = useState(false);
 
   const [exporting, setExporting] =
     useState<"PDF" | "PRINT" | null>(null);
@@ -172,28 +180,14 @@ export default function CustomerRegistrationLinkModal({
   const copyTimerRef =
     useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /*
-   * Prevent simultaneous export operations before React
-   * has rendered the disabled buttons.
-   */
   const exportBusyRef = useRef(false);
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
-
     let disposed = false;
-
-    setRegistration(null);
-    setError(null);
-    setLoading(true);
-    setCopied(false);
 
     async function loadRegistrationLink() {
       try {
-        const messId =
-          getCurrentOwnerMessId();
+        const messId = getCurrentOwnerMessId();
 
         if (messId === null) {
           throw new Error(
@@ -204,10 +198,7 @@ export default function CustomerRegistrationLinkModal({
         const response =
           await messRegistrationApi.getRegistrationLink();
 
-        validateRegistrationLink(
-          response.data,
-          messId
-        );
+        validateRegistrationLink(response.data, messId);
 
         if (!disposed) {
           setRegistration(response.data);
@@ -232,7 +223,7 @@ export default function CustomerRegistrationLinkModal({
     return () => {
       disposed = true;
     };
-  }, [open, retryCount]);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -263,9 +254,7 @@ export default function CustomerRegistrationLinkModal({
         copyTimerRef.current = null;
       }, 2000);
 
-      toast.success(
-        "Registration link copied."
-      );
+      toast.success("Registration link copied.");
     } catch {
       toast.error(
         "Unable to copy the link. You can select and copy it manually."
@@ -273,43 +262,28 @@ export default function CustomerRegistrationLinkModal({
     }
   }
 
-  /*
-   * Retains a white quiet zone around the QR code.
-   */
   function createExportSvg(): SVGSVGElement {
     const sourceSvg =
       qrContainerRef.current?.querySelector("svg");
 
     if (!sourceSvg) {
-      throw new Error(
-        "The QR code is not ready yet."
-      );
+      throw new Error("The QR code is not ready yet.");
     }
 
-    const exportSvg =
-      document.createElementNS(
-        SVG_NAMESPACE,
-        "svg"
-      );
-
-    exportSvg.setAttribute(
-      "xmlns",
-      SVG_NAMESPACE
+    const exportSvg = document.createElementNS(
+      SVG_NAMESPACE,
+      "svg"
     );
 
-    exportSvg.setAttribute(
-      "viewBox",
-      "0 0 240 240"
-    );
-
+    exportSvg.setAttribute("xmlns", SVG_NAMESPACE);
+    exportSvg.setAttribute("viewBox", "0 0 240 240");
     exportSvg.setAttribute("width", "240");
     exportSvg.setAttribute("height", "240");
 
-    const background =
-      document.createElementNS(
-        SVG_NAMESPACE,
-        "rect"
-      );
+    const background = document.createElementNS(
+      SVG_NAMESPACE,
+      "rect"
+    );
 
     background.setAttribute("width", "240");
     background.setAttribute("height", "240");
@@ -328,12 +302,6 @@ export default function CustomerRegistrationLinkModal({
     return exportSvg;
   }
 
-  /*
-   * Creates one shared A4 poster for PDF download and print.
-   *
-   * Browser-rendered text supports the same characters
-   * displayed by the application, including local languages.
-   */
   async function createPosterCanvas(
     details: MessRegistrationLinkResponse
   ): Promise<HTMLCanvasElement> {
@@ -342,14 +310,12 @@ export default function CustomerRegistrationLinkModal({
 
     await document.fonts.ready;
 
-    const canvas =
-      document.createElement("canvas");
+    const canvas = document.createElement("canvas");
 
     canvas.width = 1240;
     canvas.height = 1754;
 
-    const context =
-      canvas.getContext("2d");
+    const context = canvas.getContext("2d");
 
     if (!context) {
       throw new Error(
@@ -367,7 +333,6 @@ export default function CustomerRegistrationLinkModal({
 
     context.strokeStyle = "#d1d5db";
     context.lineWidth = 2;
-
     context.strokeRect(
       60,
       60,
@@ -377,23 +342,29 @@ export default function CustomerRegistrationLinkModal({
 
     context.textAlign = "center";
     context.textBaseline = "top";
-
     context.fillStyle = "#475569";
     context.font = "bold 23px Arial, sans-serif";
-
     context.fillText(
       "SMART MESS",
       canvas.width / 2,
       120
     );
 
-    /*
-     * Shrink long mess names until they fit in three lines.
-     */
+    // Shrink long mess names until they fit in three lines.
     let nameFontSize = 54;
-    let nameLines: string[] = [];
 
-    do {
+    context.font =
+      `bold ${nameFontSize}px Arial, sans-serif`;
+
+    let nameLines = wrapText(
+      context,
+      details.messName,
+      980
+    );
+
+    while (nameLines.length > 3 && nameFontSize > 18) {
+      nameFontSize -= 2;
+
       context.font =
         `bold ${nameFontSize}px Arial, sans-serif`;
 
@@ -402,13 +373,7 @@ export default function CustomerRegistrationLinkModal({
         details.messName,
         980
       );
-
-      if (nameLines.length <= 3 || nameFontSize <= 18) {
-        break;
-      }
-
-      nameFontSize -= 2;
-    } while (true);
+    }
 
     if (nameLines.length > 3) {
       throw new Error(
@@ -431,10 +396,8 @@ export default function CustomerRegistrationLinkModal({
     }
 
     positionY += 8;
-
     context.font = "30px Arial, sans-serif";
     context.fillStyle = "#475569";
-
     context.fillText(
       "Customer Registration",
       canvas.width / 2,
@@ -446,7 +409,6 @@ export default function CustomerRegistrationLinkModal({
     const qrSize = 500;
 
     context.imageSmoothingEnabled = false;
-
     context.drawImage(
       qrImage,
       (canvas.width - qrSize) / 2,
@@ -456,10 +418,8 @@ export default function CustomerRegistrationLinkModal({
     );
 
     positionY += qrSize + 24;
-
     context.font = "bold 36px Arial, sans-serif";
     context.fillStyle = "#111827";
-
     context.fillText(
       "Scan to join our mess",
       canvas.width / 2,
@@ -489,7 +449,6 @@ export default function CustomerRegistrationLinkModal({
       ) + 42;
 
     context.fillStyle = "#f8fafc";
-
     context.fillRect(
       120,
       positionY,
@@ -498,7 +457,6 @@ export default function CustomerRegistrationLinkModal({
     );
 
     context.strokeStyle = "#e2e8f0";
-
     context.strokeRect(
       120,
       positionY,
@@ -513,12 +471,7 @@ export default function CustomerRegistrationLinkModal({
 
     for (const lines of instructionLines) {
       for (const line of lines) {
-        context.fillText(
-          line,
-          165,
-          instructionY
-        );
-
+        context.fillText(line, 165, instructionY);
         instructionY += 39;
       }
 
@@ -530,7 +483,6 @@ export default function CustomerRegistrationLinkModal({
     context.textAlign = "center";
     context.font = "bold 25px Arial, sans-serif";
     context.fillStyle = "#111827";
-
     context.fillText(
       "Owner approval is required before you can sign in.",
       canvas.width / 2,
@@ -538,7 +490,6 @@ export default function CustomerRegistrationLinkModal({
     );
 
     positionY += 45;
-
     context.font = "23px Arial, sans-serif";
     context.fillStyle = "#475569";
 
@@ -559,10 +510,8 @@ export default function CustomerRegistrationLinkModal({
     }
 
     positionY += 38;
-
     context.font = "bold 19px Arial, sans-serif";
     context.fillStyle = "#64748b";
-
     context.fillText(
       "REGISTRATION LINK",
       canvas.width / 2,
@@ -570,7 +519,6 @@ export default function CustomerRegistrationLinkModal({
     );
 
     positionY += 34;
-
     context.font = "18px Arial, sans-serif";
 
     const linkLines = wrapText(
@@ -579,7 +527,10 @@ export default function CustomerRegistrationLinkModal({
       970
     );
 
-    if (positionY + linkLines.length * 27 > canvas.height - 90) {
+    if (
+      positionY + linkLines.length * 27 >
+      canvas.height - 90
+    ) {
       throw new Error(
         "The registration link is too long for the A4 poster."
       );
@@ -642,9 +593,7 @@ export default function CustomerRegistrationLinkModal({
         `smart-mess-${details.messId}-registration-qr.pdf`
       );
 
-      toast.success(
-        "Registration PDF downloaded."
-      );
+      toast.success("Registration PDF downloaded.");
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -662,10 +611,6 @@ export default function CustomerRegistrationLinkModal({
       return;
     }
 
-    /*
-     * Open synchronously during the button click so that
-     * browsers can recognise this as a requested pop-up.
-     */
     const printWindow = window.open(
       "",
       "_blank",
@@ -746,7 +691,6 @@ export default function CustomerRegistrationLinkModal({
         printDocument.createElement("img");
 
       image.className = "poster";
-
       image.alt =
         `${details.messName} customer registration poster`;
 
@@ -771,9 +715,7 @@ export default function CustomerRegistrationLinkModal({
         );
       };
 
-      image.src =
-        canvas.toDataURL("image/png");
-
+      image.src = canvas.toDataURL("image/png");
       printDocument.body.appendChild(image);
     } catch (error) {
       printWindow.close();
@@ -791,7 +733,7 @@ export default function CustomerRegistrationLinkModal({
 
   return (
     <Modal
-      open={open}
+      open
       title="Customer Registration"
       onClose={onClose}
       footer={
@@ -821,9 +763,7 @@ export default function CustomerRegistrationLinkModal({
 
           <Button
             variant="outline"
-            onClick={() =>
-              setRetryCount((count) => count + 1)
-            }
+            onClick={onRetry}
           >
             Try Again
           </Button>
@@ -890,9 +830,7 @@ export default function CustomerRegistrationLinkModal({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                void handleCopy();
-              }}
+              onClick={() => void handleCopy()}
             >
               {copied
                 ? <Check size={16} />
@@ -905,9 +843,7 @@ export default function CustomerRegistrationLinkModal({
               variant="outline"
               size="sm"
               disabled={exporting !== null}
-              onClick={() => {
-                void handleDownloadPdf();
-              }}
+              onClick={() => void handleDownloadPdf()}
             >
               <Download size={16} />
 
@@ -920,9 +856,7 @@ export default function CustomerRegistrationLinkModal({
               variant="outline"
               size="sm"
               disabled={exporting !== null}
-              onClick={() => {
-                void handlePrint();
-              }}
+              onClick={() => void handlePrint()}
             >
               <Printer size={16} />
 

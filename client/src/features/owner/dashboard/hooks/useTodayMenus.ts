@@ -1,13 +1,19 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { menuApi } from "@/features/owner/menu/api/menu.api";
 
-import type { MenuResponse } from "@/features/owner/menu/types/menu.types";
+import type {
+  MenuResponse,
+} from "@/features/owner/menu/types/menu.types";
 
 const REFRESH_INTERVAL = 5000;
 
 export function useTodayMenus() {
-
   const [todayMenus, setTodayMenus] =
     useState<MenuResponse[]>([]);
 
@@ -17,63 +23,57 @@ export function useTodayMenus() {
   const [error, setError] =
     useState<string | null>(null);
 
-  const fetchTodayMenus = useCallback(
-    async (showLoader = true) => {
+  const requestVersionRef = useRef(0);
 
-      try {
+  const loadTodayMenus = useCallback((): Promise<void> => {
+    const version = ++requestVersionRef.current;
 
-        if (showLoader) {
-          setLoading(true);
+    return menuApi
+      .getTodayMenus()
+      .then((response) => {
+        if (requestVersionRef.current !== version) {
+          return;
         }
-
-        setError(null);
-
-        const response =
-          await menuApi.getTodayMenus();
 
         setTodayMenus(response.data);
-
-      } catch {
-
-        setError(
-          "Failed to load today's menus."
-        );
-
-      } finally {
-
-        if (showLoader) {
+        setError(null);
+      })
+      .catch(() => {
+        if (requestVersionRef.current === version) {
+          setError("Failed to load today's menus.");
+        }
+      })
+      .finally(() => {
+        if (requestVersionRef.current === version) {
           setLoading(false);
         }
+      });
+  }, []);
 
-      }
+  const refresh = useCallback((): Promise<void> => {
+    setLoading(true);
+    setError(null);
 
-    },
-    []
-  );
+    return loadTodayMenus();
+  }, [loadTodayMenus]);
 
   useEffect(() => {
-
-    fetchTodayMenus(true);
+    void loadTodayMenus();
 
     const interval = setInterval(() => {
-      fetchTodayMenus(false);
+      void loadTodayMenus();
     }, REFRESH_INTERVAL);
 
-    return () => clearInterval(interval);
-
-  }, [fetchTodayMenus]);
+    return () => {
+      clearInterval(interval);
+      requestVersionRef.current += 1;
+    };
+  }, [loadTodayMenus]);
 
   return {
-
     todayMenus,
-
     loading,
-
     error,
-
-    refresh: () =>
-      fetchTodayMenus(true),
-
+    refresh,
   };
-
 }

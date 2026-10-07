@@ -102,60 +102,45 @@ public class AuthServiceImpl implements AuthService {
 
         if (messOwnerRepository.existsByMobileNumber(
                 request.mobileNumber())) {
-
             throw new BusinessException(
                     "A mess owner with this mobile number already exists."
             );
         }
 
-        if (messOwnerRepository.existsByEmail(
-                request.email())) {
-
+        if (messOwnerRepository.existsByEmail(request.email())) {
             throw new BusinessException(
                     "A mess owner with this email already exists."
             );
         }
 
-        MessOwner owner =
-                messOwnerMapper.toEntity(request);
+        MessOwner owner = messOwnerMapper.toEntity(request);
 
         owner.setPassword(
                 passwordEncoder.encode(request.password())
         );
 
         Mess mess = new Mess();
-
         mess.setMessName(request.messName());
         mess.setRegistrationCode(UUID.randomUUID().toString());
 
-        Mess savedMess =
-                messRepository.save(mess);
+        Mess savedMess = messRepository.save(mess);
 
         owner.setMess(savedMess);
 
-        MessOwner savedOwner =
-                messOwnerRepository.save(owner);
+        MessOwner savedOwner = messOwnerRepository.save(owner);
 
         /*
-         * Required configuration for the new mess.
-         *
-         * Uses the same initial cutoffs and prices as the
-         * existing application, with no demo operational data.
-         *
-         * Initialization joins this registration transaction.
+         * Initialize operational configuration within the
+         * same owner registration transaction.
          */
         messConfigurationInitializer.initialize(savedMess);
 
-        String accessToken =
-                jwtService.generateToken(
-                        savedOwner.getEmail(),
-                        UserRole.OWNER
-                );
-
-        return buildLoginResponse(
-                savedOwner,
-                accessToken
+        String accessToken = jwtService.generateToken(
+                savedOwner.getEmail(),
+                UserRole.OWNER
         );
+
+        return buildLoginResponse(savedOwner, accessToken);
     }
 
     @Transactional(readOnly = true)
@@ -163,46 +148,37 @@ public class AuthServiceImpl implements AuthService {
     public OwnerLoginResponse loginOwner(
             OwnerLoginRequest request) {
 
-        MessOwner owner =
-                messOwnerRepository
-                        .findByEmail(request.email())
-                        .orElseThrow(() ->
-                                new BusinessException(
-                                        "Invalid email or password."
-                                ));
+        MessOwner owner = messOwnerRepository
+                .findByEmail(request.email())
+                .orElseThrow(() -> new BusinessException(
+                        "Invalid email or password."
+                ));
 
         if (!passwordEncoder.matches(
                 request.password(),
                 owner.getPassword())) {
-
             throw new BusinessException(
                     "Invalid email or password."
             );
         }
 
         if (owner.getStatus() != MessOwnerStatus.ACTIVE) {
-
             throw new BusinessException(
                     "Your account is inactive. Please contact support."
             );
         }
 
-        String accessToken =
-                jwtService.generateToken(
-                        owner.getEmail(),
-                        UserRole.OWNER
-                );
-
-        return buildLoginResponse(
-                owner,
-                accessToken
+        String accessToken = jwtService.generateToken(
+                owner.getEmail(),
+                UserRole.OWNER
         );
+
+        return buildLoginResponse(owner, accessToken);
     }
 
     /*
      * Self-registration creates a pending account.
-     *
-     * The owning mess approves the customer before login.
+     * Approval is required before the customer's first login.
      * Registration does not issue an access token.
      */
     @Transactional
@@ -210,45 +186,35 @@ public class AuthServiceImpl implements AuthService {
     public CustomerRegistrationResponse registerCustomer(
             CustomerRegistrationRequest request) {
 
-        Mess mess =
-                messRepository
-                        .findByRegistrationCode(
-                                request.registrationCode()
-                        )
-                        .orElseThrow(() ->
-                                new BusinessException(
-                                        "Invalid mess registration link."
-                                ));
+        Mess mess = messRepository
+                .findByRegistrationCode(request.registrationCode())
+                .orElseThrow(() -> new BusinessException(
+                        "Invalid mess registration link."
+                ));
 
         if (customerRepository.existsByMobileNumber(
                 request.mobileNumber())) {
-
             throw new BusinessException(
                     "A customer with this mobile number already exists."
             );
         }
 
-        if (customerRepository.existsByEmail(
-                request.email())) {
-
+        if (customerRepository.existsByEmail(request.email())) {
             throw new BusinessException(
                     "A customer with this email already exists."
             );
         }
 
-        Customer customer =
-                customerMapper.toEntity(request);
+        Customer customer = customerMapper.toEntity(request);
 
         customer.setMess(mess);
         customer.setJoiningDate(LocalDate.now(clock));
         customer.setStatus(CustomerStatus.PENDING);
-
         customer.setPassword(
                 passwordEncoder.encode(request.password())
         );
 
-        Customer savedCustomer =
-                customerRepository.save(customer);
+        Customer savedCustomer = customerRepository.save(customer);
 
         return new CustomerRegistrationResponse(
                 savedCustomer.getCustomerId(),
@@ -263,46 +229,45 @@ public class AuthServiceImpl implements AuthService {
     public CustomerLoginResponse loginCustomer(
             CustomerLoginRequest request) {
 
-        Customer customer =
-                customerRepository
-                        .findByEmail(request.email())
-                        .orElseThrow(() ->
-                                new BusinessException(
-                                        "Invalid email or password."
-                                ));
+        Customer customer = customerRepository
+                .findByEmail(request.email())
+                .orElseThrow(() -> new BusinessException(
+                        "Invalid email or password."
+                ));
 
         if (!passwordEncoder.matches(
                 request.password(),
                 customer.getPassword())) {
-
             throw new BusinessException(
                     "Invalid email or password."
             );
         }
 
         if (customer.getStatus() == CustomerStatus.PENDING) {
-
             throw new BusinessException(
                     "Your registration is awaiting approval from your mess owner."
             );
         }
 
-        if (customer.getStatus() != CustomerStatus.ACTIVE) {
-
+        /*
+         * Inactive customers can sign in to access their
+         * profile, meal history, bills and payments.
+         *
+         * Daily participation requires ACTIVE status in the
+         * respective operational services.
+         */
+        if (customer.getStatus() != CustomerStatus.ACTIVE
+                && customer.getStatus() != CustomerStatus.INACTIVE) {
             throw new BusinessException(
-                    "Your account is inactive. Please contact your mess owner."
+                    "Your account is not available for login. Please contact your mess owner."
             );
         }
 
-        String accessToken =
-                jwtService.generateToken(
-                        customer.getEmail(),
-                        UserRole.CUSTOMER
-                );
-
-        return buildCustomerLoginResponse(
-                customer,
-                accessToken
+        String accessToken = jwtService.generateToken(
+                customer.getEmail(),
+                UserRole.CUSTOMER
         );
+
+        return buildCustomerLoginResponse(customer, accessToken);
     }
 }

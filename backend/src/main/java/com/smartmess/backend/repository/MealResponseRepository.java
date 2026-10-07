@@ -40,11 +40,30 @@ public interface MealResponseRepository
             Customer customer
     );
 
-    // Live Dashboard
+    /*
+     * Responses for active customer search results.
+     * Both accepted and declined responses are included.
+     *
+     * Call only when customerIds is non-empty.
+     */
+    @Query("""
+            SELECT response
+            FROM MealResponse response
+            JOIN FETCH response.customer customer
+            WHERE response.mess.messId = :messId
+              AND customer.mess.messId = :messId
+              AND response.menu.mess.messId = :messId
+              AND response.menu = :menu
+              AND customer.customerId IN :customerIds
+            """)
+    List<MealResponse> findForCollectionSearch(
+            @Param("messId") Long messId,
+            @Param("menu") Menu menu,
+            @Param("customerIds") List<Long> customerIds
+    );
 
     /*
-     * Tenant-scoped counts preserve the existing response
-     * status and meal-option counting rules.
+     * Live dashboard response counts.
      */
     long countByMess_MessIdAndMenuAndResponseStatus(
             Long messId,
@@ -71,27 +90,34 @@ public interface MealResponseRepository
             @Param("menu") Menu menu
     );
 
-    // Collection queue for meal record module
-
     /*
-     * Tenant-scoped queue.
+     * Collection queue.
      *
-     * Preserves the existing rule that excludes responses
-     * already connected to a meal record.
+     * Includes only active customers who accepted this menu
+     * and have not collected their meal.
+     *
+     * Customer/menu matching also detects collection without
+     * a linked meal response.
      */
     @Query("""
             SELECT mr
             FROM MealResponse mr
             WHERE mr.mess.messId = :messId
+              AND mr.customer.mess.messId = :messId
+              AND mr.menu.mess.messId = :messId
               AND mr.menu = :menu
+              AND mr.customer.status =
+                  com.smartmess.backend.enums.CustomerStatus.ACTIVE
               AND mr.responseStatus =
                   com.smartmess.backend.enums.MealResponseStatus.ACCEPTED
               AND NOT EXISTS (
-                    SELECT 1
+                    SELECT rec.mealRecordId
                     FROM MealRecord rec
-                    WHERE rec.mealResponse = mr
+                    WHERE rec.mess.messId = :messId
+                      AND rec.customer = mr.customer
+                      AND rec.menu = mr.menu
               )
-            ORDER BY mr.customer.fullName
+            ORDER BY mr.customer.fullName, mr.customer.customerId
             """)
     List<MealResponse> findCollectionQueueByMess(
             @Param("messId") Long messId,

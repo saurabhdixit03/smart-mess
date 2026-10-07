@@ -7,15 +7,15 @@ public class PaymentOverviewResponse {
 
     private Long unpaidBillCount;
 
-    private Long pendingRequestCount;
-
     private Long paidBillCount;
 
     private BigDecimal totalCollectedAmount;
 
+    private BigDecimal totalOutstandingAmount;
+
     private List<BillResponse> unpaidBills;
 
-    private List<PendingPaymentResponse> pendingPayments;
+    private List<BillResponse> paidBills;
 
     public Long getUnpaidBillCount() {
         return unpaidBillCount;
@@ -23,14 +23,6 @@ public class PaymentOverviewResponse {
 
     public void setUnpaidBillCount(Long unpaidBillCount) {
         this.unpaidBillCount = unpaidBillCount;
-    }
-
-    public Long getPendingRequestCount() {
-        return pendingRequestCount;
-    }
-
-    public void setPendingRequestCount(Long pendingRequestCount) {
-        this.pendingRequestCount = pendingRequestCount;
     }
 
     public Long getPaidBillCount() {
@@ -45,8 +37,20 @@ public class PaymentOverviewResponse {
         return totalCollectedAmount;
     }
 
-    public void setTotalCollectedAmount(BigDecimal totalCollectedAmount) {
+    public void setTotalCollectedAmount(
+            BigDecimal totalCollectedAmount) {
+
         this.totalCollectedAmount = totalCollectedAmount;
+    }
+
+    public BigDecimal getTotalOutstandingAmount() {
+        return totalOutstandingAmount;
+    }
+
+    public void setTotalOutstandingAmount(
+            BigDecimal totalOutstandingAmount) {
+
+        this.totalOutstandingAmount = totalOutstandingAmount;
     }
 
     public List<BillResponse> getUnpaidBills() {
@@ -57,12 +61,11 @@ public class PaymentOverviewResponse {
         this.unpaidBills = unpaidBills;
     }
 
-    public List<PendingPaymentResponse> getPendingPayments() {
-        return pendingPayments;
+    public List<BillResponse> getPaidBills() {
+        return paidBills;
     }
 
-    public void setPendingPayments(
-            List<PendingPaymentResponse> pendingPayments) {
-        this.pendingPayments = pendingPayments;
+    public void setPaidBills(List<BillResponse> paidBills) {
+        this.paidBills = paidBills;
     }
 }

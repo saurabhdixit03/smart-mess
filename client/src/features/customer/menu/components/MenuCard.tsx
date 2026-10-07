@@ -32,6 +32,10 @@ interface MenuCardProps {
   menu: Menu;
 }
 
+interface CustomerMenuCardProps extends MenuCardProps {
+  customerId: number;
+}
+
 export default function MenuCard({
   menu,
 }: MenuCardProps) {
@@ -49,10 +53,20 @@ export default function MenuCard({
     );
   }
 
-  const customerId = customer.customerId;
+  return (
+    <CustomerMenuCard
+      key={`${customer.customerId}-${menu.menuId}`}
+      customerId={customer.customerId}
+      menu={menu}
+    />
+  );
+}
 
-  const [open, setOpen] =
-    useState(false);
+function CustomerMenuCard({
+  customerId,
+  menu,
+}: CustomerMenuCardProps) {
+  const [open, setOpen] = useState(false);
 
   const {
     loading,
@@ -73,9 +87,7 @@ export default function MenuCard({
     loading: availabilityLoading,
     error: availabilityError,
     refetch: refetchAvailability,
-  } = useMealResponseAvailability(
-    menu.menuId
-  );
+  } = useMealResponseAvailability(menu.menuId);
 
   const canRespond =
     availability?.canRespond ?? false;
@@ -109,74 +121,52 @@ export default function MenuCard({
 
       setOpen(false);
     } catch (error) {
-      console.error(error);
-
-      await refetchAvailability();
-
       toast.error(
         error instanceof Error
           ? error.message
           : "Unable to save your response. Please try again."
       );
+
+      try {
+        await refetchAvailability();
+      } catch {
+        // Preserve the original submission error.
+      }
     }
   }
 
   return (
     <>
-      <Card
-        className="
-          flex
-          h-full
-          flex-col
-          transition-all
-          duration-200
-          hover:-translate-y-1
-          hover:shadow-md
-        "
-      >
-
+      <Card className="flex h-full flex-col transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
         <Card.Body className="flex flex-1 flex-col">
-
-          <div className="flex items-start justify-between">
-
+          <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-4">
-
               <div className="rounded-xl bg-orange-100 p-3">
-
                 <UtensilsCrossed
                   size={22}
                   className="text-orange-600"
                 />
-
               </div>
 
               <div>
-
                 <h2 className="text-xl font-semibold">
-                  {MEAL_SESSION_LABELS[
-                    menu.mealSession
-                  ]}
+                  {MEAL_SESSION_LABELS[menu.mealSession]}
                 </h2>
 
                 <p className="text-sm text-[var(--color-text-secondary)]">
                   {menu.menuDate}
                 </p>
-
               </div>
-
             </div>
 
             {mealResponse && (
               <StatusBadge
                 label={
-                  mealResponse.responseStatus ===
-                  "ACCEPTED"
+                  mealResponse.responseStatus === "ACCEPTED"
                     ? `Accepted • ${mealResponse.mealOption}${
-                        mealResponse.extraRotiCount >
-                        0
+                        mealResponse.extraRotiCount > 0
                           ? ` • +${mealResponse.extraRotiCount} Roti${
-                              mealResponse.extraRotiCount >
-                              1
+                              mealResponse.extraRotiCount > 1
                                 ? "s"
                                 : ""
                             }`
@@ -186,11 +176,9 @@ export default function MenuCard({
                 }
               />
             )}
-
           </div>
 
           <div className="mt-6 flex-1">
-
             <MenuSummary
               sabjiOne={menu.sabjiOne}
               sabjiTwo={menu.sabjiTwo}
@@ -198,23 +186,19 @@ export default function MenuCard({
               rice={menu.rice}
               sweet={menu.sweet}
             />
-
           </div>
-
         </Card.Body>
 
         <Card.Footer className="space-y-2">
-
           <Button
             fullWidth
             disabled={
+              loading ||
               responseLoading ||
               availabilityLoading ||
               !canRespond
             }
-            onClick={() =>
-              setOpen(true)
-            }
+            onClick={() => setOpen(true)}
           >
             {mealResponse
               ? "Update Response"
@@ -224,26 +208,18 @@ export default function MenuCard({
           {!availabilityLoading &&
             !canRespond &&
             responseUnavailableReason && (
-
               <p className="text-center text-sm text-[var(--color-text-secondary)]">
-                {
-                  responseUnavailableReason
-                }
+                {responseUnavailableReason}
               </p>
-
             )}
-
         </Card.Footer>
-
       </Card>
 
       <MealResponseForm
         open={open}
         loading={loading}
         existingResponse={mealResponse}
-        onClose={() =>
-          setOpen(false)
-        }
+        onClose={() => setOpen(false)}
         onSubmit={handleSubmit}
       />
     </>

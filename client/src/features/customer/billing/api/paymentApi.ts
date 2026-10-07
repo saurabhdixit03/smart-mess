@@ -2,26 +2,18 @@ import api from "@/lib/api";
 
 import { PAYMENT_API_ENDPOINT } from "../constants";
 
-import type {
-  ApiResponse,
-  UpiPayment,
-} from "../types";
+import type { PaymentCheckoutResponse } from "../types";
 
 export const paymentApi = {
-  generateUpiPayment(
-    billId: number
-  ) {
-    return api.get<ApiResponse<UpiPayment>>(
-      `${PAYMENT_API_ENDPOINT}/upi/${billId}`
+  createCheckout(billId: number) {
+    return api.post<PaymentCheckoutResponse>(
+      `${PAYMENT_API_ENDPOINT}/checkout/bill/${billId}`
     );
   },
 
-  requestPaymentVerification(
-    billId: number
-  ) {
-    return api.post<ApiResponse<void>>(
-      `${PAYMENT_API_ENDPOINT}/request/${billId}`,
-      {}
+  verifyCheckout(paymentOrderId: number) {
+    return api.post<PaymentCheckoutResponse>(
+      `${PAYMENT_API_ENDPOINT}/orders/${paymentOrderId}/verify`
     );
   },
 };

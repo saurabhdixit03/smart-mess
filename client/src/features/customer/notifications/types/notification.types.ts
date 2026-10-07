@@ -4,7 +4,9 @@ export type NotificationType =
   | "WEEKLY_SCHEDULE"
   | "RESPONSE_WINDOW"
   | "MEAL_PRICING"
-  | "BILL_GENERATED";
+  | "BILL_GENERATED"
+  | "PAYMENT_RECEIVED"
+  | "GENERAL";
 
 export interface Notification {
   notificationId: number;

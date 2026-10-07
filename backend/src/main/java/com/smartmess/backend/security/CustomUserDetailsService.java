@@ -43,11 +43,12 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     /**
-     * Loads tenant ownership and current account status
-     * from the database.
+     * Resolves the account and tenant from the database.
      *
-     * HTTP JWT authentication and WebSocket CONNECT
-     * both use this account lookup.
+     * Used by HTTP JWT authentication and WebSocket CONNECT.
+     * Inactive customers retain authenticated access to
+     * history and billing. Daily operations check ACTIVE
+     * status separately.
      */
     @Transactional(readOnly = true)
     public UserDetails loadUserByEmail(
@@ -56,16 +57,13 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         if (role == UserRole.OWNER) {
 
-            MessOwner owner =
-                    messOwnerRepository
-                            .findByEmail(email)
-                            .orElseThrow(() ->
-                                    new UsernameNotFoundException(
-                                            "Owner not found."
-                                    ));
+            MessOwner owner = messOwnerRepository
+                    .findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException(
+                            "Owner not found."
+                    ));
 
             if (owner.getStatus() != MessOwnerStatus.ACTIVE) {
-
                 throw new UsernameNotFoundException(
                         "Owner account is not active."
                 );
@@ -73,7 +71,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
             if (owner.getMess() == null
                     || owner.getMess().getMessId() == null) {
-
                 throw new UsernameNotFoundException(
                         "Owner is not linked to a mess."
                 );
@@ -90,24 +87,21 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         if (role == UserRole.CUSTOMER) {
 
-            Customer customer =
-                    customerRepository
-                            .findByEmail(email)
-                            .orElseThrow(() ->
-                                    new UsernameNotFoundException(
-                                            "Customer not found."
-                                    ));
+            Customer customer = customerRepository
+                    .findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException(
+                            "Customer not found."
+                    ));
 
-            if (customer.getStatus() != CustomerStatus.ACTIVE) {
-
+            if (customer.getStatus() != CustomerStatus.ACTIVE
+                    && customer.getStatus() != CustomerStatus.INACTIVE) {
                 throw new UsernameNotFoundException(
-                        "Customer account is not active."
+                        "Customer account is not approved."
                 );
             }
 
             if (customer.getMess() == null
                     || customer.getMess().getMessId() == null) {
-
                 throw new UsernameNotFoundException(
                         "Customer is not linked to a mess."
                 );

@@ -1,58 +1,113 @@
-import { useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { mealRecordApi } from "../api";
+
 import type { MealRecord } from "../types";
+
+type MealHistoryState = {
+  customerId: number;
+  mealRecords: MealRecord[];
+  error: string | null;
+};
 
 export function useMealRecords(
   customerId: number
 ) {
-  const [mealRecords, setMealRecords] =
-    useState<MealRecord[]>([]);
+  const [history, setHistory] =
+    useState<MealHistoryState | null>(null);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [refreshing, setRefreshing] =
+    useState(false);
 
-  const [error, setError] =
-    useState<string | null>(null);
+  const requestVersionRef = useRef(0);
 
-  const fetchMealRecords =
-    async () => {
+  const loadMealRecords = useCallback(
+    (): Promise<void> => {
+      const requestVersion =
+        ++requestVersionRef.current;
 
-      try {
-        setLoading(true);
-        setError(null);
+      return mealRecordApi
+        .getCustomerMealHistory(customerId)
+        .then((response) => {
+          if (
+            requestVersion !== requestVersionRef.current
+          ) {
+            return;
+          }
 
-        const apiResponse =
-          await mealRecordApi.getCustomerMealHistory(
-            customerId
-          );
+          setHistory({
+            customerId,
+            mealRecords: response.data,
+            error: null,
+          });
+        })
+        .catch(() => {
+          if (
+            requestVersion !== requestVersionRef.current
+          ) {
+            return;
+          }
 
-        setMealRecords(
-          apiResponse.data
-        );
+          setHistory((previous) => ({
+            customerId,
+            mealRecords:
+              previous !== null &&
+              previous.customerId === customerId
+                ? previous.mealRecords
+                : [],
+            error: "Failed to load meal history.",
+          }));
+        })
+        .finally(() => {
+          if (
+            requestVersion === requestVersionRef.current
+          ) {
+            setRefreshing(false);
+          }
+        });
+    },
+    [customerId]
+  );
 
-      } catch {
+  const fetchMealRecords = useCallback(
+    (): Promise<void> => {
+      setRefreshing(true);
 
-        setError(
-          "Failed to load meal history."
-        );
+      setHistory((previous) =>
+        previous !== null &&
+        previous.customerId === customerId
+          ? { ...previous, error: null }
+          : previous
+      );
 
-      } finally {
-
-        setLoading(false);
-
-      }
-
-    };
+      return loadMealRecords();
+    },
+    [customerId, loadMealRecords]
+  );
 
   useEffect(() => {
-    fetchMealRecords();
-  }, [customerId]);
+    void loadMealRecords();
+
+    return () => {
+      requestVersionRef.current += 1;
+    };
+  }, [loadMealRecords]);
+
+  const currentHistory =
+    history !== null &&
+    history.customerId === customerId
+      ? history
+      : null;
 
   return {
-    mealRecords,
-    loading,
-    error,
+    mealRecords: currentHistory?.mealRecords ?? [],
+    loading: currentHistory === null || refreshing,
+    error: currentHistory?.error ?? null,
     fetchMealRecords,
   };
 }

@@ -1,7 +1,4 @@
-export type BillStatus =
-  | "UNPAID"
-  | "PAID"
-  | "PAYMENT_PENDING";
+export type BillStatus = "UNPAID" | "PAID";
 
 export interface Bill {
   billId: number;
@@ -29,36 +26,27 @@ export interface BillingOverview {
   bills: Bill[];
 }
 
+/**
+ * Generate bills from unbilled meal records.
+ *
+ * Omit customerId to include all eligible customers.
+ * Dates use YYYY-MM-DD.
+ */
 export interface GenerateBillRequest {
   billingMonth: number;
   billingYear: number;
+
+  customerId?: number | null;
+
+  startDate?: string | null;
+  endDate?: string | null;
 }
 
-export interface BillResponse {
-  billId: number;
-  customerId: number;
-  customerName: string;
-  billingMonth: number;
-  billingYear: number;
-  mealRecordCount: number;
-  totalAmount: number;
-  billStatus: "UNPAID" | "PAID" | "PAYMENT_PENDING";
-  generatedAt: string;
-}
+export type BillResponse = Bill;
 
-export interface BillingSummaryResponse {
-  totalBills: number;
-  paidBills: number;
-  unpaidBills: number;
-  totalRevenue: number;
-  collectedRevenue: number;
-  pendingRevenue: number;
-}
+export type BillingSummaryResponse = BillingSummary;
 
-export interface BillingOverviewResponse {
-  summary: BillingSummaryResponse;
-  bills: BillResponse[];
-}
+export type BillingOverviewResponse = BillingOverview;
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -70,28 +58,49 @@ export interface ApiResponse<T> {
 
 export interface MealRecordResponse {
   mealRecordId: number;
+
   customerId: number;
   customerName: string;
 
   menuId: number;
-  mealResponseId: number;
+  mealResponseId: number | null;
 
   mealSession: "LUNCH" | "DINNER";
-
   mealOption: "FULL" | "HALF";
 
   mealPrice: number;
 
   extraRotiCount: number;
-
   extraRotiPrice: number;
 
   totalAmount: number;
-
   collectedAt: string;
 }
 
-export interface BillDetailResponse
-  extends BillResponse {
+export interface BillPaymentReceiptResponse {
+  paymentId: number;
+  paymentAmount: number;
+  paymentMode: "CASHFREE";
+  paidAt: string;
+
+  /**
+   * Historical payments may not have gateway metadata.
+   * Null must not be treated as a production payment.
+   */
+  environment: "SANDBOX" | "PRODUCTION" | null;
+  currency: string | null;
+  gatewayOrderId: string | null;
+  gatewayPaymentId: string | null;
+}
+
+export interface BillDetailResponse extends BillResponse {
+  messId: number;
+  messName: string;
+
+  customerMobileNumber: string;
+  customerEmail: string;
+
   mealRecords: MealRecordResponse[];
+
+  payment: BillPaymentReceiptResponse | null;
 }

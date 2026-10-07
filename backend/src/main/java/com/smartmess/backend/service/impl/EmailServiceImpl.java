@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.smartmess.backend.enums.NotificationType;
 import com.smartmess.backend.enums.UserRole;
 import com.smartmess.backend.service.EmailService;
 
@@ -36,10 +37,8 @@ public class EmailServiceImpl implements EmailService {
         }
 
         this.mailFrom = mailFrom;
-        this.frontendUrl =
-                frontendUrl.replaceAll("/+$", "");
-        this.resetExpirationMinutes =
-                resetExpirationMinutes;
+        this.frontendUrl = frontendUrl.replaceAll("/+$", "");
+        this.resetExpirationMinutes = resetExpirationMinutes;
 
         SimpleClientHttpRequestFactory requestFactory =
                 new SimpleClientHttpRequestFactory();
@@ -87,10 +86,7 @@ public class EmailServiceImpl implements EmailService {
                 Your password will remain unchanged.
 
                 Smart Mess
-                """.formatted(
-                        resetUrl,
-                        resetExpirationMinutes
-                );
+                """.formatted(resetUrl, resetExpirationMinutes);
 
         String bodyContent = """
                 <p style="margin:0 0 16px;">
@@ -128,8 +124,7 @@ public class EmailServiceImpl implements EmailService {
             String customerName,
             String messName) {
 
-        String loginUrl =
-                frontendUrl + "/customer/login";
+        String loginUrl = frontendUrl + "/customer/login";
 
         String textContent = """
                 Hi %s,
@@ -146,11 +141,7 @@ public class EmailServiceImpl implements EmailService {
 
                 Welcome aboard!
                 Smart Mess
-                """.formatted(
-                        customerName,
-                        messName,
-                        loginUrl
-                );
+                """.formatted(customerName, messName, loginUrl);
 
         String bodyContent = """
                 <p style="margin:0 0 16px;">Hi %s,</p>
@@ -180,6 +171,99 @@ public class EmailServiceImpl implements EmailService {
         sendEmail(
                 recipientEmail,
                 "Your Smart Mess registration is approved",
+                textContent,
+                htmlContent
+        );
+    }
+
+    @Override
+    public void sendCustomerNotificationEmail(
+            String recipientEmail,
+            String customerName,
+            String messName,
+            NotificationType notificationType,
+            String title,
+            String message) {
+
+        if (notificationType != NotificationType.BILL_GENERATED
+                && notificationType != NotificationType.PAYMENT_RECEIVED
+                && notificationType != NotificationType.MEAL_PRICING) {
+
+            throw new IllegalArgumentException(
+                    "This notification type does not support email delivery."
+            );
+        }
+
+        if (recipientEmail == null || recipientEmail.isBlank()
+                || title == null || title.isBlank()
+                || message == null || message.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Email recipient, title and message are required."
+            );
+        }
+
+        boolean pricing =
+                notificationType == NotificationType.MEAL_PRICING;
+
+        String actionUrl = frontendUrl
+                + (pricing
+                        ? "/customer/mess-details"
+                        : "/customer/my-bills");
+
+        String buttonLabel =
+                pricing ? "View Mess Details" : "View My Bills";
+
+        String textContent = """
+                Hi %s,
+
+                %s
+                %s
+
+                %s
+
+                Open your customer portal:
+                %s
+
+                Sign in to view your account details.
+
+                Smart Mess
+                """.formatted(
+                        customerName == null ? "" : customerName,
+                        messName == null ? "" : messName,
+                        title,
+                        message,
+                        actionUrl
+                );
+
+        String bodyContent = """
+                <p style="margin:0 0 16px;">Hi %s,</p>
+                <p style="margin:0 0 16px;">
+                  An update from <strong>%s</strong>.
+                </p>
+                <p style="margin:0 0 24px;white-space:pre-line;">%s</p>
+                """.formatted(
+                        escapeHtml(customerName),
+                        escapeHtml(messName),
+                        escapeHtml(message)
+                );
+
+        String htmlContent = buildEmail(
+                messName == null ? "Customer update" : messName,
+                title,
+                bodyContent,
+                buttonLabel,
+                actionUrl,
+                "Sign in to view your account details."
+        );
+
+        String subject = ("Smart Mess — " + title)
+                .replace('\r', ' ')
+                .replace('\n', ' ');
+
+        sendEmail(
+                recipientEmail,
+                subject,
                 textContent,
                 htmlContent
         );

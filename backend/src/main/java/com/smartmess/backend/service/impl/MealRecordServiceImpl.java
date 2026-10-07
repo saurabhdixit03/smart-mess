@@ -4,11 +4,24 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.smartmess.backend.dto.request.CreateMealRecordRequest;
+import com.smartmess.backend.dto.response.CollectionCustomerResponse;
 import com.smartmess.backend.dto.response.CollectionQueueResponse;
 import com.smartmess.backend.dto.response.MealRecordResponse;
 import com.smartmess.backend.entity.Customer;
@@ -18,7 +31,9 @@ import com.smartmess.backend.entity.MealResponse;
 import com.smartmess.backend.entity.Menu;
 import com.smartmess.backend.enums.CustomerStatus;
 import com.smartmess.backend.enums.MealOption;
+import com.smartmess.backend.enums.MealResponseStatus;
 import com.smartmess.backend.enums.MealSession;
+import com.smartmess.backend.enums.UserRole;
 import com.smartmess.backend.exception.BusinessException;
 import com.smartmess.backend.exception.ResourceNotFoundException;
 import com.smartmess.backend.mapper.MealCollectionMapper;
@@ -35,6 +50,16 @@ import com.smartmess.backend.service.MealRecordService;
 @Service
 public class MealRecordServiceImpl implements MealRecordService {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(MealRecordServiceImpl.class);
+
+    private static final BigDecimal MAX_AMOUNT =
+            new BigDecimal("99999999.99");
+
+    private static final int SEARCH_RESULT_LIMIT = 50;
+
+    private static final int MAX_SEARCH_LENGTH = 100;
+
     private final MealRecordRepository mealRecordRepository;
     private final CustomerRepository customerRepository;
     private final MenuRepository menuRepository;
@@ -42,10 +67,7 @@ public class MealRecordServiceImpl implements MealRecordService {
     private final MealPricingRepository mealPricingRepository;
     private final MealRecordMapper mealRecordMapper;
     private final DashboardWebSocketService dashboardWebSocketService;
-
-    // Used for mapping meal responses into the meal collection queue.
     private final MealCollectionMapper mealCollectionMapper;
-
     private final CustomerSecurity customerSecurity;
     private final Clock clock;
 
@@ -73,299 +95,372 @@ public class MealRecordServiceImpl implements MealRecordService {
         this.clock = clock;
     }
 
+    @Transactional
     @Override
     public MealRecordResponse createMealRecord(
             CreateMealRecordRequest request) {
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        requireOwner();
+        validateRequest(request);
 
-        // Load Customer within the authenticated mess
+        Long messId = customerSecurity.getCurrentMessId();
 
-        Customer customer =
-                customerRepository
-                        .findByCustomerIdAndMess_MessId(
-                                request.customerId(),
-                                messId
-                        )
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Customer not found with ID: "
-                                                + request.customerId()
-                                ));
-
-        // Customer Validation
+        Customer customer = customerRepository
+                .findByCustomerIdAndMessIdForUpdate(
+                        request.customerId(),
+                        messId
+                )
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Customer not found with ID: "
+                                + request.customerId()
+                ));
 
         if (customer.getStatus() != CustomerStatus.ACTIVE) {
-
             throw new BusinessException(
                     "Only active customers can collect meals."
             );
         }
 
-        // Load Menu within the authenticated mess
+        Menu menu = menuRepository
+                .findByMenuIdAndMess_MessId(
+                        request.menuId(),
+                        messId
+                )
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Menu not found with ID: "
+                                + request.menuId()
+                ));
 
-        Menu menu =
-                menuRepository
-                        .findByMenuIdAndMess_MessId(
-                                request.menuId(),
-                                messId
-                        )
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Menu not found with ID: "
-                                                + request.menuId()
-                                ));
+        LocalDateTime collectedAt = LocalDateTime.now(clock);
 
-        /*
-         * An existing menu represents an operational meal session.
-         *
-         * Response cutoff restrictions apply only to customer meal responses.
-         * The owner may still record meal collection for an existing menu,
-         * including direct or walk-in meal collection.
-         */
-
-        // Load Meal Pricing for the authenticated mess
-
-        MealPricing mealPricing =
-                mealPricingRepository
-                        .findByMess_MessId(messId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Meal pricing is not configured."
-                                ));
-
-        // Meal Pricing Validation
-
-        if (mealPricing.getHalfMealPrice()
-                .compareTo(BigDecimal.ZERO) <= 0
-                || mealPricing.getFullMealPrice()
-                        .compareTo(BigDecimal.ZERO) <= 0
-                || mealPricing.getExtraRotiPrice()
-                        .compareTo(BigDecimal.ZERO) <= 0) {
-
+        if (!collectedAt.toLocalDate().equals(menu.getMenuDate())) {
             throw new BusinessException(
-                    "Meal pricing is invalid. Please configure valid meal prices."
+                    "Meals can only be recorded for today's menu."
             );
         }
 
-        // Load Meal Response (Optional)
-
-        MealResponse mealResponse = null;
-
-        if (request.mealResponseId() != null) {
-
-            mealResponse =
-                    mealResponseRepository
-                            .findByMealResponseIdAndMess_MessId(
-                                    request.mealResponseId(),
-                                    messId
-                            )
-                            .orElseThrow(() ->
-                                    new ResourceNotFoundException(
-                                            "Meal response not found with ID: "
-                                                    + request.mealResponseId()
-                                    ));
+        /*
+         * Applies to both walk-in and response-linked collections.
+         * The customer lock serializes concurrent collection requests.
+         * The database unique constraint provides additional protection.
+         */
+        if (mealRecordRepository.existsByMess_MessIdAndCustomerAndMenu(
+                messId,
+                customer,
+                menu
+        )) {
+            throw new BusinessException(
+                    "Meal has already been collected for this customer and menu."
+            );
         }
 
-        // Business Validation
+        MealResponse mealResponse;
 
-        if (mealResponse != null) {
+        if (request.mealResponseId() != null) {
+            mealResponse = mealResponseRepository
+                    .findByMealResponseIdAndMess_MessId(
+                            request.mealResponseId(),
+                            messId
+                    )
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Meal response not found with ID: "
+                                    + request.mealResponseId()
+                    ));
 
-            if (!mealResponse.getCustomer()
-                    .getCustomerId()
+            if (!mealResponse.getCustomer().getCustomerId()
                     .equals(customer.getCustomerId())) {
-
                 throw new BusinessException(
                         "Meal response does not belong to the selected customer."
                 );
             }
 
-            if (!mealResponse.getMenu()
-                    .getMenuId()
+            if (!mealResponse.getMenu().getMenuId()
                     .equals(menu.getMenuId())) {
-
                 throw new BusinessException(
                         "Meal response does not belong to the selected menu."
                 );
             }
-
-            if (mealRecordRepository
-                    .findByMess_MessIdAndMealResponse(
-                            messId,
-                            mealResponse
-                    )
-                    .isPresent()) {
-
-                throw new BusinessException(
-                        "Meal has already been collected for this response."
-                );
-            }
-
         } else {
-
-            if (mealRecordRepository
-                    .existsByMess_MessIdAndCustomerAndMenu(
+            /*
+             * A response may have been submitted after customer search.
+             * Link it when available without creating a response for
+             * customers who genuinely have none.
+             */
+            mealResponse = mealResponseRepository
+                    .findByMess_MessIdAndCustomerAndMenu(
                             messId,
                             customer,
                             menu
-                    )) {
-
-                throw new BusinessException(
-                        "Meal has already been collected for this customer and menu."
-                );
-            }
+                    )
+                    .orElse(null);
         }
-
-        // Calculate Pricing
-
-        BigDecimal mealPrice;
-
-        if (request.mealOption() == MealOption.FULL) {
-            mealPrice = mealPricing.getFullMealPrice();
-        } else {
-            mealPrice = mealPricing.getHalfMealPrice();
-        }
-
-        BigDecimal extraRotiPrice =
-                mealPricing.getExtraRotiPrice();
-
-        BigDecimal totalAmount =
-                mealPrice.add(
-                        extraRotiPrice.multiply(
-                                BigDecimal.valueOf(
-                                        request.extraRotiCount()
-                                )
-                        )
-                );
-
-        // Create Meal Record
 
         /*
-         * Save the owner's final served meal and quantities.
-         *
-         * Response choices are optional prefill data.
-         * Stored prices preserve the collection-time charge
-         * even when the mess changes pricing later.
+         * Use pricing effective at collection time.
+         * Future price changes are excluded.
          */
-        MealRecord mealRecord =
-                MealRecord.builder()
-                        .mess(menu.getMess())
-                        .customer(customer)
-                        .menu(menu)
-                        .mealResponse(mealResponse)
-                        .mealOption(request.mealOption())
-                        .mealPrice(mealPrice)
-                        .extraRotiCount(request.extraRotiCount())
-                        .extraRotiPrice(extraRotiPrice)
-                        .totalAmount(totalAmount)
-                        .collectedAt(LocalDateTime.now(clock))
-                        .build();
+        MealPricing pricing = mealPricingRepository
+                .findTopByMess_MessIdAndEffectiveFromLessThanEqualOrderByEffectiveFromDesc(
+                        messId,
+                        collectedAt
+                )
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Configure meal prices in Settings before collecting meals."
+                ));
 
-        // Save Meal Record
+        validatePrice(pricing.getHalfMealPrice());
+        validatePrice(pricing.getFullMealPrice());
+        validatePrice(pricing.getExtraRotiPrice());
 
-        MealRecord savedMealRecord =
-                mealRecordRepository.save(mealRecord);
+        BigDecimal mealPrice =
+                request.mealOption() == MealOption.FULL
+                        ? pricing.getFullMealPrice()
+                        : pricing.getHalfMealPrice();
 
-        dashboardWebSocketService.broadcastDashboard(
-                menu.getMealSession()
+        BigDecimal extraRotiPrice = pricing.getExtraRotiPrice();
+
+        BigDecimal totalAmount = mealPrice.add(
+                extraRotiPrice.multiply(
+                        BigDecimal.valueOf(request.extraRotiCount())
+                )
         );
 
-        // Return Response
+        if (totalAmount.compareTo(MAX_AMOUNT) > 0) {
+            throw new BusinessException(
+                    "The meal amount exceeds the supported limit."
+            );
+        }
 
-        return mealRecordMapper.toResponse(
-                savedMealRecord
-        );
+        /*
+         * Save actual served choices and collection-time prices.
+         * A response is optional and provides only prefill information.
+         */
+        MealRecord record = MealRecord.builder()
+                .mess(menu.getMess())
+                .customer(customer)
+                .menu(menu)
+                .mealResponse(mealResponse)
+                .mealOption(request.mealOption())
+                .mealPrice(mealPrice)
+                .extraRotiCount(request.extraRotiCount())
+                .extraRotiPrice(extraRotiPrice)
+                .totalAmount(totalAmount)
+                .collectedAt(collectedAt)
+                .build();
+
+        MealRecord savedRecord =
+                mealRecordRepository.saveAndFlush(record);
+
+        broadcastAfterCommit(menu.getMealSession());
+
+        return mealRecordMapper.toResponse(savedRecord);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<MealRecordResponse> getCustomerMealHistory(
             Long customerId) {
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        Long messId = customerSecurity.getCurrentMessId();
 
-        Customer customer =
-                customerRepository
-                        .findByCustomerIdAndMess_MessId(
-                                customerId,
-                                messId
-                        )
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Customer not found with ID: "
-                                                + customerId
-                                ));
+        Customer customer = customerRepository
+                .findByCustomerIdAndMess_MessId(
+                        customerId,
+                        messId
+                )
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Customer not found with ID: " + customerId
+                ));
 
-        customerSecurity.checkCustomerAccess(
-                customerId
-        );
+        customerSecurity.checkCustomerAccess(customerId);
 
-        List<MealRecord> mealRecords =
+        return mealRecordMapper.toResponseList(
                 mealRecordRepository
                         .findByMess_MessIdAndCustomerOrderByCollectedAtDesc(
                                 messId,
                                 customer
-                        );
-
-        return mealRecordMapper.toResponseList(
-                mealRecords
+                        )
         );
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<MealRecordResponse> getTodayMealRecords(
             MealSession mealSession) {
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        requireOwner();
 
-        Menu menu =
-                findTodayMenu(messId, mealSession);
+        Long messId = customerSecurity.getCurrentMessId();
+        Menu menu = findTodayMenu(messId, mealSession);
 
-        List<MealRecord> mealRecords =
+        return mealRecordMapper.toResponseList(
                 mealRecordRepository.findByMess_MessIdAndMenu(
                         messId,
                         menu
-                );
-
-        return mealRecordMapper.toResponseList(
-                mealRecords
+                )
         );
     }
 
-    // Prefills accepted meal responses into the collection queue.
-    // The final meal collection action is always performed by the owner.
-
+    @Transactional(readOnly = true)
     @Override
     public List<CollectionQueueResponse> getCollectionQueue(
             MealSession mealSession) {
 
-        Long messId =
-                customerSecurity.getCurrentMessId();
+        requireOwner();
 
-        Menu menu =
-                findTodayMenu(messId, mealSession);
+        Long messId = customerSecurity.getCurrentMessId();
+        Menu menu = findTodayMenu(messId, mealSession);
 
-        List<MealResponse> mealResponses =
-                mealResponseRepository
-                        .findCollectionQueueByMess(
-                                messId,
-                                menu
-                        );
-
+        /*
+         * The default queue remains limited to accepted responses
+         * from active customers who have not collected their meal.
+         */
         return mealCollectionMapper.toResponseList(
-                mealResponses
+                mealResponseRepository.findCollectionQueueByMess(
+                        messId,
+                        menu
+                )
         );
     }
 
-    /*
-     * Resolves today's meal-session menu within one mess.
-     * Preserves the existing missing-menu message.
-     */
+    @Transactional(readOnly = true)
+    @Override
+    public List<CollectionCustomerResponse> searchCollectionCustomers(
+            MealSession mealSession,
+            String search) {
+
+        requireOwner();
+
+        if (mealSession == null) {
+            throw new BusinessException(
+                    "Meal session is required."
+            );
+        }
+
+        String keyword = search == null ? "" : search.strip();
+
+        if (keyword.isEmpty()) {
+            return List.of();
+        }
+
+        if (keyword.length() > MAX_SEARCH_LENGTH) {
+            throw new BusinessException(
+                    "Customer search must not exceed "
+                            + MAX_SEARCH_LENGTH
+                            + " characters."
+            );
+        }
+
+        Long messId = customerSecurity.getCurrentMessId();
+        Menu menu = findTodayMenu(messId, mealSession);
+
+        List<Customer> customers = customerRepository
+                .searchActiveCustomersForCollection(
+                        messId,
+                        buildSearchPattern(keyword),
+                        PageRequest.of(0, SEARCH_RESULT_LIMIT)
+                );
+
+        if (customers.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> customerIds = customers.stream()
+                .map(Customer::getCustomerId)
+                .toList();
+
+        Map<Long, MealResponse> responsesByCustomer = new HashMap<>();
+
+        for (MealResponse response : mealResponseRepository
+                .findForCollectionSearch(
+                        messId,
+                        menu,
+                        customerIds
+                )) {
+
+            responsesByCustomer.put(
+                    response.getCustomer().getCustomerId(),
+                    response
+            );
+        }
+
+        Set<Long> collectedCustomerIds = new HashSet<>(
+                mealRecordRepository.findCollectedCustomerIdsForMenu(
+                        messId,
+                        menu,
+                        customerIds
+                )
+        );
+
+        return customers.stream()
+                .map(customer -> {
+                    MealResponse response = responsesByCustomer.get(
+                            customer.getCustomerId()
+                    );
+
+                    /*
+                     * Accepted responses prefill the requested choices.
+                     * No response or a declined response starts with
+                     * Full Meal and no extra rotis for owner review.
+                     */
+                    boolean accepted = response != null
+                            && response.getResponseStatus()
+                                    == MealResponseStatus.ACCEPTED;
+
+                    MealOption mealOption =
+                            accepted && response.getMealOption() != null
+                                    ? response.getMealOption()
+                                    : MealOption.FULL;
+
+                    Integer extraRotiCount =
+                            accepted && response.getExtraRotiCount() != null
+                                    ? response.getExtraRotiCount()
+                                    : 0;
+
+                    return new CollectionCustomerResponse(
+                            customer.getCustomerId(),
+                            customer.getFullName(),
+                            customer.getMobileNumber(),
+                            menu.getMenuId(),
+                            response == null
+                                    ? null
+                                    : response.getMealResponseId(),
+                            response == null
+                                    ? null
+                                    : response.getResponseStatus(),
+                            mealOption,
+                            extraRotiCount,
+                            collectedCustomerIds.contains(
+                                    customer.getCustomerId()
+                            )
+                    );
+                })
+                .toList();
+    }
+
+    private String buildSearchPattern(String keyword) {
+
+        /*
+         * Treat SQL LIKE wildcard characters as literal search text.
+         * Matches the repository's ESCAPE '!' clause.
+         */
+        String escaped = keyword.toLowerCase(Locale.ROOT)
+                .replace("!", "!!")
+                .replace("%", "!%")
+                .replace("_", "!_");
+
+        return "%" + escaped + "%";
+    }
+
     private Menu findTodayMenu(
             Long messId,
             MealSession mealSession) {
+
+        if (mealSession == null) {
+            throw new BusinessException(
+                    "Meal session is required."
+            );
+        }
 
         return menuRepository
                 .findByMess_MessIdAndMenuDateAndMealSession(
@@ -373,10 +468,87 @@ public class MealRecordServiceImpl implements MealRecordService {
                         LocalDate.now(clock),
                         mealSession
                 )
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Menu not found for today and session: "
-                                        + mealSession
-                        ));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Menu not found for today and session: "
+                                + mealSession
+                ));
+    }
+
+    private void validateRequest(CreateMealRecordRequest request) {
+
+        if (request == null
+                || request.customerId() == null
+                || request.menuId() == null
+                || request.mealOption() == null) {
+            throw new BusinessException(
+                    "Customer, menu and meal option are required."
+            );
+        }
+
+        if (request.customerId() <= 0 || request.menuId() <= 0) {
+            throw new BusinessException(
+                    "Customer and menu IDs must be positive."
+            );
+        }
+
+        if (request.mealResponseId() != null
+                && request.mealResponseId() <= 0) {
+            throw new BusinessException(
+                    "Meal response ID must be positive."
+            );
+        }
+
+        if (request.extraRotiCount() == null
+                || request.extraRotiCount() < 0
+                || request.extraRotiCount() > 5) {
+            throw new BusinessException(
+                    "Extra roti count must be between 0 and 5."
+            );
+        }
+    }
+
+    private void validatePrice(BigDecimal price) {
+
+        if (price == null
+                || price.signum() <= 0
+                || price.compareTo(MAX_AMOUNT) > 0
+                || price.stripTrailingZeros().scale() > 2) {
+            throw new BusinessException(
+                    "Meal pricing is invalid. Please configure valid meal prices."
+            );
+        }
+    }
+
+    private void requireOwner() {
+
+        if (customerSecurity.getCurrentUserRole() != UserRole.OWNER) {
+            throw new AccessDeniedException(
+                    "Only mess owners can manage meal collection."
+            );
+        }
+    }
+
+    private void broadcastAfterCommit(MealSession mealSession) {
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+
+                    @Override
+                    public void afterCommit() {
+
+                        try {
+                            dashboardWebSocketService.broadcastDashboard(
+                                    mealSession
+                            );
+                        } catch (RuntimeException exception) {
+                            log.warn(
+                                    "Dashboard delivery failed after meal collection for {}",
+                                    mealSession,
+                                    exception
+                            );
+                        }
+                    }
+                }
+        );
     }
 }

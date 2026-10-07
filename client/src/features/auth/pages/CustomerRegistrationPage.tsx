@@ -1,9 +1,8 @@
 import {
   useEffect,
   useState,
+  type FormEvent,
 } from "react";
-
-import type { FormEvent } from "react";
 
 import {
   useNavigate,
@@ -33,8 +32,8 @@ import {
 
 interface RegistrationLinkState {
   code: string;
+  attempt: number;
   messName: string | null;
-  loading: boolean;
   error: string | null;
 }
 
@@ -63,47 +62,23 @@ export default function CustomerRegistrationPage() {
     useState(0);
 
   const [submittedRegistration, setSubmittedRegistration] =
-    useState<CustomerRegistrationResponse | null>(
-      null
-    );
+    useState<CustomerRegistrationResponse | null>(null);
 
   const [linkState, setLinkState] =
-    useState<RegistrationLinkState>({
-      code: "",
-      messName: null,
-      loading: false,
-      error: null,
-    });
+    useState<RegistrationLinkState | null>(null);
 
   const hasValidCodeFormat =
-    REGISTRATION_CODE_PATTERN.test(
-      registrationCode
-    );
+    REGISTRATION_CODE_PATTERN.test(registrationCode);
 
-  /*
-   * Verify the mess associated with the URL.
-   *
-   * Cancel the previous lookup if the registration
-   * link changes or the page unmounts.
-   */
   useEffect(() => {
     if (!hasValidCodeFormat) {
       return;
     }
 
-    const controller =
-      new AbortController();
-
+    const controller = new AbortController();
     let disposed = false;
 
-    setLinkState({
-      code: registrationCode,
-      messName: null,
-      loading: true,
-      error: null,
-    });
-
-    const loadMess = async () => {
+    async function loadMess() {
       try {
         const info =
           await getMessRegistrationInfo(
@@ -117,8 +92,8 @@ export default function CustomerRegistrationPage() {
 
         setLinkState({
           code: registrationCode,
+          attempt: retryCount,
           messName: info.messName,
-          loading: false,
           error: null,
         });
       } catch (lookupError) {
@@ -128,15 +103,15 @@ export default function CustomerRegistrationPage() {
 
         setLinkState({
           code: registrationCode,
+          attempt: retryCount,
           messName: null,
-          loading: false,
           error:
             lookupError instanceof Error
               ? lookupError.message
               : "Unable to verify this registration link. Please try again.",
         });
       }
-    };
+    }
 
     void loadMess();
 
@@ -150,41 +125,38 @@ export default function CustomerRegistrationPage() {
     retryCount,
   ]);
 
-  /*
-   * Require a successful lookup for the current code.
-   * A previous link's result must not enable this form.
-   */
+  const currentLinkState =
+    linkState !== null &&
+    linkState.code === registrationCode &&
+    linkState.attempt === retryCount
+      ? linkState
+      : null;
+
   const currentLinkVerified =
     hasValidCodeFormat &&
-    linkState.code === registrationCode &&
-    !linkState.loading &&
-    !linkState.error &&
-    linkState.messName !== null;
+    currentLinkState !== null &&
+    !currentLinkState.error &&
+    currentLinkState.messName !== null;
 
   const verifyingLink =
     hasValidCodeFormat &&
-    (
-      linkState.code !== registrationCode ||
-      linkState.loading
-    );
+    currentLinkState === null;
 
   const linkError =
     !registrationCode
       ? "Please use the registration link or QR code provided by your mess owner."
       : !hasValidCodeFormat
         ? "This registration link is invalid. Please ask your mess owner for the correct link."
-        : linkState.code === registrationCode
-          ? linkState.error
-          : null;
+        : currentLinkState?.error ?? null;
 
   const loginPath = registrationCode
     ? "/customer/login?registrationCode=" +
       encodeURIComponent(registrationCode)
     : "/customer/login";
 
-  const handleSubmit = async (
-    event: FormEvent
-  ) => {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
     if (
@@ -213,12 +185,8 @@ export default function CustomerRegistrationPage() {
     } catch {
       // Error is already handled by the hook.
     }
-  };
+  }
 
-  /*
-   * A pending customer remains outside the portal.
-   * They sign in normally after the owner approves them.
-   */
   if (submittedRegistration) {
     return (
       <div className="flex min-h-full items-center justify-center px-4 py-8">
@@ -236,22 +204,21 @@ export default function CustomerRegistrationPage() {
                 <strong className="text-[var(--color-text)]">
                   {submittedRegistration.fullName}
                 </strong>
-              .
+                .
               </p>
 
-            <div className="rounded-xl border border-[var(--color-border)] p-4">
-              <p className="font-semibold text-[var(--color-text)]">
+              <div className="rounded-xl border border-[var(--color-border)] p-4">
+                <p className="font-semibold text-[var(--color-text)]">
                   Awaiting Owner Approval
-              </p>
+                </p>
 
-              <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
                   Your registration is awaiting approval.
                   Once approved, you’ll receive an email
                   with a link to sign in.
-              </p>
+                </p>
+              </div>
             </div>
-
-          </div>
           </Card.Body>
         </Card>
       </div>
@@ -277,7 +244,7 @@ export default function CustomerRegistrationPage() {
               </p>
 
               <p className="mt-1 font-semibold text-[var(--color-text)]">
-                {linkState.messName}
+                {currentLinkState?.messName}
               </p>
 
               <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
@@ -312,9 +279,7 @@ export default function CustomerRegistrationPage() {
                   type="button"
                   fullWidth
                   onClick={() =>
-                    setRetryCount(
-                      (count) => count + 1
-                    )
+                    setRetryCount((count) => count + 1)
                   }
                 >
                   Try Again
@@ -338,9 +303,7 @@ export default function CustomerRegistrationPage() {
                   type="text"
                   value={fullName}
                   onChange={(event) =>
-                    setFullName(
-                      event.target.value
-                    )
+                    setFullName(event.target.value)
                   }
                   placeholder="Enter your full name"
                   autoComplete="name"
@@ -359,9 +322,7 @@ export default function CustomerRegistrationPage() {
                   type="tel"
                   value={mobileNumber}
                   onChange={(event) =>
-                    setMobileNumber(
-                      event.target.value
-                    )
+                    setMobileNumber(event.target.value)
                   }
                   placeholder="Enter mobile number"
                   autoComplete="tel"
@@ -380,9 +341,7 @@ export default function CustomerRegistrationPage() {
                   type="email"
                   value={email}
                   onChange={(event) =>
-                    setEmail(
-                      event.target.value
-                    )
+                    setEmail(event.target.value)
                   }
                   placeholder="Enter email address"
                   autoComplete="email"
@@ -401,9 +360,7 @@ export default function CustomerRegistrationPage() {
                   type="password"
                   value={password}
                   onChange={(event) =>
-                    setPassword(
-                      event.target.value
-                    )
+                    setPassword(event.target.value)
                   }
                   placeholder="Create a password"
                   autoComplete="new-password"
@@ -441,9 +398,7 @@ export default function CustomerRegistrationPage() {
 
             <button
               type="button"
-              onClick={() =>
-                navigate(loginPath)
-              }
+              onClick={() => navigate(loginPath)}
               className="font-semibold text-[var(--color-primary)] hover:underline"
             >
               Login

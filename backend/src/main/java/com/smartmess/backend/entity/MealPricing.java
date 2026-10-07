@@ -1,6 +1,7 @@
 package com.smartmess.backend.entity;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import com.smartmess.backend.common.BaseEntity;
 
@@ -11,11 +12,23 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "meal_pricing")
+@Table(
+        name = "meal_pricing",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_meal_pricing_mess_effective",
+                        columnNames = {
+                                "mess_id",
+                                "effective_from"
+                        }
+                )
+        }
+)
 public class MealPricing extends BaseEntity {
 
     @Id
@@ -23,13 +36,11 @@ public class MealPricing extends BaseEntity {
     private Long mealPricingId;
 
     /*
-     * Tenant Ownership
-     *
-     * Each mess has its own current meal pricing record.
-     * Existing prices are updated within that record.
+     * Each mess can have multiple pricing versions.
+     * Existing collected meals retain their stored prices.
      */
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "mess_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "mess_id", nullable = false)
     private Mess mess;
 
     @Column(nullable = false, precision = 10, scale = 2)
@@ -40,6 +51,17 @@ public class MealPricing extends BaseEntity {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal extraRotiPrice;
+
+    /*
+     * Initial pricing uses a baseline date.
+     * Scheduled pricing will receive an explicit effective time
+     * from the service using the application's configured clock.
+     *
+     * This default preserves existing initialization callers.
+     */
+    @Column(name = "effective_from", nullable = false)
+    private LocalDateTime effectiveFrom =
+            LocalDateTime.of(1970, 1, 1, 0, 0);
 
     public MealPricing() {
     }
@@ -82,5 +104,13 @@ public class MealPricing extends BaseEntity {
 
     public void setExtraRotiPrice(BigDecimal extraRotiPrice) {
         this.extraRotiPrice = extraRotiPrice;
+    }
+
+    public LocalDateTime getEffectiveFrom() {
+        return effectiveFrom;
+    }
+
+    public void setEffectiveFrom(LocalDateTime effectiveFrom) {
+        this.effectiveFrom = effectiveFrom;
     }
 }

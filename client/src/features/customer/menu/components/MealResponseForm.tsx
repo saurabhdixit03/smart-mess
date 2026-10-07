@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   Button,
@@ -31,7 +31,30 @@ interface MealResponseFormProps {
   ) => Promise<void>;
 }
 
-export default function MealResponseForm({
+export default function MealResponseForm(
+  props: MealResponseFormProps
+) {
+  if (!props.open) {
+    return null;
+  }
+
+  const response = props.existingResponse;
+
+  const formKey = JSON.stringify([
+    response?.responseStatus ?? null,
+    response?.mealOption ?? null,
+    response?.extraRotiCount ?? null,
+  ]);
+
+  return (
+    <OpenMealResponseForm
+      key={formKey}
+      {...props}
+    />
+  );
+}
+
+function OpenMealResponseForm({
   open,
   loading,
   existingResponse,
@@ -40,47 +63,29 @@ export default function MealResponseForm({
 }: MealResponseFormProps) {
   const [responseStatus, setResponseStatus] =
     useState<MealResponseStatus>(
-      MEAL_RESPONSE_STATUS.ACCEPTED
-    );
-
-  const [mealOption, setMealOption] =
-    useState<MealOption>(
-      MEAL_OPTION.FULL
-    );
-
-  const [extraRotiCount, setExtraRotiCount] =
-    useState<number>(
-      EXTRA_ROTI.DEFAULT
-    );
-
-  useEffect(() => {
-    if (!open) return;
-
-    setResponseStatus(
       existingResponse?.responseStatus ??
         MEAL_RESPONSE_STATUS.ACCEPTED
     );
 
-    setMealOption(
+  const [mealOption, setMealOption] =
+    useState<MealOption>(
       existingResponse?.mealOption ??
         MEAL_OPTION.FULL
     );
 
-    setExtraRotiCount(
+  const [extraRotiCount, setExtraRotiCount] =
+    useState<number>(
       existingResponse?.extraRotiCount ??
         EXTRA_ROTI.DEFAULT
     );
-  }, [open, existingResponse]);
 
   async function handleSubmit() {
     await onSubmit(
       responseStatus,
-      responseStatus ===
-        MEAL_RESPONSE_STATUS.ACCEPTED
+      responseStatus === MEAL_RESPONSE_STATUS.ACCEPTED
         ? mealOption
         : null,
-      responseStatus ===
-        MEAL_RESPONSE_STATUS.ACCEPTED
+      responseStatus === MEAL_RESPONSE_STATUS.ACCEPTED
         ? extraRotiCount
         : 0
     );
@@ -130,25 +135,21 @@ export default function MealResponseForm({
       }
     >
       <div className="space-y-7">
-
         <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
           Your response helps us prepare the right
           quantity of food.
         </p>
 
         <div>
-
           <p className="mb-3 text-sm font-semibold">
             Will you be taking today's tiffin?
           </p>
 
           <div className="flex gap-3">
-
             <Button
               fullWidth
               variant={
-                responseStatus ===
-                MEAL_RESPONSE_STATUS.ACCEPTED
+                responseStatus === MEAL_RESPONSE_STATUS.ACCEPTED
                   ? "primary"
                   : "outline"
               }
@@ -164,8 +165,7 @@ export default function MealResponseForm({
             <Button
               fullWidth
               variant={
-                responseStatus ===
-                MEAL_RESPONSE_STATUS.DECLINED
+                responseStatus === MEAL_RESPONSE_STATUS.DECLINED
                   ? "primary"
                   : "outline"
               }
@@ -177,36 +177,26 @@ export default function MealResponseForm({
             >
               Not Today
             </Button>
-
           </div>
-
         </div>
 
-        {responseStatus ===
-          MEAL_RESPONSE_STATUS.ACCEPTED && (
-
+        {responseStatus === MEAL_RESPONSE_STATUS.ACCEPTED && (
           <div className="space-y-6">
-
             <div>
-
               <p className="mb-3 text-sm font-semibold">
                 Select Tiffin Type
               </p>
 
               <div className="flex gap-3">
-
                 <Button
                   fullWidth
                   variant={
-                    mealOption ===
-                    MEAL_OPTION.FULL
+                    mealOption === MEAL_OPTION.FULL
                       ? "primary"
                       : "outline"
                   }
                   onClick={() =>
-                    setMealOption(
-                      MEAL_OPTION.FULL
-                    )
+                    setMealOption(MEAL_OPTION.FULL)
                   }
                 >
                   Full
@@ -215,28 +205,21 @@ export default function MealResponseForm({
                 <Button
                   fullWidth
                   variant={
-                    mealOption ===
-                    MEAL_OPTION.HALF
+                    mealOption === MEAL_OPTION.HALF
                       ? "primary"
                       : "outline"
                   }
                   onClick={() =>
-                    setMealOption(
-                      MEAL_OPTION.HALF
-                    )
+                    setMealOption(MEAL_OPTION.HALF)
                   }
                 >
                   Half
                 </Button>
-
               </div>
-
             </div>
 
             <div>
-
               <div className="mb-3 flex items-center justify-between">
-
                 <p className="text-sm font-semibold">
                   Extra Rotis
                 </p>
@@ -244,17 +227,14 @@ export default function MealResponseForm({
                 <span className="text-xs text-[var(--color-text-secondary)]">
                   Optional
                 </span>
-
               </div>
 
               <div className="flex items-center gap-4">
-
                 <Button
                   size="sm"
                   variant="outline"
                   disabled={
-                    extraRotiCount ===
-                    EXTRA_ROTI.MIN
+                    extraRotiCount === EXTRA_ROTI.MIN
                   }
                   onClick={decreaseRoti}
                 >
@@ -269,22 +249,16 @@ export default function MealResponseForm({
                   size="sm"
                   variant="outline"
                   disabled={
-                    extraRotiCount ===
-                    EXTRA_ROTI.MAX
+                    extraRotiCount === EXTRA_ROTI.MAX
                   }
                   onClick={increaseRoti}
                 >
                   +
                 </Button>
-
               </div>
-
             </div>
-
           </div>
-
         )}
-
       </div>
     </Modal>
   );
