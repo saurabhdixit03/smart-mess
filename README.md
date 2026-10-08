@@ -2,46 +2,39 @@
 
 Smart Mess is a full-stack meal planning and mess operations platform designed for local mess and tiffin services. It supports multiple independent messes, with separate Owner and Customer portals and access scoped to each user's mess.
 
-Owners manage customer approvals, publish menus, monitor meal responses, record meal collections, configure schedules and pricing, generate bills manually or through automated monthly billing, and track payments through Cashfree. Customers join through their mess's registration link, participate in daily meals after approval, review their meal history and bills, and complete payments through gateway checkout.
+Owners manage customers, publish menus, monitor meal responses, record collections, configure schedules and pricing, generate bills, and track payments. Customers join through their mess's registration link, participate after approval, review their meal history and bills, and pay through Cashfree checkout.
 
-The platform also provides billing insights, persistent notifications, email delivery, and real-time operational updates.
+The platform provides billing insights, persistent notifications, email delivery, and real-time operational updates.
 
 ## Features
 
 ### Owner Portal
 
-- Dashboard with live meal-response summaries
-- Kitchen preparation estimates
+- Dashboard with live meal-response summaries and kitchen preparation estimates
 - Lunch and dinner menu publishing
-- Mess-specific customer registration links and approval management
+- Mess-specific registration links and customer approval management
 - Customer activation, rejection, and reactivation
-- Customer meal-response monitoring
-- Meal collection recording, including customers without a prior response
+- Meal-response monitoring and collection recording
+- Meal collection for customers without a prior response
 - Recorded meal prices preserved for billing
 - Bill generation for selected customers and date ranges
 - Automated billing for completed months with retryable jobs
-- Cashfree payment tracking and reconciliation
+- Payment tracking and reconciliation
 - Billing and revenue insights
-- Initial meal pricing configuration
-- Scheduled meal price changes
-- Response-window configuration
-- Weekly schedule management
+- Initial meal pricing and scheduled price changes
+- Response-window and weekly schedule configuration
 - Temporary mess closure management
 - Real-time operational updates
 
 ### Customer Portal
 
-- Register through a mess registration link
-- Access the portal after owner approval
-- View published lunch and dinner menus
-- Accept or decline meals
-- Select full or half meals
-- Request extra rotis
+- Register through a mess link and access the portal after approval
+- View menus and accept or decline meals
+- Select full or half meals and request extra rotis
 - Review collected meal history
-- View bills, meal breakdowns, and payment details
-- Download bills
+- View and download bills with meal breakdowns and payment details
 - Pay through Cashfree checkout
-- View mess schedules, pricing, and closure information
+- View mess pricing, schedules, and closures
 - Receive persistent real-time notifications
 - Receive email notifications for bills, payments, and pricing changes
 - View profile and account information
@@ -50,88 +43,74 @@ The platform also provides billing insights, persistent notifications, email del
 
 ## System Workflow
 
-```text
-Menu Publishing
-       |
-       v
-Customer Meal Response
-       |
-       v
-Live Owner Dashboard
-       |
-       v
-Meal Collection
-       |
-       v
-Meal Records
-       |
-       v
-Monthly Billing
-       |
-       v
-Payment Tracking
+```mermaid
+flowchart TD
+    A["Owner registration and mess configuration"] --> B["Menu publishing"]
+    B --> C["Customer meal response"]
+    C --> D["Live dashboard and kitchen estimates"]
+    D --> E["Meal collection"]
+    B --> E
+    E --> F["Meal records with recorded prices"]
+    F --> G["Manual or automated billing"]
+    G --> H["Customer checkout"]
+    H --> I["Gateway verification and reconciliation"]
+    I --> J["Payment records and notifications"]
 ```
+
+Owners configure meal prices before publishing menus. Collections can also be recorded without a prior response, and billing uses the prices stored with each collected meal.
 
 ## Architecture
 
-```text
-React and TypeScript Client
-          |
-          |-- REST API
-          |
-          |-- STOMP over WebSocket
-          |
-          v
-Spring Boot Backend
-          |
-          v
-MySQL Database
+```mermaid
+flowchart TD
+    A["React and TypeScript client"] -->|"REST API and JWT"| B["Spring Boot backend"]
+    A <-->|"STOMP over WebSocket"| B
+    B --> C["MySQL database"]
+    B <-->|"Checkout, verification and webhooks"| D["Cashfree"]
+    B -->|"Queued notification emails"| E["Brevo HTTPS API"]
+    F["Billing, email and reconciliation workers"] --> B
 ```
 
-The frontend uses a feature-based structure and generally follows this application flow:
+The frontend uses a feature-based structure:
 
-```text
-Page -> Hook -> API Client -> Spring Boot API
+```mermaid
+flowchart LR
+    A["Page"] --> B["Hook"] --> C["API client"] --> D["Spring Boot API"]
 ```
 
-The application uses JWT authentication with separate login flows and protected routes for owners and customers.
+JWT authentication controls Owner and Customer access. Backend operations scope data to the authenticated user's mess.
 
 ## Technology Stack
 
 ### Frontend
 
-- React 19
-- TypeScript
-- Vite
-- Tailwind CSS
+- React 19 and TypeScript
+- Vite and Tailwind CSS
 - React Router
-- Axios
-- React Hook Form
-- Zod
+- Fetch-based API client
+- React Hook Form and Zod
 - STOMP and SockJS
-- Framer Motion
-- Sonner
-- Lucide React
-- React QR Code
+- Framer Motion, Sonner, and Lucide React
+- jsPDF and html2canvas
 - pnpm
 
 ### Backend
 
-- Java 17
-- Spring Boot
-- Spring Web
-- Spring Data JPA
-- Spring Security
-- JWT authentication
+- Java 17 and Spring Boot
+- Spring Web and Spring Data JPA
+- Spring Security and JWT authentication
 - WebSocket messaging
-- Bean Validation
-- MapStruct
+- Bean Validation and MapStruct
+- Scheduled workers and transaction management
 - Maven
 
 ### Database and Supporting Services
 
 - MySQL
-- Brevo SMTP
+- Cashfree Payment Gateway
+- Brevo HTTPS Email API
+- Render application hosting
+- Aiven database hosting
 - GitHub Actions
 
 ## Repository Structure
@@ -141,41 +120,38 @@ smart-mess/
 |-- .github/
 |   `-- workflows/
 |       `-- ci.yml
-|
 |-- backend/
 |   |-- src/
+|   |-- Dockerfile
 |   |-- pom.xml
 |   |-- mvnw
 |   `-- mvnw.cmd
-|
 |-- client/
 |   |-- public/
 |   |-- src/
+|   |-- .env.example
 |   |-- package.json
 |   `-- pnpm-lock.yaml
-|
 |-- postman/
 |   |-- collections/
-|   |   `-- Smart Mess API.postman_collection.json
-|   `-- environments/
-|       `-- Smart-Mess-Local.postman_environment.json
-|
+|   |   `-- Smart-Mess-API.postman_collection.json
+|   |-- environments/
+|   |   `-- Smart-Mess-Local.postman_environment.json
+|   `-- README.md
 |-- .gitignore
 `-- README.md
 ```
 
 ## Prerequisites
 
-Install the following tools before running the project locally:
-
-- Java 17 or later
+- Java 17
 - Node.js 22 or later
 - pnpm
 - MySQL
 - Git
 - Eclipse, IntelliJ IDEA, or another Java IDE (optional)
 
-The Maven Wrapper is included, so Maven does not need to be installed globally.
+The Maven Wrapper is included; a global Maven installation is not required.
 
 ## Local Setup
 
@@ -188,62 +164,78 @@ cd smart-mess
 
 ### 2. Create the local database
 
-Create a MySQL database named `smart_mess`:
-
 ```sql
-CREATE DATABASE smart_mess;
+CREATE DATABASE smart_mess
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
 ```
 
 ### 3. Configure the backend
 
-Update the local database settings in:
+Review the local database settings in:
 
 ```text
 backend/src/main/resources/application.properties
 ```
 
-Configure your local MySQL credentials:
-
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/smart_mess
 spring.datasource.username=your_mysql_username
-spring.datasource.password=your_mysql_password
+spring.datasource.password=${LOCAL_DB_PASSWORD}
 ```
 
-The local application configuration enables demo-data seeding:
+Set the following environment variables in the terminal or IDE used to start the backend:
+
+```text
+LOCAL_DB_PASSWORD
+BREVO_API_KEY
+MAIL_FROM
+FRONTEND_URL
+```
+
+Use your local database password, Brevo API key, verified sender address, and `http://localhost:5173` as the frontend URL.
+
+For PowerShell, environment variables can be set for the current session:
+
+```powershell
+$env:LOCAL_DB_PASSWORD = "your_local_database_password"
+$env:BREVO_API_KEY = "your_brevo_api_key"
+$env:MAIL_FROM = "your_verified_sender_email"
+$env:FRONTEND_URL = "http://localhost:5173"
+```
+
+For optional sandbox payments, also configure:
+
+```text
+CASHFREE_ENABLED=true
+CASHFREE_ENVIRONMENT=SANDBOX
+CASHFREE_CLIENT_ID
+CASHFREE_CLIENT_SECRET
+CASHFREE_RETURN_URL=http://localhost:5173/customer/my-bills
+```
+
+Cashfree is disabled by default. A public backend URL is required to receive gateway webhooks locally.
+
+Demo data is controlled by:
 
 ```properties
 app.seed-demo-data=true
 ```
 
-Set it to `false` if you want to start with an empty database.
+Set it to `false` to skip sample data. Demo records belong to a dedicated demo mess; newly registered messes configure their own meal prices.
 
-For email-based password reset, configure the following environment variables:
-
-```text
-BREVO_SMTP_KEY
-MAIL_FROM
-FRONTEND_URL
-```
-
-The application uses `Asia/Kolkata` as its default time zone.
+The default application time zone is `Asia/Kolkata`.
 
 ## Running the Backend
 
-You can run the backend through Eclipse or through the Maven Wrapper.
-
 ### Option 1: Run through Eclipse
 
-1. Import the `backend` directory as an existing Maven project.
-2. Allow Eclipse to download and update the Maven dependencies.
-3. Locate the main class containing `@SpringBootApplication`.
-4. Select **Run As -> Spring Boot App**.
+1. Import `backend` as an existing Maven project.
+2. Allow Maven dependencies to download.
+3. Add the required environment variables to the run configuration.
+4. Run `BackendApplication` using **Run As → Spring Boot App**.
 
-If the Spring Boot option is unavailable, use:
-
-```text
-Run As -> Java Application
-```
+If unavailable, use **Run As → Java Application**.
 
 ### Option 2: Run through PowerShell
 
@@ -259,26 +251,20 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-The backend runs by default at:
-
-```text
-http://localhost:8080
-```
+The backend runs at `http://localhost:8080`.
 
 ## Running the Frontend
 
 ### 1. Configure the frontend environment
 
-Create `client/.env` using `client/.env.example` as the template:
+Copy `client/.env.example` to `client/.env` and configure:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8080/api
-VITE_WS_URL=http://localhost:8080/ws
+VITE_WS_URL=http://localhost:8080/ws-dashboard
 ```
 
-Update the values if your backend uses different URLs.
-
-The local `.env` file is ignored by Git and must not contain production secrets.
+Frontend environment variables are public build-time configuration. Do not place gateway credentials or backend secrets in them.
 
 ### 2. Install dependencies
 
@@ -293,26 +279,21 @@ pnpm install
 pnpm dev
 ```
 
-The frontend runs by default at:
-
-```text
-http://localhost:5173
-```
+The frontend runs at `http://localhost:5173`.
 
 ## Build and Verification
 
 ### Frontend production build
 
-The frontend build runs TypeScript compilation followed by the Vite production build:
-
 ```powershell
 cd client
+pnpm lint
 pnpm build
 ```
 
-### Backend compilation check
+The build checks TypeScript and creates production assets in `client/dist`.
 
-Use this command for a quick clean compilation without creating the final application package:
+### Backend compilation check
 
 ```powershell
 cd backend
@@ -321,14 +302,22 @@ cd backend
 
 ### Backend package build
 
-This command compiles the backend, runs the configured tests, and creates the application JAR under `backend/target`:
-
 ```powershell
 cd backend
 .\mvnw.cmd clean package
 ```
 
-To create the package without running tests:
+This compiles the backend, runs tests, and creates the application JAR under `backend/target`.
+
+The database integration tests use the dedicated local database `smart_mess_worker_test`. Create it before running the suite and review the test datasource configuration:
+
+```sql
+CREATE DATABASE smart_mess_worker_test;
+```
+
+Integration tests recreate their test tables. Use a dedicated test database.
+
+To package without running tests:
 
 ```powershell
 .\mvnw.cmd clean package -DskipTests
@@ -338,22 +327,21 @@ On Linux or macOS, replace `.\mvnw.cmd` with `./mvnw`.
 
 ## Production Configuration
 
-The production Spring profile is defined in:
+Production settings are defined in:
 
 ```text
 backend/src/main/resources/application-prod.properties
 ```
 
-It uses environment variables instead of local credentials.
-
 ### Required production variables
 
 ```text
+SPRING_PROFILES_ACTIVE=prod
 DB_URL
 DB_USERNAME
 DB_PASSWORD
 JWT_SECRET
-BREVO_SMTP_KEY
+BREVO_API_KEY
 FRONTEND_URL
 ```
 
@@ -364,45 +352,49 @@ JWT_EXPIRATION
 MAIL_FROM
 PASSWORD_RESET_EXPIRATION_MINUTES
 APP_TIME_ZONE
+BILLING_AUTOMATION_ENABLED
+NOTIFICATION_EMAILS_ENABLED
 ```
 
-Activate the production profile with:
+To enable payment checkout, configure:
 
 ```text
-SPRING_PROFILES_ACTIVE=prod
+CASHFREE_ENABLED=true
+CASHFREE_ENVIRONMENT=SANDBOX
+CASHFREE_CLIENT_ID
+CASHFREE_CLIENT_SECRET
+CASHFREE_RETURN_URL
+CASHFREE_NOTIFY_URL
 ```
 
-Demo-data seeding is disabled in the production configuration.
+Use sandbox credentials for test payments. Configure the return URL to the frontend's `/customer/my-bills` page and the notify URL to the backend's `/api/webhooks/cashfree` endpoint.
+
+The backend and frontend are hosted on Render, with MySQL hosted on Aiven. Frontend API and WebSocket URLs must point to the deployed backend.
+
+Production disables demo seeding and uses `spring.jpa.hibernate.ddl-auto=validate`. Apply database schema changes before deploying a backend that requires them, and back up existing data before migration.
 
 ## Postman API Collection
 
-The repository includes a Postman API collection and an empty local environment template:
+Import these files:
 
 ```text
-postman/collections/Smart Mess API.postman_collection.json
+postman/collections/Smart-Mess-API.postman_collection.json
 postman/environments/Smart-Mess-Local.postman_environment.json
 ```
 
-To use the collection:
+1. Start the local backend.
+2. Import the collection and environment into Postman.
+3. Select the imported local environment.
+4. Set `baseUrl` to `http://localhost:8080/api`.
+5. Follow `postman/README.md` to run the required workflows.
 
-1. Import both JSON files into Postman.
-2. Select the `Smart Mess - Local` environment.
-3. Configure the local `baseUrl`.
-4. Add the required test credentials.
-5. Run individual requests or the complete API workflow.
+Regression workflows create test accounts and operational records. Use a local development database. Cashfree checkpoints require sandbox checkout steps and should be run separately from automated workflows.
 
-Passwords, JWT tokens, IDs, and other runtime values are intentionally empty in the committed environment file.
-
-Do not commit a populated environment containing real credentials or access tokens.
+Committed environment values are blank except for the local base URL. Keep populated environment exports, credentials, and tokens out of Git.
 
 ## Continuous Integration
 
-GitHub Actions runs the Smart Mess CI workflow for:
-
-- Pull requests targeting `main`
-- Pushes to `main`
-
-The workflow performs the following checks:
+GitHub Actions runs for pull requests targeting `main` and pushes to `main`.
 
 ### Frontend
 
@@ -412,20 +404,19 @@ The workflow performs the following checks:
 ### Backend
 
 - Sets up Java 17
-- Builds the Spring Boot application using Maven
-- Skips test execution during the current CI package build
+- Packages the Spring Boot application
+- Skips tests in the current CI package build
 
-The workflow is configured in:
+Run the backend test suite and frontend lint locally before merging changes.
 
-```text
-.github/workflows/ci.yml
-```
+The workflow is defined in `.github/workflows/ci.yml`.
 
 ## Security Notes
 
-- Never commit database passwords, SMTP keys, JWT secrets, or production credentials.
-- Keep `client/.env` local.
+- Keep database passwords, gateway credentials, email API keys, and JWT secrets out of Git.
+- Use environment variables for backend secrets.
 - Use a strong, unique JWT secret in production.
-- Configure production secrets through environment variables.
-- Keep the committed Postman environment empty.
-- Do not commit JWT tokens generated during API testing.
+- Keep local `.env` files and populated Postman exports untracked.
+- Never place secrets in `VITE_*` variables.
+- Payment completion is confirmed by backend gateway verification.
+- Protect database backups because they can contain account and payment information.
