@@ -8,195 +8,136 @@ import DataTable, {
 
 import Pagination from "@/components/common/ui/Pagination";
 
-import SectionTitle from "@/components/common/ui/SectionTitle";
-
-import StatusBadge from "@/components/common/ui/StatusBadge";
-
 import { useMenuHistory } from "../../hooks/useMenuHistory";
 
 import type { MenuResponse } from "../../types/menu.types";
 
-export default function MenuHistoryTable() {
+const PAGE_SIZE = 10;
 
+function formatDate(value: string): string {
+  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+export default function MenuHistoryTable() {
   const {
     menuHistory,
     loading,
     error,
   } = useMenuHistory();
 
-  const [currentPage, setCurrentPage] =
-    useState(1);
-
-  const PAGE_SIZE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.max(
     1,
     Math.ceil(menuHistory.length / PAGE_SIZE)
   );
 
+  const visiblePage = Math.min(currentPage, totalPages);
+
   const paginatedMenus = menuHistory.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
+    (visiblePage - 1) * PAGE_SIZE,
+    visiblePage * PAGE_SIZE
   );
-
-  if (loading) {
-    return (
-      <Card className="mt-6">
-        <Card.Body className="py-12 text-center">
-          Loading menu history...
-        </Card.Body>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="mt-6">
-        <Card.Body className="py-12 text-center text-red-500">
-          {error}
-        </Card.Body>
-      </Card>
-    );
-  }
-
-  if (menuHistory.length === 0) {
-    return (
-      <Card className="mt-6">
-        <Card.Body className="py-12 text-center text-[var(--color-text-secondary)]">
-          No menu history available.
-        </Card.Body>
-      </Card>
-    );
-  }
 
   const columns: Column<MenuResponse>[] = [
     {
       key: "menuDate",
       header: "Date",
-      width: "18%",
-
-      render: (menu) => {
-
-        const formattedDate = new Date(
-          menu.menuDate
-        ).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
-
-        return (
-          <p className="font-medium">
-            {formattedDate}
-          </p>
-        );
-      },
+      className: "whitespace-nowrap",
+      render: (menu) => (
+        <span className="font-medium">
+          {formatDate(menu.menuDate)}
+        </span>
+      ),
     },
-
     {
       key: "mealSession",
       header: "Session",
-      width: "15%",
-
       headerClassName: "text-center",
       className: "text-center",
-
       render: (menu) => (
-
-        <StatusBadge
-          label={
-            menu.mealSession === "LUNCH"
-              ? "Lunch"
-              : "Dinner"
-          }
-          variant={
-            menu.mealSession === "LUNCH"
-              ? "lunch"
-              : "dinner"
-          }
-        />
-
+        <span>
+          {menu.mealSession === "LUNCH" ? "Lunch" : "Dinner"}
+        </span>
       ),
     },
-
     {
-      key: "menu",
-      header: "Menu Details",
-
+      key: "sabjiOne",
+      header: "Sabji",
       render: (menu) => (
-
-        <div className="space-y-2">
-
-          <div className="flex flex-wrap gap-2">
-
-            <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-              {menu.sabjiOne}
-            </span>
-
-            {menu.sabjiTwo && (
-              <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                {menu.sabjiTwo}
-              </span>
-            )}
-
-          </div>
-
-          <p className="text-sm text-[var(--color-text-secondary)]">
-            {[menu.dal, menu.rice, menu.sweet]
-              .filter(Boolean)
-              .join(" • ")}
-          </p>
-
-        </div>
-
+        <span className="font-medium">
+          {[menu.sabjiOne, menu.sabjiTwo]
+            .filter(Boolean)
+            .join(" · ")}
+        </span>
       ),
+    },
+    {
+      key: "dal",
+      header: "Dal",
+      render: (menu) => menu.dal || "—",
+    },
+    {
+      key: "rice",
+      header: "Rice",
+      render: (menu) => menu.rice || "—",
+    },
+    {
+      key: "sweet",
+      header: "Sweet",
+      render: (menu) => menu.sweet || "—",
     },
   ];
 
   return (
-    <Card className="mt-6 interactive-surface">
+    <section className="mt-6 space-y-3">
 
-      <Card.Header className="space-y-1">
-
-        <SectionTitle
-          title="Menu History"
-        />
-
-        <p className="text-sm text-[var(--color-text-secondary)]">
-          Previously published lunch and dinner menus.
-        </p>
-
-      </Card.Header>
-
-      <Card.Body className="p-0">
-
-        <DataTable
-          columns={columns}
-          data={paginatedMenus}
-          rowKey={(menu) => menu.menuId}
-        />
-
-      </Card.Body>
-
-      {totalPages > 1 && (
-
-        <Card.Footer>
-
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPrevious={() =>
-              setCurrentPage((page) => page - 1)
-            }
-            onNext={() =>
-              setCurrentPage((page) => page + 1)
-            }
+      {loading ? (
+        <Card>
+          <Card.Body className="py-12 text-center text-[var(--color-text-secondary)]">
+            <p role="status">Loading menu history...</p>
+          </Card.Body>
+        </Card>
+      ) : error ? (
+        <Card>
+          <Card.Body className="py-12 text-center text-[var(--color-danger)]">
+            <p role="alert">{error}</p>
+          </Card.Body>
+        </Card>
+      ) : (
+        <>
+          <DataTable
+            columns={columns}
+            data={paginatedMenus}
+            rowKey={(menu) => menu.menuId}
           />
 
-        </Card.Footer>
-
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={visiblePage}
+              totalPages={totalPages}
+              onPrevious={() =>
+                setCurrentPage(Math.max(1, visiblePage - 1))
+              }
+              onNext={() =>
+                setCurrentPage(
+                  Math.min(totalPages, visiblePage + 1)
+                )
+              }
+            />
+          )}
+        </>
       )}
-
-    </Card>
+    </section>
   );
 }

@@ -137,12 +137,6 @@ export default function Sidebar({
           {account.name}
         </p>
 
-        {account.role && (
-          <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
-            {account.role}
-          </p>
-        )}
-
       </div>
     </>
   );

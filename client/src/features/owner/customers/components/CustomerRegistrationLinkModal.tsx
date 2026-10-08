@@ -731,38 +731,95 @@ function RegistrationModalContent({
     }
   }
 
-  return (
+    return (
     <Modal
       open
       title="Customer Registration"
       onClose={onClose}
       footer={
-        <Button
-          variant="secondary"
-          onClick={onClose}
-          disabled={exporting !== null}
-        >
-          Close
-        </Button>
+        <div className="flex w-full flex-wrap items-center justify-between gap-2">
+          {!loading && !error && registration && (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void handleCopy()}
+              >
+                {copied ? (
+                  <Check size={15} />
+                ) : (
+                  <Copy size={15} />
+                )}
+
+                {copied ? "Copied" : "Copy Link"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={exporting !== null}
+                onClick={() => void handleDownloadPdf()}
+              >
+                <Download size={15} />
+
+                {exporting === "PDF"
+                  ? "Preparing..."
+                  : "PDF"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={exporting !== null}
+                onClick={() => void handlePrint()}
+              >
+                <Printer size={15} />
+
+                {exporting === "PRINT"
+                  ? "Preparing..."
+                  : "Print"}
+              </Button>
+            </div>
+          )}
+
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="ml-auto"
+            onClick={onClose}
+            disabled={exporting !== null}
+          >
+            Close
+          </Button>
+        </div>
       }
     >
       {loading && (
-        <p className="py-8 text-center text-sm text-[var(--color-text-secondary)]">
+        <p
+          role="status"
+          className="py-6 text-center text-sm text-[var(--color-text-secondary)]"
+        >
           Loading your registration QR...
         </p>
       )}
 
       {!loading && error && (
-        <div className="space-y-4 py-4 text-center">
+        <div className="space-y-3 py-4 text-center">
           <p
             role="alert"
-            className="text-sm text-red-500"
+            className="text-sm text-[var(--color-danger)]"
           >
             {error}
           </p>
 
           <Button
+            type="button"
             variant="outline"
+            size="sm"
             onClick={onRetry}
           >
             Try Again
@@ -771,26 +828,25 @@ function RegistrationModalContent({
       )}
 
       {!loading && !error && registration && (
-        <div className="space-y-5">
+        <div className="space-y-3">
           <div className="text-center">
-            <h2 className="text-lg font-semibold text-[var(--color-text)]">
+            <h2 className="break-words text-base font-semibold text-[var(--color-text)]">
               {registration.messName}
             </h2>
 
-            <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-              Share this QR or link so customers can
-              submit a registration for your mess.
+            <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+              Share the QR or link to invite customers.
             </p>
           </div>
 
           <div className="flex justify-center">
             <div
               ref={qrContainerRef}
-              className="rounded-xl border border-gray-200 bg-white p-5"
+              className="rounded-xl border border-gray-200 bg-white p-4"
             >
               <QRCode
                 value={registration.registrationUrl}
-                size={200}
+                size={160}
                 level="M"
                 bgColor="#ffffff"
                 fgColor="#000000"
@@ -798,20 +854,12 @@ function RegistrationModalContent({
             </div>
           </div>
 
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-            <p className="text-sm text-amber-900">
-              Customers need your approval before
-              they can sign in. Review their requests
-              on the Customers page.
-            </p>
-          </div>
-
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <label
               htmlFor="mess-registration-link"
-              className="text-sm font-medium text-[var(--color-text)]"
+              className="block text-xs font-medium text-[var(--color-text-secondary)]"
             >
-              Registration Link
+              Registration link
             </label>
 
             <input
@@ -822,54 +870,13 @@ function RegistrationModalContent({
               onFocus={(event) =>
                 event.currentTarget.select()
               }
-              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background-secondary)] px-3 py-2 text-sm text-[var(--color-text)] outline-none"
+              className="h-9 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-background-secondary)] px-3 text-sm text-[var(--color-text)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
             />
           </div>
 
-          <div className="flex flex-wrap justify-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void handleCopy()}
-            >
-              {copied
-                ? <Check size={16} />
-                : <Copy size={16} />}
-
-              {copied ? "Copied" : "Copy Link"}
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={exporting !== null}
-              onClick={() => void handleDownloadPdf()}
-            >
-              <Download size={16} />
-
-              {exporting === "PDF"
-                ? "Preparing PDF..."
-                : "Download PDF"}
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={exporting !== null}
-              onClick={() => void handlePrint()}
-            >
-              <Printer size={16} />
-
-              {exporting === "PRINT"
-                ? "Preparing..."
-                : "Print QR"}
-            </Button>
-          </div>
-
-          <p className="text-center text-xs text-[var(--color-text-secondary)]">
-            Download or print an A4 poster with your
-            mess name, registration QR, and joining
-            instructions.
+          <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
+            Owner approval is required before sign-in.
+            Review registrations on the Customers page.
           </p>
         </div>
       )}

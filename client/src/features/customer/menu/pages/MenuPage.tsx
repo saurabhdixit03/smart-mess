@@ -1,9 +1,7 @@
 import PageHeader from "@/components/common/ui/PageHeader";
 
 import TodayMenus from "../components/TodayMenus";
-import {
-  MENU_PAGE,
-} from "../constants";
+import { MENU_PAGE } from "../constants";
 import { useMenus } from "../hooks";
 
 export default function MenuPage() {
@@ -15,7 +13,7 @@ export default function MenuPage() {
   } = useMenus();
 
   return (
-    <div className="space-y-8">
+    <section className="min-w-0 space-y-4">
       <PageHeader
         title={MENU_PAGE.TITLE}
         description={MENU_PAGE.DESCRIPTION}
@@ -27,6 +25,6 @@ export default function MenuPage() {
         error={error}
         onRefresh={fetchTodayMenus}
       />
-    </div>
+    </section>
   );
 }

@@ -1,4 +1,7 @@
-import { PageHeader } from "@/components/common/ui";
+import {
+  Card,
+  PageHeader,
+} from "@/components/common/ui";
 
 import { ProfileCard } from "../components";
 import { useProfile } from "../hooks";
@@ -10,9 +13,17 @@ export default function ProfilePage() {
 
   if (!customer) {
     return (
-      <div className="py-20 text-center text-red-500">
-        Customer session not found.
-      </div>
+      <section className="space-y-4">
+        <PageHeader
+          title="My Profile"
+          description="View your account information."
+        />
+
+        <ProfileMessage
+          message="Customer session not found."
+          error
+        />
+      </section>
     );
   }
 
@@ -21,6 +32,31 @@ export default function ProfilePage() {
       key={customer.customerId}
       customerId={customer.customerId}
     />
+  );
+}
+
+function ProfileMessage({
+  message,
+  error = false,
+}: {
+  message: string;
+  error?: boolean;
+}) {
+  return (
+    <Card className="w-full max-w-lg">
+      <Card.Body className="py-10 text-center">
+        <p
+          role={error ? "alert" : "status"}
+          className={`text-sm ${
+            error
+              ? "text-[var(--color-danger)]"
+              : "text-[var(--color-text-secondary)]"
+          }`}
+        >
+          {message}
+        </p>
+      </Card.Body>
+    </Card>
   );
 }
 
@@ -35,38 +71,22 @@ function CustomerProfileContent({
     error,
   } = useProfile(customerId);
 
-  if (loading) {
-    return (
-      <div className="py-20 text-center text-[var(--color-text-secondary)]">
-        Loading profile...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="py-20 text-center text-red-500">
-        {error}
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div className="py-20 text-center text-[var(--color-text-secondary)]">
-        Profile not found.
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-8">
+    <section className="min-w-0 space-y-4">
       <PageHeader
         title="My Profile"
         description="View your account information."
       />
 
-      <ProfileCard profile={profile} />
-    </div>
+      {loading ? (
+        <ProfileMessage message="Loading profile..." />
+      ) : error ? (
+        <ProfileMessage message={error} error />
+      ) : !profile ? (
+        <ProfileMessage message="Profile not found." />
+      ) : (
+        <ProfileCard profile={profile} />
+      )}
+    </section>
   );
 }

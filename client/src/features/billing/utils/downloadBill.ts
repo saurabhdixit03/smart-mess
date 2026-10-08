@@ -1,4 +1,5 @@
 import type { BillDocumentData } from "../types";
+import { getBillReference } from "./getBillReference";
 
 type Charge = {
   description: string;
@@ -95,10 +96,7 @@ export async function downloadBill(
 
   await document.fonts.ready;
 
-  const reference =
-    `SM-${bill.billingYear}` +
-    `${String(bill.billingMonth).padStart(2, "0")}-` +
-    String(bill.billId).padStart(6, "0");
+const reference = getBillReference(bill);
 
   const payment = bill.payment;
   const sandbox = payment?.environment === "SANDBOX";

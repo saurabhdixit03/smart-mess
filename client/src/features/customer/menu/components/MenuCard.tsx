@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
 
@@ -45,7 +46,10 @@ export default function MenuCard({
     return (
       <Card>
         <Card.Body>
-          <p className="text-center text-red-500">
+          <p
+            role="alert"
+            className="text-center text-sm text-[var(--color-danger)]"
+          >
             Customer session not found.
           </p>
         </Card.Body>
@@ -92,10 +96,33 @@ function CustomerMenuCard({
   const canRespond =
     availability?.canRespond ?? false;
 
+  const accepted =
+    mealResponse?.responseStatus === "ACCEPTED";
+
   const responseUnavailableReason =
     availabilityError
       ? "Unable to check response availability. Please try again later."
       : availability?.reason ?? null;
+
+  const responseLabel =
+    mealResponse && accepted
+      ? [
+          mealResponse.mealOption === "FULL"
+            ? "Full meal"
+            : mealResponse.mealOption === "HALF"
+              ? "Half meal"
+              : "Accepted",
+          mealResponse.extraRotiCount > 0
+            ? `+${mealResponse.extraRotiCount} ${
+                mealResponse.extraRotiCount === 1
+                  ? "roti"
+                  : "rotis"
+              }`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")
+      : "Not Today";
 
   async function handleSubmit(
     responseStatus: MealResponseStatus,
@@ -135,50 +162,42 @@ function CustomerMenuCard({
     }
   }
 
+  function closeForm() {
+    if (!loading) {
+      setOpen(false);
+    }
+  }
+
   return (
     <>
-      <Card className="flex h-full flex-col transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
-        <Card.Body className="flex flex-1 flex-col">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-4">
-              <div className="rounded-xl bg-orange-100 p-3">
+      <Card className="interactive-surface flex h-full flex-col">
+        <Card.Body className="flex flex-1 flex-col p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)] pb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
                 <UtensilsCrossed
-                  size={22}
-                  className="text-orange-600"
+                  size={20}
+                  aria-hidden="true"
                 />
               </div>
 
               <div>
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-lg font-semibold tracking-tight text-[var(--color-text)]">
                   {MEAL_SESSION_LABELS[menu.mealSession]}
                 </h2>
 
-                <p className="text-sm text-[var(--color-text-secondary)]">
-                  {menu.menuDate}
-                </p>
               </div>
             </div>
 
-            {mealResponse && (
+            {!responseLoading && mealResponse && (
               <StatusBadge
-                label={
-                  mealResponse.responseStatus === "ACCEPTED"
-                    ? `Accepted • ${mealResponse.mealOption}${
-                        mealResponse.extraRotiCount > 0
-                          ? ` • +${mealResponse.extraRotiCount} Roti${
-                              mealResponse.extraRotiCount > 1
-                                ? "s"
-                                : ""
-                            }`
-                          : ""
-                      }`
-                    : "Not Today"
-                }
+                label={responseLabel}
+                variant={accepted ? "success" : "warning"}
               />
             )}
           </div>
 
-          <div className="mt-6 flex-1">
+          <div className="mt-3 flex-1 rounded-xl border border-[var(--color-border)] bg-[#FAFAF8] p-3">
             <MenuSummary
               sabjiOne={menu.sabjiOne}
               sabjiTwo={menu.sabjiTwo}
@@ -189,8 +208,9 @@ function CustomerMenuCard({
           </div>
         </Card.Body>
 
-        <Card.Footer className="space-y-2">
+        <Card.Footer className="space-y-2 px-4 py-3">
           <Button
+            type="button"
             fullWidth
             disabled={
               loading ||
@@ -200,15 +220,19 @@ function CustomerMenuCard({
             }
             onClick={() => setOpen(true)}
           >
-            {mealResponse
-              ? "Update Response"
-              : "Respond"}
+            {loading
+              ? "Saving..."
+              : responseLoading || availabilityLoading
+                ? "Checking availability..."
+                : mealResponse
+                  ? "Update Response"
+                  : "Respond"}
           </Button>
 
           {!availabilityLoading &&
             !canRespond &&
             responseUnavailableReason && (
-              <p className="text-center text-sm text-[var(--color-text-secondary)]">
+              <p className="text-center text-xs leading-5 text-[var(--color-text-secondary)]">
                 {responseUnavailableReason}
               </p>
             )}
@@ -219,7 +243,7 @@ function CustomerMenuCard({
         open={open}
         loading={loading}
         existingResponse={mealResponse}
-        onClose={() => setOpen(false)}
+        onClose={closeForm}
         onSubmit={handleSubmit}
       />
     </>
