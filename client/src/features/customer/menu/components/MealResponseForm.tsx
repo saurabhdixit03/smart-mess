@@ -21,9 +21,7 @@ interface MealResponseFormProps {
   open: boolean;
   loading: boolean;
   existingResponse: MealResponse | null;
-
   onClose: () => void;
-
   onSubmit: (
     responseStatus: MealResponseStatus,
     mealOption: MealOption | null,
@@ -79,36 +77,31 @@ function OpenMealResponseForm({
         EXTRA_ROTI.DEFAULT
     );
 
+  const accepted =
+    responseStatus === MEAL_RESPONSE_STATUS.ACCEPTED;
+
   async function handleSubmit() {
+    if (loading) {
+      return;
+    }
+
     await onSubmit(
       responseStatus,
-      responseStatus === MEAL_RESPONSE_STATUS.ACCEPTED
-        ? mealOption
-        : null,
-      responseStatus === MEAL_RESPONSE_STATUS.ACCEPTED
-        ? extraRotiCount
-        : 0
-    );
-
-    onClose();
-  }
-
-  function increaseRoti() {
-    setExtraRotiCount((value) =>
-      Math.min(value + 1, EXTRA_ROTI.MAX)
+      accepted ? mealOption : null,
+      accepted ? extraRotiCount : 0
     );
   }
 
-  function decreaseRoti() {
-    setExtraRotiCount((value) =>
-      Math.max(value - 1, EXTRA_ROTI.MIN)
-    );
+  function handleClose() {
+    if (!loading) {
+      onClose();
+    }
   }
 
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       title={
         existingResponse
           ? "Update Tiffin Response"
@@ -117,42 +110,46 @@ function OpenMealResponseForm({
       footer={
         <>
           <Button
-            variant="outline"
-            onClick={onClose}
+            type="button"
+            variant="secondary"
+            disabled={loading}
+            onClick={handleClose}
           >
             Cancel
           </Button>
 
           <Button
+            type="button"
             disabled={loading}
-            onClick={handleSubmit}
+            onClick={() => void handleSubmit()}
           >
-            {existingResponse
-              ? "Update Response"
-              : "Save Response"}
+            {loading
+              ? "Saving..."
+              : existingResponse
+                ? "Update Response"
+                : "Save Response"}
           </Button>
         </>
       }
     >
-      <div className="space-y-7">
-        <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
-          Your response helps us prepare the right
-          quantity of food.
+      <div className="space-y-5">
+        <p className="text-sm leading-5 text-[var(--color-text-secondary)]">
+          Your response helps your mess prepare
+          the right quantity of food.
         </p>
 
-        <div>
-          <p className="mb-3 text-sm font-semibold">
+        <fieldset disabled={loading}>
+          <legend className="mb-2 text-sm font-semibold text-[var(--color-text)]">
             Will you be taking today's tiffin?
-          </p>
+          </legend>
 
-          <div className="flex gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <Button
+              type="button"
               fullWidth
-              variant={
-                responseStatus === MEAL_RESPONSE_STATUS.ACCEPTED
-                  ? "primary"
-                  : "outline"
-              }
+              disabled={loading}
+              aria-pressed={accepted}
+              variant={accepted ? "primary" : "outline"}
               onClick={() =>
                 setResponseStatus(
                   MEAL_RESPONSE_STATUS.ACCEPTED
@@ -163,12 +160,11 @@ function OpenMealResponseForm({
             </Button>
 
             <Button
+              type="button"
               fullWidth
-              variant={
-                responseStatus === MEAL_RESPONSE_STATUS.DECLINED
-                  ? "primary"
-                  : "outline"
-              }
+              disabled={loading}
+              aria-pressed={!accepted}
+              variant={!accepted ? "primary" : "outline"}
               onClick={() =>
                 setResponseStatus(
                   MEAL_RESPONSE_STATUS.DECLINED
@@ -178,18 +174,23 @@ function OpenMealResponseForm({
               Not Today
             </Button>
           </div>
-        </div>
+        </fieldset>
 
-        {responseStatus === MEAL_RESPONSE_STATUS.ACCEPTED && (
-          <div className="space-y-6">
-            <div>
-              <p className="mb-3 text-sm font-semibold">
-                Select Tiffin Type
-              </p>
+        {accepted ? (
+          <div className="space-y-4">
+            <fieldset disabled={loading}>
+              <legend className="mb-2 text-sm font-semibold text-[var(--color-text)]">
+                Tiffin type
+              </legend>
 
-              <div className="flex gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <Button
+                  type="button"
                   fullWidth
+                  disabled={loading}
+                  aria-pressed={
+                    mealOption === MEAL_OPTION.FULL
+                  }
                   variant={
                     mealOption === MEAL_OPTION.FULL
                       ? "primary"
@@ -203,7 +204,12 @@ function OpenMealResponseForm({
                 </Button>
 
                 <Button
+                  type="button"
                   fullWidth
+                  disabled={loading}
+                  aria-pressed={
+                    mealOption === MEAL_OPTION.HALF
+                  }
                   variant={
                     mealOption === MEAL_OPTION.HALF
                       ? "primary"
@@ -216,48 +222,77 @@ function OpenMealResponseForm({
                   Half
                 </Button>
               </div>
-            </div>
+            </fieldset>
 
-            <div>
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-semibold">
-                  Extra Rotis
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3">
+              <div>
+                <p className="text-sm font-semibold text-[var(--color-text)]">
+                  Extra rotis
                 </p>
 
-                <span className="text-xs text-[var(--color-text-secondary)]">
+                <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
                   Optional
-                </span>
+                </p>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <Button
+                  type="button"
                   size="sm"
                   variant="outline"
+                  aria-label="Remove one extra roti"
                   disabled={
-                    extraRotiCount === EXTRA_ROTI.MIN
+                    loading ||
+                    extraRotiCount <= EXTRA_ROTI.MIN
                   }
-                  onClick={decreaseRoti}
+                  onClick={() =>
+                    setExtraRotiCount((value) =>
+                      Math.max(
+                        value - 1,
+                        EXTRA_ROTI.MIN
+                      )
+                    )
+                  }
                 >
                   −
                 </Button>
 
-                <span className="min-w-8 text-center text-lg font-semibold">
+                <span
+                  aria-live="polite"
+                  aria-atomic="true"
+                  className="min-w-6 text-center text-lg font-semibold tabular-nums text-[var(--color-text)]"
+                >
                   {extraRotiCount}
                 </span>
 
                 <Button
+                  type="button"
                   size="sm"
                   variant="outline"
+                  aria-label="Add one extra roti"
                   disabled={
-                    extraRotiCount === EXTRA_ROTI.MAX
+                    loading ||
+                    extraRotiCount >= EXTRA_ROTI.MAX
                   }
-                  onClick={increaseRoti}
+                  onClick={() =>
+                    setExtraRotiCount((value) =>
+                      Math.min(
+                        value + 1,
+                        EXTRA_ROTI.MAX
+                      )
+                    )
+                  }
                 >
                   +
                 </Button>
               </div>
             </div>
           </div>
+        ) : (
+          <p className="rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm text-[var(--color-text-secondary)]">
+            Your mess will know you are not taking
+            this meal.
+          </p>
         )}
       </div>
     </Modal>

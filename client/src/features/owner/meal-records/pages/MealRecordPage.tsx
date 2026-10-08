@@ -7,6 +7,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import {
+  ArrowRight,
   LoaderCircle,
   Search,
   X,
@@ -37,12 +38,19 @@ import type {
   MealSession,
 } from "../types";
 
-const MEAL_SESSIONS: MealSession[] = ["LUNCH", "DINNER"];
+const MEAL_SESSIONS: MealSession[] = [
+  "LUNCH",
+  "DINNER",
+];
+
 const RECORDS_PER_PAGE = 10;
 
 export default function MealRecordPage() {
   const navigate = useNavigate();
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  const searchInputRef =
+    useRef<HTMLInputElement | null>(null);
+
   const searchResultsId = useId();
 
   const {
@@ -54,7 +62,8 @@ export default function MealRecordPage() {
   const [selectedSession, setSelectedSession] =
     useState<MealSession>("LUNCH");
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] =
+    useState(1);
 
   const [previousSession, setPreviousSession] =
     useState<MealSession>("LUNCH");
@@ -63,7 +72,6 @@ export default function MealRecordPage() {
     useState<MealCollectionSelection | null>(null);
 
   const [search, setSearch] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
 
   const availableSessions = MEAL_SESSIONS.filter(
     (session) =>
@@ -130,10 +138,15 @@ export default function MealRecordPage() {
 
   const totalPages = Math.max(
     1,
-    Math.ceil(mealRecords.length / RECORDS_PER_PAGE)
+    Math.ceil(
+      mealRecords.length / RECORDS_PER_PAGE
+    )
   );
 
-  const activePage = Math.min(currentPage, totalPages);
+  const activePage = Math.min(
+    currentPage,
+    totalPages
+  );
 
   const paginatedRecords = mealRecords.slice(
     (activePage - 1) * RECORDS_PER_PAGE,
@@ -148,17 +161,15 @@ export default function MealRecordPage() {
     setPreviousSession(activeSession);
     setCurrentPage(1);
     setSelectedCustomer(null);
-    setSearchOpen(false);
-  }
-
-  if (currentPage > totalPages) {
-    setCurrentPage(totalPages);
+    setSearch("");
   }
 
   const showSearchResults =
-    searchOpen && search.trim().length > 0;
+    search.trim().length > 0;
 
-  function selectSearchCustomer(customer: CollectionCustomer) {
+  function selectSearchCustomer(
+    customer: CollectionCustomer
+  ) {
     if (
       customer.collected ||
       customer.menuId !== selectedMenu?.menuId
@@ -174,13 +185,10 @@ export default function MealRecordPage() {
       mealOption: customer.mealOption,
       extraRotiCount: customer.extraRotiCount,
     });
-
-    setSearchOpen(false);
   }
 
   function clearSearch() {
     setSearch("");
-    setSearchOpen(false);
     searchInputRef.current?.focus();
   }
 
@@ -192,17 +200,31 @@ export default function MealRecordPage() {
     void refetchHistory();
   }
 
-  if (menusLoading || loading || historyLoading) {
+  if (
+    menusLoading ||
+    loading ||
+    historyLoading
+  ) {
     return (
-      <div className="py-12 text-center">
+      <div
+        role="status"
+        className="py-12 text-center text-[var(--color-text-secondary)]"
+      >
         Loading meal records...
       </div>
     );
   }
 
-  if (menusError || error || historyError) {
+  if (
+    menusError ||
+    error ||
+    historyError
+  ) {
     return (
-      <div className="py-12 text-center text-red-500">
+      <div
+        role="alert"
+        className="py-12 text-center text-[var(--color-danger)]"
+      >
         {menusError ?? error ?? historyError}
       </div>
     );
@@ -210,7 +232,7 @@ export default function MealRecordPage() {
 
   if (todayMenus.length === 0) {
     return (
-      <section className="space-y-6">
+      <section className="space-y-4">
         <PageHeader
           title="Meal Collection"
           description="Record customer meal collections and review today's activity."
@@ -222,13 +244,16 @@ export default function MealRecordPage() {
           </h2>
 
           <p className="mx-auto mt-2 max-w-md text-sm text-[var(--color-text-secondary)]">
-            Publish today's menu before starting meal collection.
+            Publish today's menu before starting
+            meal collection.
           </p>
 
           <Button
             type="button"
             className="mt-6"
-            onClick={() => navigate("/owner/menu")}
+            onClick={() =>
+              navigate("/owner/menu")
+            }
           >
             Go to Menu
           </Button>
@@ -238,30 +263,44 @@ export default function MealRecordPage() {
   }
 
   return (
-    <section className="min-w-0 space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <PageHeader
-          title="Meal Collection"
-          description="Record customer meal collections and review today's activity."
-        />
-
-        <div className="inline-flex self-end rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-1 sm:self-auto">
-          {availableSessions.map((session) => (
-            <button
-              key={session}
-              type="button"
-              onClick={() => setSelectedSession(session)}
-              className={`rounded-md px-5 py-2 text-sm font-medium transition-colors ${
-                session === activeSession
-                  ? "bg-[var(--color-primary)] text-white shadow-sm"
-                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-background)]"
-              }`}
-            >
-              {session === "LUNCH" ? "Lunch" : "Dinner"}
-            </button>
-          ))}
-        </div>
-      </div>
+    <section className="min-w-0 space-y-4">
+      <PageHeader
+        title="Meal Collection"
+        description="Record customer meal collections and review today's activity."
+        action={
+          <div className="inline-flex rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-1">
+            {availableSessions.map((session) => (
+              <button
+                key={session}
+                type="button"
+                aria-pressed={
+                  session === activeSession
+                }
+                onClick={() =>
+                  setSelectedSession(session)
+                }
+                className={`
+                  rounded-md px-5 py-2
+                  text-sm font-medium
+                  transition-colors
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-[var(--color-primary)]
+                  ${
+                    session === activeSession
+                      ? "bg-[var(--color-primary)] text-white shadow-sm"
+                      : "text-[var(--color-text-secondary)] hover:bg-[var(--color-background)]"
+                  }
+                `}
+              >
+                {session === "LUNCH"
+                  ? "Lunch"
+                  : "Dinner"}
+              </button>
+            ))}
+          </div>
+        }
+      />
 
       <MealRecordSummary
         pendingMeals={pendingMeals}
@@ -269,80 +308,74 @@ export default function MealRecordPage() {
         halfMeals={halfMeals}
       />
 
-      <div
-        className="relative w-full"
-        onFocusCapture={() => setSearchOpen(true)}
-        onBlurCapture={(event) => {
-          if (
-            !event.currentTarget.contains(
-              event.relatedTarget as Node | null
-            )
-          ) {
-            setSearchOpen(false);
-          }
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            searchInputRef.current?.focus();
-            setSearchOpen(false);
-          }
-        }}
-      >
-        <div className="relative">
-          <Input
-            ref={searchInputRef}
-            fullWidth
-            inputSize="md"
-            aria-label="Search active customers by name or mobile"
-            aria-controls={
-              showSearchResults ? searchResultsId : undefined
-            }
-            placeholder="Search customer name or mobile..."
-            value={search}
-            maxLength={100}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setSearchOpen(true);
-            }}
-            leftIcon={<Search size={18} />}
-            className="pr-10"
-          />
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start">
+        <div className="w-full shrink-0 sm:max-w-sm">
+          <div className="relative">
+            <Input
+              ref={searchInputRef}
+              fullWidth
+              inputSize="md"
+              aria-label="Search active customers by name or mobile"
+              aria-controls={
+                showSearchResults
+                  ? searchResultsId
+                  : undefined
+              }
+              placeholder="Search customer name or mobile..."
+              value={search}
+              maxLength={100}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  clearSearch();
+                }
+              }}
+              leftIcon={<Search size={18} />}
+              className="pr-10"
+            />
 
-          {search.length > 0 && (
-            <button
-              type="button"
-              aria-label="Clear customer search"
-              onClick={clearSearch}
-              className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-[var(--color-text-secondary)] hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
-            >
-              <X size={16} />
-            </button>
-          )}
+            {search.length > 0 && (
+              <button
+                type="button"
+                aria-label="Clear customer search"
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-[var(--color-text-secondary)] hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+              >
+                <X
+                  size={16}
+                  aria-hidden="true"
+                />
+              </button>
+            )}
+          </div>
         </div>
 
         {showSearchResults && (
           <div
             id={searchResultsId}
-            className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg"
+            aria-label="Matching active customers"
+            className="min-w-0 flex-1"
           >
-            <div className="border-b border-[var(--color-border)] px-4 py-2.5">
-              <p className="text-xs font-medium text-[var(--color-text-secondary)]">
-                Active customers ·{" "}
-                {activeSession === "LUNCH" ? "Lunch" : "Dinner"}
-              </p>
-            </div>
-
             {searchLoading ? (
               <div
                 role="status"
-                className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-[var(--color-text-secondary)]"
+                className="flex min-h-11 items-center gap-2 text-sm text-[var(--color-text-secondary)]"
               >
-                <LoaderCircle size={16} className="animate-spin" />
+                <LoaderCircle
+                  size={16}
+                  className="animate-spin"
+                  aria-hidden="true"
+                />
                 Searching customers...
               </div>
             ) : searchError ? (
-              <div className="space-y-3 px-4 py-4">
-                <p role="alert" className="text-sm text-red-500">
+              <div className="flex min-h-11 flex-wrap items-center gap-3">
+                <p
+                  role="alert"
+                  className="text-sm text-[var(--color-danger)]"
+                >
                   {searchError}
                 </p>
 
@@ -358,79 +391,114 @@ export default function MealRecordPage() {
             ) : searchCustomers.length === 0 ? (
               <p
                 role="status"
-                className="px-4 py-6 text-center text-sm text-[var(--color-text-secondary)]"
+                className="flex min-h-11 items-center text-sm text-[var(--color-text-secondary)]"
               >
                 No active customers match your search.
               </p>
             ) : (
-              <>
-                <ul className="max-h-72 overflow-y-auto overscroll-contain divide-y divide-[var(--color-border)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {searchCustomers.map((customer) => (
-                    <li key={customer.customerId}>
-                      <button
-                        type="button"
-                        disabled={customer.collected}
-                        onClick={() => selectSearchCustomer(customer)}
-                        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-primary)] disabled:cursor-default disabled:opacity-60"
+              <div className="space-y-2">
+                <ul className="flex gap-2 overflow-x-auto overscroll-x-contain pb-2">
+                  {searchCustomers.map((customer) => {
+                    const unavailable =
+                      customer.collected ||
+                      customer.menuId !==
+                        selectedMenu?.menuId;
+
+                    return (
+                      <li
+                        key={customer.customerId}
+                        className="w-56 shrink-0"
                       >
-                        <span className="min-w-0">
-                          <span className="block truncate text-sm font-medium text-[var(--color-text)]">
-                            {customer.customerName}
-                          </span>
-
-                          <span className="mt-0.5 block text-xs text-[var(--color-text-secondary)]">
-                            {customer.mobileNumber}
-                          </span>
-                        </span>
-
-                        <span
-                          className={`shrink-0 text-xs font-medium ${
-                            customer.collected
-                              ? "text-[var(--color-text-secondary)]"
-                              : "text-[var(--color-primary)]"
-                          }`}
+                        <button
+                          type="button"
+                          disabled={unavailable}
+                          onClick={() =>
+                            selectSearchCustomer(
+                              customer
+                            )
+                          }
+                          className="flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-left transition-colors hover:border-[var(--color-primary)] hover:bg-[var(--color-background)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-primary)] disabled:cursor-default disabled:opacity-60"
                         >
-                          {customer.collected ? "Collected" : "Record"}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
+                          <span className="min-w-0">
+                            <span
+                              title={
+                                customer.customerName
+                              }
+                              className="block truncate text-sm font-medium text-[var(--color-text)]"
+                            >
+                              {customer.customerName}
+                            </span>
+
+                          </span>
+
+                          <span
+                            className={`
+                              flex shrink-0 items-center gap-1
+                              text-xs font-medium
+                              ${
+                                unavailable
+                                  ? "text-[var(--color-text-secondary)]"
+                                  : "text-[var(--color-primary)]"
+                              }
+                            `}
+                          >
+                            {customer.collected
+                              ? "Collected"
+                              : unavailable
+                                ? "Unavailable"
+                                : "Record"}
+
+                            {!unavailable && (
+                              <ArrowRight
+                                size={13}
+                                aria-hidden="true"
+                              />
+                            )}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
 
                 {searchCustomers.length === 50 && (
-                  <p className="border-t border-[var(--color-border)] px-4 py-2 text-xs text-[var(--color-text-secondary)]">
-                    Showing the first 50 matches. Refine your search
-                    to find more customers.
+                  <p className="text-xs text-[var(--color-text-secondary)]">
+                    Showing the first 50 matches.
+                    Refine your search to find more
+                    customers.
                   </p>
                 )}
-              </>
+              </div>
             )}
           </div>
         )}
       </div>
 
+      <MealRecordQueue
+        items={recordQueue}
+        onRecord={setSelectedCustomer}
+      />
+
       <div className="space-y-3">
-
-
-        <MealRecordQueue
-          items={recordQueue}
-          onRecord={setSelectedCustomer}
+        <MealRecordTable
+          records={paginatedRecords}
         />
-      </div>
-
-      <div className="space-y-4">
-        <MealRecordTable records={paginatedRecords} />
 
         {totalPages > 1 && (
           <Pagination
             currentPage={activePage}
             totalPages={totalPages}
             onPrevious={() =>
-              setCurrentPage((page) => Math.max(1, page - 1))
+              setCurrentPage(
+                Math.max(1, activePage - 1)
+              )
             }
             onNext={() =>
-              setCurrentPage((page) =>
-                Math.min(totalPages, page + 1)
+              setCurrentPage(
+                Math.min(
+                  totalPages,
+                  activePage + 1
+                )
               )
             }
           />
@@ -440,7 +508,9 @@ export default function MealRecordPage() {
       <RecordMealDialog
         open={selectedCustomer !== null}
         customer={selectedCustomer}
-        onClose={() => setSelectedCustomer(null)}
+        onClose={() =>
+          setSelectedCustomer(null)
+        }
         onSuccess={handleCollectionSaved}
       />
     </section>

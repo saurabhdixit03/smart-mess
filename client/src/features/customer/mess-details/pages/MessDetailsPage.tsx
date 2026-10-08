@@ -6,52 +6,53 @@ import {
 
 import type { ReactNode } from "react";
 
+import Card from "@/components/common/ui/Card/Card";
 import PageHeader from "@/components/common/ui/PageHeader";
 
 import { useMessDetails } from "../hooks/useMessDetails";
 
-function formatTime(
-  value: string | null
-) {
+const currencyFormat = new Intl.NumberFormat("en-IN", {
+  style: "currency",
+  currency: "INR",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
+function formatTime(value: string | null): string {
   if (!value) {
     return "Not configured";
   }
 
-  const [hours, minutes] =
-    value.split(":");
+  const [hours, minutes] = value.split(":").map(Number);
+
+  if (
+    !Number.isInteger(hours) ||
+    !Number.isInteger(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return "Not configured";
+  }
 
   const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
 
-  date.setHours(
-    Number(hours),
-    Number(minutes),
-    0,
-    0
-  );
-
-  return date.toLocaleTimeString(
-    "en-IN",
-    {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    }
-  );
+  return date.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
-function formatDay(
-  value: string | null
-) {
+function formatDay(value: string | null): string {
   if (!value) {
     return "No weekly off";
   }
 
-  return (
-    value.charAt(0) +
-    value
-      .slice(1)
-      .toLowerCase()
-  );
+  return value.charAt(0).toUpperCase() +
+    value.slice(1).toLowerCase();
 }
 
 type DetailRowProps = {
@@ -64,33 +65,14 @@ function DetailRow({
   value,
 }: DetailRowProps) {
   return (
-    <div
-      className="
-        flex
-        items-center
-        justify-between
-        gap-4
-      "
-    >
-      <span
-        className="
-          text-sm
-          text-[var(--color-text-secondary)]
-        "
-      >
+    <div className="flex items-start justify-between gap-4">
+      <dt className="text-sm leading-5 text-[var(--color-text-secondary)]">
         {label}
-      </span>
+      </dt>
 
-      <span
-        className="
-          text-right
-          text-sm
-          font-semibold
-          text-[var(--color-text)]
-        "
-      >
+      <dd className="min-w-0 break-words text-right text-sm font-medium leading-5 tabular-nums text-[var(--color-text)]">
         {value}
-      </span>
+      </dd>
     </div>
   );
 }
@@ -109,79 +91,27 @@ function DetailCard({
   children,
 }: DetailCardProps) {
   return (
-    <section
-      className="
-        flex
-        min-h-[210px]
-        flex-col
-        rounded-xl
-        border
-        border-[var(--color-border)]
-        bg-[var(--color-surface)]
-        p-5
-        shadow-sm
-        transition-all
-        duration-200
-        hover:-translate-y-1
-        hover:shadow-md
-      "
-    >
-      <div className="flex items-start gap-3">
+    <Card className="interactive-surface h-full">
+      <Card.Body className="p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+            {icon}
+          </div>
 
-        <div
-          className="
-            flex
-            h-9
-            w-9
-            shrink-0
-            items-center
-            justify-center
-            rounded-lg
-            bg-[var(--color-primary)]/10
-            text-[var(--color-primary)]
-          "
-        >
-          {icon}
-        </div>
-
-        <div>
-
-          <h2
-            className="
-              text-base
-              font-semibold
-              text-[var(--color-text)]
-            "
-          >
+          <h2 className="text-base font-semibold tracking-tight text-[var(--color-text)]">
             {title}
           </h2>
-
-          <p
-            className="
-              mt-1
-              text-xs
-              leading-5
-              text-[var(--color-text-secondary)]
-            "
-          >
-            {description}
-          </p>
-
         </div>
 
-      </div>
+        <p className="mt-2 text-xs leading-5 text-[var(--color-text-secondary)]">
+          {description}
+        </p>
 
-      <div
-        className="
-          mt-auto
-          space-y-3
-          pt-6
-        "
-      >
-        {children}
-      </div>
-
-    </section>
+        <dl className="mt-3 space-y-3 rounded-xl border border-[var(--color-border)] bg-[#FAFAF8] p-3">
+          {children}
+        </dl>
+      </Card.Body>
+    </Card>
   );
 }
 
@@ -192,26 +122,6 @@ export default function MessDetailsPage() {
     loading,
     error,
   } = useMessDetails();
-
-  if (loading) {
-    return (
-      <div className="p-6">
-        Loading mess details...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-6">
-
-        <p className="text-sm text-[var(--color-danger)]">
-          {error}
-        </p>
-
-      </div>
-    );
-  }
 
   const closedSessions: string[] = [];
 
@@ -224,103 +134,123 @@ export default function MessDetailsPage() {
   }
 
   const weeklySessionSummary =
-    closedSessions.length > 0
+    settings?.weeklyClosedDay && closedSessions.length > 0
       ? closedSessions.join(" & ")
       : "None";
 
   return (
-    <div className="space-y-5">
-
+    <section className="min-w-0 space-y-4">
       <PageHeader
         title="Mess Details"
-        description="View meal response timings, weekly schedule, and current meal pricing."
+        description="View response deadlines, weekly schedule, and current meal prices."
       />
 
-      <div
-        className="
-          grid
-          gap-4
-          md:grid-cols-2
-          xl:grid-cols-3
-        "
-      >
+      {loading ? (
+        <Card>
+          <Card.Body className="py-10 text-center">
+            <p
+              role="status"
+              className="text-sm text-[var(--color-text-secondary)]"
+            >
+              Loading mess details...
+            </p>
+          </Card.Body>
+        </Card>
+      ) : error ? (
+        <Card>
+          <Card.Body className="py-8 text-center">
+            <p
+              role="alert"
+              className="text-sm text-[var(--color-danger)]"
+            >
+              {error}
+            </p>
+          </Card.Body>
+        </Card>
+      ) : (
+        <div className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <DetailCard
+            icon={<Clock3 size={20} aria-hidden="true" />}
+            title="Response Window"
+            description="Submit your response before these deadlines."
+          >
+            <DetailRow
+              label="Lunch"
+              value={formatTime(
+                settings?.lunchResponseCutoff ?? null
+              )}
+            />
 
-        <DetailCard
-          icon={<Clock3 size={18} />}
-          title="Response Window"
-          description="Meal response deadlines for lunch and dinner."
-        >
-          <DetailRow
-            label="Lunch"
-            value={formatTime(
-              settings?.lunchResponseCutoff ??
-                null
-            )}
-          />
+            <DetailRow
+              label="Dinner"
+              value={formatTime(
+                settings?.dinnerResponseCutoff ?? null
+              )}
+            />
+          </DetailCard>
 
-          <DetailRow
-            label="Dinner"
-            value={formatTime(
-              settings?.dinnerResponseCutoff ??
-                null
-            )}
-          />
-        </DetailCard>
-
-        <DetailCard
-          icon={<CalendarDays size={18} />}
-          title="Weekly Schedule"
-          description="Recurring weekly mess closure details."
-        >
-          <DetailRow
-            label="Closed Day"
-            value={formatDay(
-              settings?.weeklyClosedDay ??
-                null
-            )}
-          />
-
-          <DetailRow
-            label="Closed Meals"
-            value={weeklySessionSummary}
-          />
-        </DetailCard>
-
-        <DetailCard
-          icon={<IndianRupee size={18} />}
-          title="Meal Pricing"
-          description="Current meal prices used for billing."
-        >
-          <DetailRow
-            label="Half Meal"
-            value={
-              pricing
-                ? `₹${pricing.halfMealPrice}`
-                : "Not available"
+          <DetailCard
+            icon={
+              <CalendarDays size={20} aria-hidden="true" />
             }
-          />
+            title="Weekly Schedule"
+            description="Regular weekly closures for your mess."
+          >
+            <DetailRow
+              label="Closed day"
+              value={formatDay(
+                settings?.weeklyClosedDay ?? null
+              )}
+            />
 
-          <DetailRow
-            label="Full Meal"
-            value={
-              pricing
-                ? `₹${pricing.fullMealPrice}`
-                : "Not available"
+            <DetailRow
+              label="Closed meals"
+              value={weeklySessionSummary}
+            />
+          </DetailCard>
+
+          <DetailCard
+            icon={
+              <IndianRupee size={20} aria-hidden="true" />
             }
-          />
+            title="Meal Pricing"
+            description="Current prices applied when meals are collected."
+          >
+            <DetailRow
+              label="Full meal"
+              value={
+                pricing
+                  ? currencyFormat.format(
+                      pricing.fullMealPrice
+                    )
+                  : "Not available"
+              }
+            />
 
-          <DetailRow
-            label="Extra Roti"
-            value={
-              pricing
-                ? `₹${pricing.extraRotiPrice}`
-                : "Not available"
-            }
-          />
-        </DetailCard>
+            <DetailRow
+              label="Half meal"
+              value={
+                pricing
+                  ? currencyFormat.format(
+                      pricing.halfMealPrice
+                    )
+                  : "Not available"
+              }
+            />
 
-      </div>
-
-    </div>
+            <DetailRow
+              label="Extra roti"
+              value={
+                pricing
+                  ? currencyFormat.format(
+                      pricing.extraRotiPrice
+                    )
+                  : "Not available"
+              }
+            />
+          </DetailCard>
+        </div>
+      )}
+    </section>
   );
 }

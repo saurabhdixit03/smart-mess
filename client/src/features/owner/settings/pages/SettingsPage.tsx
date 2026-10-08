@@ -70,10 +70,16 @@ function SettingsCard({
   disabled = false,
 }: SettingsCardProps) {
   return (
-    <section className="interactive-surface flex min-h-[190px] min-w-0 flex-col rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
-          {icon}
+    <section className="interactive-surface flex min-w-0 flex-col rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+            {icon}
+          </div>
+
+          <h2 className="min-w-0 text-base font-semibold tracking-tight text-[var(--color-text)]">
+            {title}
+          </h2>
         </div>
 
         {onEdit && (
@@ -85,22 +91,16 @@ function SettingsCard({
             title={`Edit ${title}`}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Pencil size={15} />
+            <Pencil size={15} aria-hidden="true" />
           </button>
         )}
       </div>
 
-      <div className="mt-4">
-        <h2 className="text-base font-semibold text-[var(--color-text)]">
-          {title}
-        </h2>
+      <p className="mt-2 text-xs leading-5 text-[var(--color-text-secondary)]">
+        {description}
+      </p>
 
-        <p className="mt-1 text-xs leading-5 text-[var(--color-text-secondary)]">
-          {description}
-        </p>
-      </div>
-
-      <div className="mt-auto pt-4">
+      <div className="mt-3 rounded-xl border border-[var(--color-border)] bg-[#FAFAF8] p-3">
         {children}
       </div>
     </section>

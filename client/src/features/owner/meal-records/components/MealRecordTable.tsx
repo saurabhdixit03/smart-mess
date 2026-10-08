@@ -70,22 +70,6 @@ export default function MealRecordTable({
 
     <section className="space-y-4">
 
-      <div>
-
-        <h2 className="text-lg font-semibold">
-
-          Today's Meal Records
-
-        </h2>
-
-        <p className="text-sm text-[var(--color-text-secondary)]">
-
-          Recently recorded meals for the selected session.
-
-        </p>
-
-      </div>
-
       <DataTable
         columns={columns}
         data={records}
@@ -95,8 +79,6 @@ export default function MealRecordTable({
       />
 
     </section>
-
-    
 
   );
 
