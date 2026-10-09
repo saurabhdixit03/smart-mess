@@ -8,6 +8,8 @@ import DownloadBillButton from "@/features/billing/components/DownloadBillButton
 
 import { useBillDetails } from "../hooks";
 
+import { getBillReference } from "@/features/billing/utils/getBillReference";
+
 interface BillDetailsModalProps {
   billId: number | null;
   open: boolean;
@@ -51,7 +53,11 @@ function BillDetailsContent({
   return (
     <Modal
       open
-      title={`Bill #${billId}`}
+      title={
+        billDetail
+        ? `Bill ${getBillReference(billDetail)}`
+        : "Bill Details"
+      }
       size="lg"
       onClose={onClose}
       footer={
