@@ -41,8 +41,8 @@ import com.smartmess.backend.repository.NotificationRepository;
 import com.smartmess.backend.repository.PaymentOrderRepository;
 import com.smartmess.backend.repository.PaymentRepository;
 import com.smartmess.backend.security.CustomerSecurity;
-import com.smartmess.backend.service.NotificationService;
 import com.smartmess.backend.service.EmailDeliveryService;
+import com.smartmess.backend.service.NotificationService;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
@@ -199,15 +199,11 @@ public class NotificationServiceImpl implements NotificationService {
                 + " "
                 + bill.getBillingYear();
 
-        String message = "Bill #"
-                + bill.getBillId()
-                + " for "
+        String message = "Your bill for "
                 + billingPeriod
-                + " has been generated for "
-                + bill.getMealRecordCount()
-                + " collected meals. Amount due: "
+                + " is ready. Amount due: "
                 + formatAmount(bill.getTotalAmount())
-                + ".";
+                + ". View your bill for meal details.";
 
         saveNotification(
                 recipient,
@@ -297,15 +293,20 @@ public class NotificationServiceImpl implements NotificationService {
             prefix = "Sandbox test payment. No real money was charged. ";
         }
 
+        String billingPeriod = Month.of(bill.getBillingMonth())
+                .getDisplayName(TextStyle.FULL, Locale.ENGLISH)
+                + " "
+                + bill.getBillingYear();
+
         saveNotification(
                 recipient,
                 NotificationType.PAYMENT_RECEIVED,
                 title,
                 prefix
-                        + "Payment of "
+                        + "Your payment of "
                         + formatAmount(payment.getPaymentAmount())
-                        + " for Bill #"
-                        + billId
+                        + " for "
+                        + billingPeriod
                         + " has been verified successfully."
         );
     }

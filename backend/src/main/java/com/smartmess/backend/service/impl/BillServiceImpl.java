@@ -454,18 +454,14 @@ public class BillServiceImpl implements BillService {
                 .getCurrencyInstance(INDIA_LOCALE)
                 .format(bill.getTotalAmount());
 
-        return "Bill #"
-                + bill.getBillId()
-                + " for "
+        return "Your bill for "
                 + buildBillingPeriod(
                         bill.getBillingMonth(),
                         bill.getBillingYear()
                 )
-                + " has been generated for "
-                + bill.getMealRecordCount()
-                + " collected meals. Amount due: "
+                + " is ready. Amount due: "
                 + amount
-                + ".";
+                + ". View your bill for meal details.";
     }
 
     private String buildBillingPeriod(
