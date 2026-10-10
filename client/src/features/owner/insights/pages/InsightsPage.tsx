@@ -1,10 +1,12 @@
 import { useState, type ReactNode } from "react";
 
 import {
+  ChartPie,
   CheckCircle2,
   CirclePlus,
   Clock3,
   IndianRupee,
+  LayoutGrid,
   Percent,
   Receipt,
   Soup,
@@ -21,7 +23,10 @@ import {
 } from "@/components/common/ui";
 
 import { InsightsFilters } from "../components";
+import InsightsCharts from "../components/InsightsCharts";
 import { useInsights } from "../hooks";
+
+type InsightsView = "cards" | "charts";
 
 const currencyFormat = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -131,6 +136,7 @@ function LoadingCards({
           </div>
 
           <div className="mt-2 h-6 w-24 max-w-full rounded bg-[var(--color-surface-hover)]" />
+
           <div className="mt-2 h-3 w-28 max-w-full rounded bg-[var(--color-surface-hover)]" />
         </Card>
       ))}
@@ -138,28 +144,70 @@ function LoadingCards({
   );
 }
 
-function LoadingInsights() {
+function LoadingInsights({
+  view,
+}: {
+  view: InsightsView;
+}) {
   return (
     <div role="status" className="space-y-4">
-      <span className="sr-only">Loading insights...</span>
+      <span className="sr-only">
+        Loading insights...
+      </span>
 
-      <InsightSection title="Financial overview">
-        <LoadingCards count={4} className={summaryGrid} />
-      </InsightSection>
+      {view === "charts" ? (
+        <div
+          aria-hidden="true"
+          className="grid gap-4 lg:grid-cols-3"
+        >
+          {Array.from({ length: 3 }, (_, index) => (
+            <Card
+              key={index}
+              className="min-w-0 animate-pulse p-4 motion-reduce:animate-none sm:p-5"
+            >
+              <div className="h-4 w-32 rounded bg-[var(--color-surface-hover)]" />
 
-      <InsightSection title="Bills & customers">
-        <LoadingCards count={4} className={summaryGrid} />
-      </InsightSection>
+              <div className="mt-2 h-3 w-48 max-w-full rounded bg-[var(--color-surface-hover)]" />
 
-      <InsightSection title="Meal overview">
-        <LoadingCards count={5} className={mealGrid} />
-      </InsightSection>
+              <div className="mx-auto my-5 h-52 w-52 max-w-full rounded-full bg-[var(--color-surface-hover)]" />
+
+              <div className="h-3 w-full rounded bg-[var(--color-surface-hover)]" />
+
+              <div className="mt-3 h-3 w-full rounded bg-[var(--color-surface-hover)]" />
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <>
+          <InsightSection title="Financial overview">
+            <LoadingCards
+              count={4}
+              className={summaryGrid}
+            />
+          </InsightSection>
+
+          <InsightSection title="Bills & customers">
+            <LoadingCards
+              count={4}
+              className={summaryGrid}
+            />
+          </InsightSection>
+
+          <InsightSection title="Meal overview">
+            <LoadingCards
+              count={5}
+              className={mealGrid}
+            />
+          </InsightSection>
+        </>
+      )}
     </div>
   );
 }
 
 export default function InsightsPage() {
   const [period, setPeriod] = useState(getCurrentPeriod);
+  const [view, setView] = useState<InsightsView>("cards");
 
   const { month, year } = period;
 
@@ -182,30 +230,58 @@ export default function InsightsPage() {
   return (
     <section className="space-y-4">
       <PageHeader
-        title="Insights"
-        description={`Business overview for ${periodLabel}.`}
-        action={
-          <InsightsFilters
-            month={month}
-            year={year}
-            onMonthChange={(value) =>
-              setPeriod((previous) => ({
-                ...previous,
-                month: value,
-              }))
-            }
-            onYearChange={(value) =>
-              setPeriod((previous) => ({
-                ...previous,
-                year: value,
-              }))
-            }
-          />
+  title="Insights"
+  description={`Business overview for ${periodLabel}.`}
+  action={
+    <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+      <div className="min-w-0 flex-1 sm:flex-none">
+        <InsightsFilters
+          month={month}
+          year={year}
+          onMonthChange={(value) =>
+            setPeriod((previous) => ({
+              ...previous,
+              month: value,
+            }))
+          }
+          onYearChange={(value) =>
+            setPeriod((previous) => ({
+              ...previous,
+              year: value,
+            }))
+          }
+        />
+      </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="shrink-0"
+        title={
+          view === "cards"
+            ? "Switch to chart view"
+            : "Switch to card view"
         }
-      />
+        onClick={() =>
+          setView((previous) =>
+            previous === "cards" ? "charts" : "cards"
+          )
+        }
+      >
+        {view === "cards" ? (
+          <ChartPie size={16} aria-hidden="true" />
+        ) : (
+          <LayoutGrid size={16} aria-hidden="true" />
+        )}
+
+        {view === "cards" ? "Chart View" : "Card View"}
+      </Button>
+    </div>
+  }
+/>
 
       {loading ? (
-        <LoadingInsights />
+        <LoadingInsights view={view} />
       ) : error || !insights || !financial || !meals ? (
         <Card>
           <Card.Body className="py-10 text-center">
@@ -215,7 +291,8 @@ export default function InsightsPage() {
               </h2>
 
               <p className="mx-auto mt-2 max-w-md text-sm text-[var(--color-text-secondary)]">
-                {error || "Insights are unavailable for this period."}
+                {error ||
+                  "Insights are unavailable for this period."}
               </p>
             </div>
 
@@ -229,6 +306,8 @@ export default function InsightsPage() {
             </Button>
           </Card.Body>
         </Card>
+      ) : view === "charts" ? (
+        <InsightsCharts insights={insights} />
       ) : (
         <div className="space-y-4">
           <InsightSection title="Financial overview">
@@ -316,35 +395,45 @@ export default function InsightsPage() {
             <div className={mealGrid}>
               <InsightCard
                 title="Total meals"
-                value={countFormat.format(meals.totalMeals)}
+                value={countFormat.format(
+                  meals.totalMeals
+                )}
                 description="Full and half meals"
                 icon={<UtensilsCrossed size={17} />}
               />
 
               <InsightCard
                 title="Full meals"
-                value={countFormat.format(meals.fullMeals)}
+                value={countFormat.format(
+                  meals.fullMeals
+                )}
                 description="Full portions"
                 icon={<UtensilsCrossed size={17} />}
               />
 
               <InsightCard
                 title="Half meals"
-                value={countFormat.format(meals.halfMeals)}
+                value={countFormat.format(
+                  meals.halfMeals
+                )}
                 description="Half portions"
                 icon={<Soup size={17} />}
               />
 
               <InsightCard
                 title="Total rotis"
-                value={countFormat.format(meals.totalRotis)}
+                value={countFormat.format(
+                  meals.totalRotis
+                )}
                 description="Including extras"
                 icon={<Wheat size={17} />}
               />
 
               <InsightCard
                 title="Extra rotis"
-                value={countFormat.format(meals.extraRotis)}
+                value={countFormat.format(
+                  meals.extraRotis
+                )}
                 description="Additional rotis"
                 icon={<CirclePlus size={17} />}
               />
