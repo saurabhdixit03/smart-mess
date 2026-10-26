@@ -20,3 +20,11 @@
 .DS_Store
 Thumbs.db
 Desktop.ini
+# ==========================
+# Eclipse
+# ==========================
+
+.metadata/
+.settings/
+.classpath
+.project

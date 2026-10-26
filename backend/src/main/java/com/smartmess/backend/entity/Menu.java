@@ -66,18 +66,32 @@ public class Menu extends BaseEntity {
     @Column(name = "meal_session", nullable = false)
     private MealSession mealSession;
 
-    @Column(name = "sabji_one", nullable = false, length = 100)
-    private String sabjiOne;
+    /*
+     * Dish References
+     *
+     * Menu no longer stores dish names directly.
+     * Each menu item now points to a tenant-scoped Dish.
+     *
+     * sabjiOne is required.
+     * The remaining menu items are optional.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "sabji_one_dish_id", nullable = false)
+    private Dish sabjiOne;
 
-    @Column(name = "sabji_two", length = 100)
-    private String sabjiTwo;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sabji_two_dish_id")
+    private Dish sabjiTwo;
 
-    @Column(length = 100)
-    private String dal;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dal_dish_id")
+    private Dish dal;
 
-    @Column(length = 100)
-    private String rice;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rice_dish_id")
+    private Dish rice;
 
-    @Column(length = 100)
-    private String sweet;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sweet_dish_id")
+    private Dish sweet;
 }

@@ -10,10 +10,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartmess.backend.entity.Dish;
 import com.smartmess.backend.entity.Mess;
 import com.smartmess.backend.entity.Menu;
+import com.smartmess.backend.enums.DishCategory;
 import com.smartmess.backend.enums.MealSession;
+import com.smartmess.backend.repository.DishRepository;
 import com.smartmess.backend.repository.MenuRepository;
+import com.smartmess.backend.service.DishNameNormalizer;
 
 @Component
 public class MenuSeeder {
@@ -30,13 +34,19 @@ public class MenuSeeder {
             20260917L;
 
     private final MenuRepository menuRepository;
+    private final DishRepository dishRepository;
+    private final DishNameNormalizer dishNameNormalizer;
     private final Clock clock;
 
     public MenuSeeder(
             MenuRepository menuRepository,
+            DishRepository dishRepository,
+            DishNameNormalizer dishNameNormalizer,
             Clock clock) {
 
         this.menuRepository = menuRepository;
+        this.dishRepository = dishRepository;
+        this.dishNameNormalizer = dishNameNormalizer;
         this.clock = clock;
     }
 
@@ -54,6 +64,9 @@ public class MenuSeeder {
      *
      * SeedDataService selects and passes the demo mess.
      * Other messes' menus do not affect this seed check.
+     *
+     * Dish records are created/reused for this mess and
+     * then referenced by the seeded menus.
      */
     @Transactional
     public void seed(Mess mess) {
@@ -222,28 +235,105 @@ public class MenuSeeder {
         );
 
         menu.setSabjiOne(
-                template.sabjiOne()
+                findOrCreateDish(
+                        mess,
+                        template.sabjiOne(),
+                        DishCategory.SABJI
+                )
         );
 
         menu.setSabjiTwo(
-                template.sabjiTwo()
+                findOrCreateDish(
+                        mess,
+                        template.sabjiTwo(),
+                        DishCategory.SABJI
+                )
         );
 
         menu.setDal(
-                template.dal()
+                findOrCreateDish(
+                        mess,
+                        template.dal(),
+                        DishCategory.DAL
+                )
         );
 
         menu.setRice(
-                template.rice()
+                findOrCreateDish(
+                        mess,
+                        template.rice(),
+                        DishCategory.RICE
+                )
         );
 
         menu.setSweet(
-                template.sweet()
+                findOrCreateDish(
+                        mess,
+                        template.sweet(),
+                        DishCategory.SWEET
+                )
         );
 
         menuRepository.save(
                 menu
         );
+    }
+
+    private Dish findOrCreateDish(
+            Mess mess,
+            String name,
+            DishCategory category) {
+
+        String normalizedName =
+                dishNameNormalizer.normalize(
+                        name
+                );
+
+        return dishRepository
+                .findByMess_MessIdAndNormalizedName(
+                        mess.getMessId(),
+                        normalizedName
+                )
+                .map(existingDish -> {
+
+                    if (existingDish.getCategory() != category) {
+
+                        throw new IllegalStateException(
+                                "Seed dish already exists under a different category: "
+                                        + name
+                        );
+                    }
+
+                    return existingDish;
+                })
+                .orElseGet(() -> {
+
+                    Dish dish =
+                            new Dish();
+
+                    dish.setMess(mess);
+
+                    dish.setName(
+                            name.trim().replaceAll(
+                                    "\\s+",
+                                    " "
+                            )
+                    );
+
+                    dish.setNormalizedName(
+                            normalizedName
+                    );
+
+                    dish.setCategory(
+                            category
+                    );
+
+                    dish.setActive(true);
+
+                    return dishRepository.save(
+                            dish
+                    );
+                });
     }
 
     private List<MenuTemplate> buildMenuTemplates() {
