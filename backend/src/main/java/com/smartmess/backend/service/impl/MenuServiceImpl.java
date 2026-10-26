@@ -6,17 +6,22 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.smartmess.backend.dto.request.CreateMenuRequest;
 import com.smartmess.backend.dto.response.MenuAvailabilityResponse;
 import com.smartmess.backend.dto.response.MenuResponse;
+import com.smartmess.backend.entity.Dish;
 import com.smartmess.backend.entity.Menu;
 import com.smartmess.backend.entity.MessClosure;
 import com.smartmess.backend.entity.MessSettings;
+import com.smartmess.backend.enums.DishCategory;
 import com.smartmess.backend.enums.MealSession;
 import com.smartmess.backend.enums.NotificationType;
 import com.smartmess.backend.exception.BusinessException;
@@ -27,6 +32,7 @@ import com.smartmess.backend.repository.MessClosureRepository;
 import com.smartmess.backend.repository.MessRepository;
 import com.smartmess.backend.repository.MessSettingsRepository;
 import com.smartmess.backend.security.CustomerSecurity;
+import com.smartmess.backend.service.DishService;
 import com.smartmess.backend.service.MenuService;
 import com.smartmess.backend.service.NotificationService;
 
@@ -49,6 +55,14 @@ public class MenuServiceImpl implements MenuService {
     private final CustomerSecurity customerSecurity;
     private final MealPricingRepository mealPricingRepository;
 
+    /*
+     * Dish Service
+     *
+     * Resolves owner-entered dish names into tenant-scoped
+     * Dish entities before the Menu is saved.
+     */
+    private final DishService dishService;
+
     public MenuServiceImpl(
             MenuRepository menuRepository,
             MenuMapper menuMapper,
@@ -58,7 +72,8 @@ public class MenuServiceImpl implements MenuService {
             Clock clock,
             MessRepository messRepository,
             CustomerSecurity customerSecurity,
-            MealPricingRepository mealPricingRepository) {
+            MealPricingRepository mealPricingRepository,
+            DishService dishService) {
 
         this.menuRepository = menuRepository;
         this.menuMapper = menuMapper;
@@ -69,9 +84,11 @@ public class MenuServiceImpl implements MenuService {
         this.messRepository = messRepository;
         this.customerSecurity = customerSecurity;
         this.mealPricingRepository = mealPricingRepository;
+        this.dishService = dishService;
     }
 
     @Override
+    @Transactional
     public MenuResponse publishMenu(
             CreateMenuRequest request) {
 
@@ -93,6 +110,57 @@ public class MenuServiceImpl implements MenuService {
                                 "Mess not found."
                         ))
         );
+
+        /*
+         * Resolve the owner-entered dish names into tenant-scoped
+         * Dish entities.
+         *
+         * Categories are determined by the menu slot, so the owner
+         * does not need to provide category information.
+         */
+        Dish sabjiOne = dishService.findOrCreateDish(
+                messId,
+                request.sabjiOne(),
+                DishCategory.SABJI
+        );
+
+        Dish sabjiTwo = resolveOptionalDish(
+                messId,
+                request.sabjiTwo(),
+                DishCategory.SABJI
+        );
+
+        Dish dal = resolveOptionalDish(
+                messId,
+                request.dal(),
+                DishCategory.DAL
+        );
+
+        Dish rice = resolveOptionalDish(
+                messId,
+                request.rice(),
+                DishCategory.RICE
+        );
+
+        Dish sweet = resolveOptionalDish(
+                messId,
+                request.sweet(),
+                DishCategory.SWEET
+        );
+
+        validateNoDuplicateDish(
+                sabjiOne,
+                sabjiTwo,
+                dal,
+                rice,
+                sweet
+        );
+
+        menu.setSabjiOne(sabjiOne);
+        menu.setSabjiTwo(sabjiTwo);
+        menu.setDal(dal);
+        menu.setRice(rice);
+        menu.setSweet(sweet);
 
         Menu savedMenu = menuRepository.save(menu);
 
@@ -293,6 +361,77 @@ public class MenuServiceImpl implements MenuService {
         }
     }
 
+    /*
+     * Resolves optional menu items.
+     *
+     * sabjiOne is required and is resolved directly.
+     * The remaining four slots may be null or blank.
+     */
+    private Dish resolveOptionalDish(
+            Long messId,
+            String name,
+            DishCategory category) {
+
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+
+        return dishService.findOrCreateDish(
+                messId,
+                name,
+                category
+        );
+    }
+
+    /*
+     * A menu must not contain the same dish more than once.
+     *
+     * This uses Dish identity rather than raw text, so inputs such as:
+     *
+     * "Bhindi Masala"
+     * "  Bhindi   Masala  "
+     *
+     * resolve to the same tenant-scoped Dish and are correctly
+     * treated as duplicates.
+     */
+    private void validateNoDuplicateDish(
+            Dish sabjiOne,
+            Dish sabjiTwo,
+            Dish dal,
+            Dish rice,
+            Dish sweet) {
+
+        Set<Long> dishIds = new HashSet<>();
+
+        List<Dish> dishes = new ArrayList<>();
+
+        dishes.add(sabjiOne);
+
+        if (sabjiTwo != null) {
+            dishes.add(sabjiTwo);
+        }
+
+        if (dal != null) {
+            dishes.add(dal);
+        }
+
+        if (rice != null) {
+            dishes.add(rice);
+        }
+
+        if (sweet != null) {
+            dishes.add(sweet);
+        }
+
+        for (Dish dish : dishes) {
+
+            if (!dishIds.add(dish.getDishId())) {
+                throw new BusinessException(
+                        "The same dish cannot be added more than once to the same menu."
+                );
+            }
+        }
+    }
     /*
      * Uses the same pricing prerequisite as publication.
      * Already published menus retain their existing availability state.

@@ -11,16 +11,51 @@ import com.smartmess.backend.entity.Menu;
 public interface MenuMapper {
 
     /*
-     * Maps menu details using the existing Menu builder.
+     * Dish fields are intentionally ignored here.
      *
-     * The service assigns the authenticated mess.
-     * Menu identity is generated during persistence.
-     * Inherited timestamps are managed by JPA auditing
-     * and are not fields of the Menu builder.
+     * The service is responsible for resolving the submitted
+     * dish names into tenant-scoped Dish entities.
+     *
+     * The service then assigns those Dish entities to Menu.
      */
     @Mapping(target = "menuId", ignore = true)
     @Mapping(target = "mess", ignore = true)
+    @Mapping(target = "sabjiOne", ignore = true)
+    @Mapping(target = "sabjiTwo", ignore = true)
+    @Mapping(target = "dal", ignore = true)
+    @Mapping(target = "rice", ignore = true)
+    @Mapping(target = "sweet", ignore = true)
     Menu toEntity(CreateMenuRequest request);
 
+    /*
+     * The API continues to expose dish names rather than
+     * exposing the internal Dish entity structure.
+     *
+     * Example:
+     *
+     * Menu.sabjiOne -> Dish("Bhindi Masala")
+     *                         ↓
+     * MenuResponse.sabjiOne -> "Bhindi Masala"
+     */
+    @Mapping(
+            target = "sabjiOne",
+            source = "sabjiOne.name"
+    )
+    @Mapping(
+            target = "sabjiTwo",
+            source = "sabjiTwo.name"
+    )
+    @Mapping(
+            target = "dal",
+            source = "dal.name"
+    )
+    @Mapping(
+            target = "rice",
+            source = "rice.name"
+    )
+    @Mapping(
+            target = "sweet",
+            source = "sweet.name"
+    )
     MenuResponse toResponse(Menu menu);
 }

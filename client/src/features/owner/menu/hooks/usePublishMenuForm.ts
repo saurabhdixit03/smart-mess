@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { toast } from "sonner";
 
+import { dishApi } from "../api/dish.api";
 import { menuApi } from "../api/menu.api";
 
 import {
@@ -18,6 +19,10 @@ import {
 } from "../schemas/menu.schema";
 
 import type { CreateMenuRequest } from "../types/menu.types";
+import type {
+  DishCategory,
+  DishResponse,
+} from "../types/dish.types";
 
 type UsePublishMenuFormProps = {
   mealSession: "LUNCH" | "DINNER";
@@ -30,13 +35,72 @@ export function usePublishMenuForm({
   onSuccess,
   onCancel,
 }: UsePublishMenuFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+
+  const [dishSuggestions, setDishSuggestions] =
+    useState<Record<DishCategory, DishResponse[]>>({
+      SABJI: [],
+      DAL: [],
+      RICE: [],
+      SWEET: [],
+    });
+
+  const [isSearchingDishes, setIsSearchingDishes] =
+    useState(false);
 
   const form = useForm<PublishMenuFormData>({
     resolver: zodResolver(menuSchema),
     defaultValues: MENU_FORM.DEFAULT_VALUES,
     mode: "onBlur",
   });
+
+  const searchDishSuggestions = async (
+    category: DishCategory,
+    query: string
+  ) => {
+    if (!query.trim()) {
+      setDishSuggestions((current) => ({
+        ...current,
+        [category]: [],
+      }));
+
+      return;
+    }
+
+    try {
+      setIsSearchingDishes(true);
+
+      const response =
+        await dishApi.searchDishes(
+          category,
+          query
+        );
+
+      setDishSuggestions((current) => ({
+        ...current,
+        [category]: response.data,
+      }));
+    } catch (error) {
+      console.error(error);
+
+      setDishSuggestions((current) => ({
+        ...current,
+        [category]: [],
+      }));
+    } finally {
+      setIsSearchingDishes(false);
+    }
+  };
+
+  const clearDishSuggestions = (
+    category: DishCategory
+  ) => {
+    setDishSuggestions((current) => ({
+      ...current,
+      [category]: [],
+    }));
+  };
 
   const onSubmit = async (
     data: PublishMenuFormData
@@ -66,6 +130,13 @@ export function usePublishMenuForm({
 
       form.reset(MENU_FORM.DEFAULT_VALUES);
 
+      setDishSuggestions({
+        SABJI: [],
+        DAL: [],
+        RICE: [],
+        SWEET: [],
+      });
+
       await onSuccess();
 
       onCancel();
@@ -89,5 +160,9 @@ export function usePublishMenuForm({
     form,
     onSubmit,
     isSubmitting,
+    dishSuggestions,
+    isSearchingDishes,
+    searchDishSuggestions,
+    clearDishSuggestions,
   };
 }
