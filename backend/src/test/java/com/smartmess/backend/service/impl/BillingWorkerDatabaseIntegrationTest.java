@@ -39,15 +39,16 @@ import com.smartmess.backend.service.EmailDeliveryService;
 import com.smartmess.backend.service.EmailService;
 
 @SpringBootTest(classes = {com.smartmess.backend.BackendApplication.class,
-    BillingWorkerDatabaseIntegrationTest.FixedClockConfiguration.class}, properties = {
-    "spring.datasource.url=jdbc:mysql://localhost:3306/smart_mess_worker_test",
-    "spring.jpa.hibernate.ddl-auto=create-drop",
-    "spring.jpa.show-sql=false",
-    "app.seed-demo-data=false",
-    "app.billing.automation.enabled=false",
-    "app.mail.notifications.enabled=false",
-    "app.cashfree.enabled=false",
-    "app.mail.brevo.api-key=unused-in-integration-tests"
+        BillingWorkerDatabaseIntegrationTest.FixedClockConfiguration.class}, properties = {
+        "spring.datasource.url=jdbc:mysql://localhost:3306/smart_mess_worker_test",
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.jpa.show-sql=false",
+        "spring.flyway.enabled=false",
+        "app.seed-demo-data=false",
+        "app.billing.automation.enabled=false",
+        "app.mail.notifications.enabled=false",
+        "app.cashfree.enabled=false",
+        "app.mail.brevo.api-key=unused-in-integration-tests"
 })
 @ContextConfiguration(initializers = BillingWorkerDatabaseIntegrationTest.TestDatabaseGuard.class)
 class BillingWorkerDatabaseIntegrationTest {
