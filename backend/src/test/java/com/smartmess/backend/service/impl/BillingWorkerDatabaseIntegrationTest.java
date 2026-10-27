@@ -1,3 +1,4 @@
+
 package com.smartmess.backend.service.impl;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -9,7 +10,9 @@ import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+
 import jakarta.persistence.EntityManager;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+
 import com.smartmess.backend.entity.*;
 import com.smartmess.backend.enums.*;
 import com.smartmess.backend.repository.BillingJobRepository;
@@ -90,6 +94,7 @@ class BillingWorkerDatabaseIntegrationTest {
             mess.setMessName("Worker integration " + UUID.randomUUID());
             mess.setRegistrationCode(UUID.randomUUID().toString());
             entityManager.persist(mess);
+
             Customer customer = new Customer();
             customer.setMess(mess);
             customer.setFullName("Worker Test Customer");
@@ -99,12 +104,26 @@ class BillingWorkerDatabaseIntegrationTest {
             customer.setJoiningDate(LocalDate.of(2026, 1, 1));
             customer.setStatus(status);
             entityManager.persist(customer);
+
+            /*
+             * Menu now references Dish entities instead of storing
+             * dish names directly.
+             */
+            Dish dish = new Dish();
+            dish.setMess(mess);
+            dish.setName("Test Sabji");
+            dish.setNormalizedName("test sabji");
+            dish.setCategory(DishCategory.SABJI);
+            dish.setActive(true);
+            entityManager.persist(dish);
+
             Menu menu = new Menu();
             menu.setMess(mess);
             menu.setMenuDate(LocalDate.of(2026, month, 10));
             menu.setMealSession(MealSession.LUNCH);
-            menu.setSabjiOne("Test Sabji");
+            menu.setSabjiOne(dish);
             entityManager.persist(menu);
+
             MealRecord record = new MealRecord();
             record.setMess(mess);
             record.setCustomer(customer);
@@ -116,120 +135,342 @@ class BillingWorkerDatabaseIntegrationTest {
             record.setTotalAmount(amount);
             record.setCollectedAt(menu.getMenuDate().atTime(12, 0));
             entityManager.persist(record);
+
             BillingJob job = new BillingJob();
             job.setMess(mess);
             job.setBillingMonth(month);
             job.setBillingYear(2026);
             job.setNextAttemptAt(NOW);
             entityManager.persist(job);
+
             entityManager.flush();
-            return new Fixture(mess.getMessId(), customer.getCustomerId(), record.getMealRecordId(), job.getBillingJobId());
+
+            return new Fixture(
+                    mess.getMessId(),
+                    customer.getCustomerId(),
+                    record.getMealRecordId(),
+                    job.getBillingJobId()
+            );
         });
     }
 
     private long count(String table, Long messId) {
-        return jdbc.queryForObject("SELECT COUNT(*) FROM " + table + " WHERE mess_id = ?", Long.class, messId);
+        return jdbc.queryForObject(
+                "SELECT COUNT(*) FROM " + table + " WHERE mess_id = ?",
+                Long.class,
+                messId
+        );
     }
 
     private void assertCommitted(Fixture fixture) {
         assertEquals(1, count("bills", fixture.messId()));
         assertEquals(1, count("notifications", fixture.messId()));
         assertEquals(1, count("email_deliveries", fixture.messId()));
-        Long billId = jdbc.queryForObject("SELECT bill_id FROM meal_records WHERE meal_record_id = ?", Long.class, fixture.recordId());
+
+        Long billId = jdbc.queryForObject(
+            "SELECT bill_id FROM meal_records WHERE meal_record_id = ?",
+            Long.class,
+            fixture.recordId()
+        );
+
         assertNotNull(billId);
-        assertEquals(0, new BigDecimal("80.00").compareTo(jdbc.queryForObject(
-            "SELECT total_amount FROM bills WHERE bill_id = ?", BigDecimal.class, billId)));
-        assertEquals("COMPLETED", jdbc.queryForObject("SELECT status FROM billing_jobs WHERE billing_job_id = ?", String.class, fixture.jobId()));
-        assertEquals("PENDING", jdbc.queryForObject("SELECT delivery_status FROM email_deliveries WHERE mess_id = ?", String.class, fixture.messId()));
+
+        assertEquals(
+            0,
+            new BigDecimal("80.00").compareTo(
+                jdbc.queryForObject(
+                    "SELECT total_amount FROM bills WHERE bill_id = ?",
+                    BigDecimal.class,
+                    billId
+                )
+            )
+        );
+
+        assertEquals(
+            "COMPLETED",
+            jdbc.queryForObject(
+                "SELECT status FROM billing_jobs WHERE billing_job_id = ?",
+                String.class,
+                fixture.jobId()
+            )
+        );
+
+        assertEquals(
+            "PENDING",
+            jdbc.queryForObject(
+                "SELECT delivery_status FROM email_deliveries WHERE mess_id = ?",
+                String.class,
+                fixture.messId()
+            )
+        );
+
         verifyNoInteractions(emailService);
     }
 
-    @Test void billMealNotificationAndEmailQueueCommitTogether() {
-        Fixture own = fixture(CustomerStatus.ACTIVE, 9, new BigDecimal("80.00"));
-        Fixture foreign = fixture(CustomerStatus.ACTIVE, 9, new BigDecimal("80.00"));
-        worker.execute(state.claim(own.jobId()).orElseThrow());
+    @Test
+    void billMealNotificationAndEmailQueueCommitTogether() {
+        Fixture own = fixture(
+                CustomerStatus.ACTIVE,
+                9,
+                new BigDecimal("80.00")
+        );
+
+        Fixture foreign = fixture(
+                CustomerStatus.ACTIVE,
+                9,
+                new BigDecimal("80.00")
+        );
+
+        worker.execute(
+                state.claim(own.jobId()).orElseThrow()
+        );
+
         assertCommitted(own);
-        assertEquals(0, count("bills", foreign.messId()));
-        assertEquals(0, count("notifications", foreign.messId()));
-        assertEquals(0, count("email_deliveries", foreign.messId()));
-        assertNull(jdbc.queryForObject("SELECT bill_id FROM meal_records WHERE meal_record_id = ?", Long.class, foreign.recordId()));
+
+        assertEquals(
+                0,
+                count("bills", foreign.messId())
+        );
+
+        assertEquals(
+                0,
+                count("notifications", foreign.messId())
+        );
+
+        assertEquals(
+                0,
+                count("email_deliveries", foreign.messId())
+        );
+
+        assertNull(
+                jdbc.queryForObject(
+                        "SELECT bill_id FROM meal_records WHERE meal_record_id = ?",
+                        Long.class,
+                        foreign.recordId()
+                )
+        );
     }
 
-    @Test void queueFailureRollsBackCustomerBillAndRetryCreatesOneBill() {
-        Fixture fixture = fixture(CustomerStatus.ACTIVE, 9, new BigDecimal("80.00"));
+    @Test
+    void queueFailureRollsBackCustomerBillAndRetryCreatesOneBill() {
+        Fixture fixture = fixture(
+                CustomerStatus.ACTIVE,
+                9,
+                new BigDecimal("80.00")
+        );
+
         transaction.executeWithoutResult(tx -> {
             doThrow(new IllegalStateException("Injected queue failure"))
                     .when(emailDelivery)
                     .queueNotificationEmail(any(Notification.class));
         });
-        worker.execute(state.claim(fixture.jobId()).orElseThrow());
-        assertEquals(0, count("bills", fixture.messId()));
-        assertEquals(0, count("notifications", fixture.messId()));
-        assertEquals(0, count("email_deliveries", fixture.messId()));
-        assertNull(jdbc.queryForObject("SELECT bill_id FROM meal_records WHERE meal_record_id = ?", Long.class, fixture.recordId()));
-        assertEquals("FAILED", jdbc.queryForObject("SELECT status FROM billing_jobs WHERE billing_job_id = ?", String.class, fixture.jobId()));
+
+        worker.execute(
+                state.claim(fixture.jobId()).orElseThrow()
+        );
+
+        assertEquals(
+                0,
+                count("bills", fixture.messId())
+        );
+
+        assertEquals(
+                0,
+                count("notifications", fixture.messId())
+        );
+
+        assertEquals(
+                0,
+                count("email_deliveries", fixture.messId())
+        );
+
+        assertNull(
+                jdbc.queryForObject(
+                        "SELECT bill_id FROM meal_records WHERE meal_record_id = ?",
+                        Long.class,
+                        fixture.recordId()
+                )
+        );
+
+        assertEquals(
+                "FAILED",
+                jdbc.queryForObject(
+                        "SELECT status FROM billing_jobs WHERE billing_job_id = ?",
+                        String.class,
+                        fixture.jobId()
+                )
+        );
+
         reset(emailDelivery);
+
         transaction.executeWithoutResult(tx -> {
-            BillingJob job = jobs.findByIdForUpdate(fixture.jobId()).orElseThrow();
+            BillingJob job =
+                    jobs.findByIdForUpdate(
+                            fixture.jobId()
+                    ).orElseThrow();
+
             job.setNextAttemptAt(NOW);
             jobs.saveAndFlush(job);
         });
-        ClaimedJob retry = state.claim(fixture.jobId()).orElseThrow();
+
+        ClaimedJob retry =
+                state.claim(fixture.jobId()).orElseThrow();
+
         worker.execute(retry);
+
         assertCommitted(fixture);
+
         worker.execute(retry);
+
         assertCommitted(fixture);
-        assertTrue(state.claim(fixture.jobId()).isEmpty());
+
+        assertTrue(
+                state.claim(fixture.jobId()).isEmpty()
+        );
     }
 
-    @Test void inactiveCustomerStillReceivesHistoricalBillAndEmailJob() {
-        Fixture fixture = fixture(CustomerStatus.INACTIVE, 9, new BigDecimal("80.00"));
-        worker.execute(state.claim(fixture.jobId()).orElseThrow());
+    @Test
+    void inactiveCustomerStillReceivesHistoricalBillAndEmailJob() {
+        Fixture fixture = fixture(
+                CustomerStatus.INACTIVE,
+                9,
+                new BigDecimal("80.00")
+        );
+
+        worker.execute(
+                state.claim(fixture.jobId()).orElseThrow()
+        );
+
         assertCommitted(fixture);
     }
 
-    @Test void concurrentClaimsHaveOnlyOneWinner() throws Exception {
-        Fixture fixture = fixture(CustomerStatus.ACTIVE, 9, new BigDecimal("80.00"));
-        ExecutorService executor = Executors.newFixedThreadPool(2);
-        CountDownLatch ready = new CountDownLatch(2);
-        CountDownLatch start = new CountDownLatch(1);
+    @Test
+    void concurrentClaimsHaveOnlyOneWinner() throws Exception {
+        Fixture fixture = fixture(
+                CustomerStatus.ACTIVE,
+                9,
+                new BigDecimal("80.00")
+        );
+
+        ExecutorService executor =
+                Executors.newFixedThreadPool(2);
+
+        CountDownLatch ready =
+                new CountDownLatch(2);
+
+        CountDownLatch start =
+                new CountDownLatch(1);
+
         Callable<Optional<ClaimedJob>> attempt = () -> {
             ready.countDown();
-            if (!start.await(10, TimeUnit.SECONDS)) throw new IllegalStateException("Claim start timed out");
+
+            if (!start.await(
+                    10,
+                    TimeUnit.SECONDS
+            )) {
+                throw new IllegalStateException(
+                        "Claim start timed out"
+                );
+            }
+
             return state.claim(fixture.jobId());
         };
+
         try {
-            Future<Optional<ClaimedJob>> first = executor.submit(attempt);
-            Future<Optional<ClaimedJob>> second = executor.submit(attempt);
-            assertTrue(ready.await(10, TimeUnit.SECONDS));
+            Future<Optional<ClaimedJob>> first =
+                    executor.submit(attempt);
+
+            Future<Optional<ClaimedJob>> second =
+                    executor.submit(attempt);
+
+            assertTrue(
+                    ready.await(
+                            10,
+                            TimeUnit.SECONDS
+                    )
+            );
+
             start.countDown();
-            List<ClaimedJob> winners = new ArrayList<>();
-            first.get(20, TimeUnit.SECONDS).ifPresent(winners::add);
-            second.get(20, TimeUnit.SECONDS).ifPresent(winners::add);
-            assertEquals(1, winners.size());
+
+            List<ClaimedJob> winners =
+                    new ArrayList<>();
+
+            first.get(
+                    20,
+                    TimeUnit.SECONDS
+            ).ifPresent(winners::add);
+
+            second.get(
+                    20,
+                    TimeUnit.SECONDS
+            ).ifPresent(winners::add);
+
+            assertEquals(
+                    1,
+                    winners.size()
+            );
+
             worker.execute(winners.get(0));
+
             assertCommitted(fixture);
-            assertEquals(1, jdbc.queryForObject("SELECT attempt_count FROM billing_jobs WHERE billing_job_id = ?", Integer.class, fixture.jobId()));
+
+            assertEquals(
+                    1,
+                    jdbc.queryForObject(
+                            "SELECT attempt_count FROM billing_jobs WHERE billing_job_id = ?",
+                            Integer.class,
+                            fixture.jobId()
+                    )
+            );
+
         } finally {
             start.countDown();
             executor.shutdownNow();
-            executor.awaitTermination(10, TimeUnit.SECONDS);
+            executor.awaitTermination(
+                    10,
+                    TimeUnit.SECONDS
+            );
         }
     }
 
-    @Test void expiredClaimIsRecoveredAndOldWorkerCannotBill() {
-        Fixture fixture = fixture(CustomerStatus.ACTIVE, 9, new BigDecimal("80.00"));
-        ClaimedJob old = state.claim(fixture.jobId()).orElseThrow();
+    @Test
+    void expiredClaimIsRecoveredAndOldWorkerCannotBill() {
+        Fixture fixture = fixture(
+                CustomerStatus.ACTIVE,
+                9,
+                new BigDecimal("80.00")
+        );
+
+        ClaimedJob old =
+                state.claim(fixture.jobId()).orElseThrow();
+
         transaction.executeWithoutResult(tx -> {
-            BillingJob job = jobs.findByIdForUpdate(fixture.jobId()).orElseThrow();
+            BillingJob job =
+                    jobs.findByIdForUpdate(
+                            fixture.jobId()
+                    ).orElseThrow();
+
             job.setLeaseExpiresAt(NOW);
             jobs.saveAndFlush(job);
         });
-        ClaimedJob replacement = state.claim(fixture.jobId()).orElseThrow();
-        assertNotEquals(old.leaseToken(), replacement.leaseToken());
+
+        ClaimedJob replacement =
+                state.claim(fixture.jobId()).orElseThrow();
+
+        assertNotEquals(
+                old.leaseToken(),
+                replacement.leaseToken()
+        );
+
         worker.execute(old);
-        assertEquals(0, count("bills", fixture.messId()));
+
+        assertEquals(
+                0,
+                count("bills", fixture.messId())
+        );
+
         worker.execute(replacement);
+
         assertCommitted(fixture);
     }
 }
