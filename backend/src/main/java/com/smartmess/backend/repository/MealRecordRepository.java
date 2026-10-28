@@ -40,6 +40,11 @@ public interface MealRecordRepository
             Customer customer,
             Menu menu
     );
+    
+    Optional<MealRecord> findByMealRecordIdAndMess_MessId(
+            Long mealRecordId,
+            Long messId
+    );
 
     /*
      * Collection status for active customer search results.
