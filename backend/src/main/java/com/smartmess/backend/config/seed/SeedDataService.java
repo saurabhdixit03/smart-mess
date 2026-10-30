@@ -20,6 +20,7 @@ public class SeedDataService {
     private final MenuSeeder menuSeeder;
     private final MealResponseSeeder mealResponseSeeder;
     private final MealRecordSeeder mealRecordSeeder;
+    private final MealFeedbackSeeder mealFeedbackSeeder;
 
     /*
      * Required application configuration.
@@ -60,5 +61,7 @@ public class SeedDataService {
         mealResponseSeeder.seed(demoMess);
 
         mealRecordSeeder.seedMealRecords(demoMess);
+        
+        mealFeedbackSeeder.seed(demoMess);
     }
 }

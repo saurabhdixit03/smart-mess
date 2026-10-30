@@ -18,5 +18,6 @@ export interface DishRating {
 export interface SubmitMealFeedbackRequest {
   mealRecordId: number;
   dishRatings: DishRating[];
+  commentedDishId?: number;
   commonComment?: string;
 }
