@@ -105,7 +105,6 @@ class BillingWorkerDatabaseIntegrationTest {
             customer.setJoiningDate(LocalDate.of(2026, 1, 1));
             customer.setStatus(status);
             entityManager.persist(customer);
-
             /*
              * Menu now references Dish entities instead of storing
              * dish names directly.
@@ -123,21 +122,21 @@ class BillingWorkerDatabaseIntegrationTest {
             menu.setMenuDate(LocalDate.of(2026, month, 10));
             menu.setMealSession(MealSession.LUNCH);
             menu.setSabjiOne(dish);
-            entityManager.persist(menu);
+entityManager.persist(menu);
 
-            MealRecord record = new MealRecord();
-            record.setMess(mess);
-            record.setCustomer(customer);
-            record.setMenu(menu);
-            record.setMealOption(MealOption.FULL);
-            record.setMealPrice(amount);
-            record.setExtraRotiCount(0);
-            record.setExtraRotiPrice(new BigDecimal("10.00"));
-            record.setTotalAmount(amount);
-            record.setCollectedAt(menu.getMenuDate().atTime(12, 0));
-            entityManager.persist(record);
+MealRecord record = new MealRecord();
+record.setMess(mess);
+record.setCustomer(customer);
+record.setMenu(menu);
+record.setMealOption(MealOption.FULL);
+record.setMealPrice(amount);
+record.setExtraRotiCount(0);
+record.setExtraRotiPrice(new BigDecimal("10.00"));
+record.setTotalAmount(amount);
+record.setCollectedAt(menu.getMenuDate().atTime(12, 0));
+entityManager.persist(record);
 
-            BillingJob job = new BillingJob();
+BillingJob job = new BillingJob();
             job.setMess(mess);
             job.setBillingMonth(month);
             job.setBillingYear(2026);
