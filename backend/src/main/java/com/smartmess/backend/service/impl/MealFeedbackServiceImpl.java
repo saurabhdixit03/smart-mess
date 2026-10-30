@@ -151,7 +151,6 @@ public class MealFeedbackServiceImpl implements MealFeedbackService {
                                 + request.mealRecordId()
                 ));
 
-        
         if (!mealRecord.getCustomer().getCustomerId()
                 .equals(customerId)) {
             throw new AccessDeniedException(
@@ -420,7 +419,7 @@ public class MealFeedbackServiceImpl implements MealFeedbackService {
 
         return normalized;
     }
-    
+
     private Dish validateCommentedDish(
             Long commentedDishId,
             List<Dish> mealDishes) {

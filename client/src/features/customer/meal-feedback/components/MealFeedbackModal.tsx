@@ -89,8 +89,8 @@ export default function MealFeedbackModal({
   const [comment, setComment] = useState("");
 
   const [commentedDishId, setCommentedDishId] = useState<
-  number | null
->(null);
+    number | null
+  >(null);
 
   useEffect(() => {
     if (!feedback) {
@@ -146,12 +146,12 @@ export default function MealFeedbackModal({
       })),
 
       ...(comment.trim()
-  ? {
-      commentedDishId:
-        commentedDishId ?? undefined,
-      commonComment: comment.trim(),
-    }
-  : {}),
+        ? {
+            commentedDishId:
+              commentedDishId ?? undefined,
+            commonComment: comment.trim(),
+          }
+        : {}),
     };
 
     await onSubmit(payload);
@@ -332,48 +332,48 @@ export default function MealFeedbackModal({
           </p>
 
           <div className="space-y-2">
-  <label
-    htmlFor="meal-feedback-about"
-    className="text-sm font-medium text-[var(--color-text)]"
-  >
-    About
-  </label>
+            <label
+              htmlFor="meal-feedback-about"
+              className="text-sm font-medium text-[var(--color-text)]"
+            >
+              About
+            </label>
 
-  <select
-    id="meal-feedback-about"
-    value={commentedDishId ?? ""}
-    onChange={(event) =>
-      setCommentedDishId(
-        event.target.value
-          ? Number(event.target.value)
-          : null
-      )
-    }
-    disabled={submitting}
-    className="
-      w-full rounded-lg border
-      border-[var(--color-border)]
-      bg-[var(--color-surface)]
-      px-3 py-2 text-sm
-      text-[var(--color-text)]
-      focus:outline-none
-      focus:ring-2
-      focus:ring-[var(--color-primary)]/30
-      disabled:opacity-50
-    "
-  >
-    <option value="">Overall meal</option>
+            <select
+              id="meal-feedback-about"
+              value={commentedDishId ?? ""}
+              onChange={(event) =>
+                setCommentedDishId(
+                  event.target.value
+                    ? Number(event.target.value)
+                    : null
+                )
+              }
+              disabled={submitting}
+              className="
+                w-full rounded-lg border
+                border-[var(--color-border)]
+                bg-[var(--color-surface)]
+                px-3 py-2 text-sm
+                text-[var(--color-text)]
+                focus:outline-none
+                focus:ring-2
+                focus:ring-[var(--color-primary)]/30
+                disabled:opacity-50
+              "
+            >
+              <option value="">Overall meal</option>
 
-    {feedback.dishes.map((dish) => (
-      <option
-        key={dish.dishId}
-        value={dish.dishId}
-      >
-        {dish.dishName}
-      </option>
-    ))}
-  </select>
-</div>
+              {feedback.dishes.map((dish) => (
+                <option
+                  key={dish.dishId}
+                  value={dish.dishId}
+                >
+                  {dish.dishName}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <Textarea
             id="meal-feedback-comment"
