@@ -33,6 +33,8 @@ import com.smartmess.backend.service.BillingJobStateService.ClaimedJob;
 import com.smartmess.backend.service.BillingJobWorkerService;
 import com.smartmess.backend.service.EmailDeliveryService;
 import com.smartmess.backend.service.EmailService;
+import com.smartmess.backend.entity.Dish;
+import com.smartmess.backend.entity.DishCategory;
 
 @SpringBootTest(classes = {com.smartmess.backend.BackendApplication.class,
     BillingWorkerDatabaseIntegrationTest.FixedClockConfiguration.class}, properties = {
@@ -99,12 +101,20 @@ class BillingWorkerDatabaseIntegrationTest {
             customer.setJoiningDate(LocalDate.of(2026, 1, 1));
             customer.setStatus(status);
             entityManager.persist(customer);
-            Menu menu = new Menu();
-            menu.setMess(mess);
-            menu.setMenuDate(LocalDate.of(2026, month, 10));
-            menu.setMealSession(MealSession.LUNCH);
-            menu.setSabjiOne("Test Sabji");
-            entityManager.persist(menu);
+            Dish dish = new Dish();
+dish.setMess(mess);
+dish.setName("Test Sabji");
+dish.setNormalizedName("test sabji");
+dish.setCategory(DishCategory.SABJI);
+dish.setActive(true);
+entityManager.persist(dish);
+
+Menu menu = new Menu();
+menu.setMess(mess);
+menu.setMenuDate(LocalDate.of(2026, month, 10));
+menu.setMealSession(MealSession.LUNCH);
+menu.setSabjiOne(dish);
+entityManager.persist(menu);
             MealRecord record = new MealRecord();
             record.setMess(mess);
             record.setCustomer(customer);
