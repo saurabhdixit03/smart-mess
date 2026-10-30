@@ -1,6 +1,7 @@
 package com.smartmess.backend.entity;
 
 import com.smartmess.backend.common.BaseEntity;
+import com.smartmess.backend.entity.Dish;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,6 +16,7 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 
 @Getter
 @Setter
@@ -50,6 +52,10 @@ public class MealFeedback extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "meal_record_id", nullable = false)
     private MealRecord mealRecord;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "commented_dish_id")
+    private Dish commentedDish;
 
     @Column(name = "common_comment", length = 1000)
     private String commonComment;

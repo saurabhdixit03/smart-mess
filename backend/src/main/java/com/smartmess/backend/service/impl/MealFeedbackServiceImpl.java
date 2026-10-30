@@ -185,6 +185,11 @@ public class MealFeedbackServiceImpl implements MealFeedbackService {
                 mealDishes
         );
 
+        Dish commentedDish = validateCommentedDish(
+                request.commentedDishId(),
+                mealDishes
+        );
+
         String commonComment = normalizeComment(
                 request.commonComment()
         );
@@ -193,6 +198,7 @@ public class MealFeedbackServiceImpl implements MealFeedbackService {
         feedback.setMess(mealRecord.getMess());
         feedback.setCustomer(customer);
         feedback.setMealRecord(mealRecord);
+        feedback.setCommentedDish(commentedDish);
         feedback.setCommonComment(commonComment);
 
         MealFeedback savedFeedback =
@@ -413,5 +419,21 @@ public class MealFeedbackServiceImpl implements MealFeedbackService {
         }
 
         return normalized;
+    }
+    
+    private Dish validateCommentedDish(
+            Long commentedDishId,
+            List<Dish> mealDishes) {
+
+        if (commentedDishId == null) {
+            return null;
+        }
+
+        return mealDishes.stream()
+                .filter(dish -> dish.getDishId().equals(commentedDishId))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(
+                        "Commented dish does not belong to this meal."
+                ));
     }
 }

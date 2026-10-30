@@ -8,6 +8,8 @@ public record SubmitMealFeedbackRequest(
 
         List<DishRating> dishRatings,
 
+        Long commentedDishId,
+
         String commonComment
 
 ) {
