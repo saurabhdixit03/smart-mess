@@ -37,8 +37,6 @@ import com.smartmess.backend.service.BillingJobStateService.ClaimedJob;
 import com.smartmess.backend.service.BillingJobWorkerService;
 import com.smartmess.backend.service.EmailDeliveryService;
 import com.smartmess.backend.service.EmailService;
-import com.smartmess.backend.entity.Dish;
-import com.smartmess.backend.entity.DishCategory;
 
 @SpringBootTest(classes = {com.smartmess.backend.BackendApplication.class,
         BillingWorkerDatabaseIntegrationTest.FixedClockConfiguration.class}, properties = {
