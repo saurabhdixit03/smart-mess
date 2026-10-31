@@ -1,11 +1,11 @@
 package com.smartmess.backend.repository;
 
 import java.util.List;
-import java.util.List;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.smartmess.backend.repository.projection.DishFeedbackObservationProjection;
 import com.smartmess.backend.repository.projection.DishRatingAnalyticsProjection;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -84,5 +84,36 @@ public interface DishFeedbackRatingRepository
     List<DishRatingAnalyticsProjection> getDishRatingAnalytics(
             @Param("messId") Long messId
     );   
+    
+    // Observation Projection Query
+    
+    @Query("""
+            SELECT
+            	rating.mealFeedback.mealFeedbackId AS mealFeedbackId,
+                rating.mealFeedback.mess.messId AS messId,
+                rating.mealFeedback.mealRecord.menu.menuId AS menuId,
+                rating.mealFeedback.mealRecord.menu.menuDate AS menuDate,
+                rating.mealFeedback.mealRecord.menu.mealSession AS mealSession,
+                rating.dish.dishId AS dishId,
+                rating.dish.name AS dishName,
+                rating.rating AS rating,
+                CASE
+                    WHEN rating.dish.dishId = rating.mealFeedback.commentedDish.dishId
+                    THEN rating.mealFeedback.commonComment
+                    ELSE NULL
+                END AS comment
+
+            FROM DishFeedbackRating rating
+
+            WHERE rating.mealFeedback.mess.messId = :messId
+
+            ORDER BY
+                rating.mealFeedback.mealRecord.menu.menuDate DESC,
+                rating.mealFeedback.mealRecord.menu.menuId DESC,
+                rating.dish.dishId
+            """)
+    List<DishFeedbackObservationProjection> getDishFeedbackObservations(
+            @Param("messId") Long messId
+    );
     
 }
