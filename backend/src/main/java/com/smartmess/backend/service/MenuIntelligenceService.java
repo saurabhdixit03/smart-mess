@@ -13,7 +13,5 @@ public interface MenuIntelligenceService {
     
     List<DishFeedbackAnalyticsResponse> getDishFeedbackAnalytics();
     
-    List<DishFeedbackObservationProjection> getDishFeedbackObservations();
-    
     MenuIntelligenceContext buildIntelligenceContext();
 }

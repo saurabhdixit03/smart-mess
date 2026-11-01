@@ -57,6 +57,7 @@ public interface MealFeedbackRepository
 
     	       WHERE feedback.mess.messId = :messId
     	         AND feedback.commentedDish IS NOT NULL
+                AND feedback.commonComment IS NOT NULL
 
     	       GROUP BY
     	           feedback.commentedDish.dishId,
@@ -81,7 +82,7 @@ public interface MealFeedbackRepository
 
     	       WHERE feedback.mess.messId = :messId
     	         AND feedback.commentedDish IS NOT NULL
-    	         AND feedback.commonComment IS NOT NULL
+                AND feedback.commonComment IS NOT NULL
 
     	       ORDER BY
     	           feedback.commentedDish.dishId,

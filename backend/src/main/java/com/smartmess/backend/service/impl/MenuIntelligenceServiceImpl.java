@@ -83,16 +83,6 @@ public class MenuIntelligenceServiceImpl
     
     @Override
     @Transactional(readOnly = true)
-    public List<DishFeedbackObservationProjection> getDishFeedbackObservations() {
-
-        Long messId = customerSecurity.getCurrentMessId();
-
-        return dishFeedbackRatingRepository
-                .getDishFeedbackObservations(messId);
-    }
-    
-    @Override
-    @Transactional(readOnly = true)
     public MenuIntelligenceContext buildIntelligenceContext() {
         Long messId = customerSecurity.getCurrentMessId();
         return contextBuilder.build(messId);
