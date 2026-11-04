@@ -12,6 +12,7 @@ import com.smartmess.backend.entity.MealFeedback;
 import com.smartmess.backend.entity.MealRecord;
 import com.smartmess.backend.repository.projection.DishFeedbackAnalyticsProjection;
 import com.smartmess.backend.repository.projection.DishFeedbackCommentProjection;
+import com.smartmess.backend.repository.projection.OverallMealFeedbackProjection;
 
 public interface MealFeedbackRepository
         extends JpaRepository<MealFeedback, Long> {
@@ -44,51 +45,96 @@ public interface MealFeedbackRepository
             Customer customer,
             MealRecord mealRecord
     );
-    
+
     // Feedback Comments Count
-    
+
     @Query("""
-    	       SELECT
-    	           feedback.commentedDish.dishId AS dishId,
-    	           feedback.commentedDish.name AS dishName,
-    	           COUNT(feedback) AS totalComments
+               SELECT
+                   feedback.commentedDish.dishId AS dishId,
+                   feedback.commentedDish.name AS dishName,
+                   COUNT(feedback) AS totalComments
 
-    	       FROM MealFeedback feedback
+               FROM MealFeedback feedback
 
-    	       WHERE feedback.mess.messId = :messId
-    	         AND feedback.commentedDish IS NOT NULL
+               WHERE feedback.mess.messId = :messId
+                 AND feedback.commentedDish IS NOT NULL
                 AND feedback.commonComment IS NOT NULL
 
-    	       GROUP BY
-    	           feedback.commentedDish.dishId,
-    	           feedback.commentedDish.name
+               GROUP BY
+                   feedback.commentedDish.dishId,
+                   feedback.commentedDish.name
 
-    	       ORDER BY
-    	           COUNT(feedback) DESC
-    	       """)
-    	List<DishFeedbackAnalyticsProjection> getDishFeedbackAnalytics(
-    	       @Param("messId") Long messId
-    	);
-    
+               ORDER BY
+                   COUNT(feedback) DESC
+               """)
+        List<DishFeedbackAnalyticsProjection> getDishFeedbackAnalytics(
+               @Param("messId") Long messId
+        );
+
     // To Fetch Actual Comments
-    
+
     @Query("""
-    	       SELECT
-    	           feedback.commentedDish.dishId AS dishId,
-    	           feedback.commentedDish.name AS dishName,
-    	           feedback.commonComment AS comment
+               SELECT
+                   feedback.commentedDish.dishId AS dishId,
+                   feedback.commentedDish.name AS dishName,
+                   feedback.commonComment AS comment
 
-    	       FROM MealFeedback feedback
+               FROM MealFeedback feedback
 
-    	       WHERE feedback.mess.messId = :messId
-    	         AND feedback.commentedDish IS NOT NULL
+               WHERE feedback.mess.messId = :messId
+                 AND feedback.commentedDish IS NOT NULL
                 AND feedback.commonComment IS NOT NULL
 
-    	       ORDER BY
-    	           feedback.commentedDish.dishId,
-    	           feedback.mealFeedbackId
-    	       """)
-    	List<DishFeedbackCommentProjection> getDishFeedbackComments(
-    	        @Param("messId") Long messId
-    	);
+               ORDER BY
+                   feedback.commentedDish.dishId,
+                   feedback.mealFeedbackId
+               """)
+        List<DishFeedbackCommentProjection> getDishFeedbackComments(
+                @Param("messId") Long messId
+        );
+
+        /*
+     * Fetches overall meal comments separately from dish-specific comments.
+     * Results are restricted to the authenticated mess.
+     */
+    @Query("""
+            SELECT feedback.commonComment
+
+            FROM MealFeedback feedback
+
+            WHERE feedback.mess.messId = :messId
+              AND feedback.commentedDish IS NULL
+              AND feedback.commonComment IS NOT NULL
+
+            ORDER BY feedback.mealFeedbackId
+            """)
+    List<String> getOverallMealComments(
+            @Param("messId") Long messId
+    );
+
+    /*
+     * Fetches overall meal comments with their actual menu occurrence.
+     * Uses menuDate, not feedback submission time.
+     */
+    @Query("""
+            SELECT
+                menu.menuId AS menuId,
+                menu.menuDate AS menuDate,
+                menu.mealSession AS mealSession,
+                feedback.commonComment AS comment
+
+            FROM MealFeedback feedback
+
+            JOIN feedback.mealRecord mealRecord
+            JOIN mealRecord.menu menu
+
+            WHERE feedback.mess.messId = :messId
+              AND feedback.commentedDish IS NULL
+              AND feedback.commonComment IS NOT NULL
+
+            ORDER BY menu.menuDate DESC, menu.mealSession, menu.menuId
+            """)
+    List<OverallMealFeedbackProjection> getOverallMealFeedbackObservations(
+            @Param("messId") Long messId
+    );
 }

@@ -1,0 +1,1 @@
+export const MENU_INTELLIGENCE_API_ENDPOINT = "/menu-intelligence";

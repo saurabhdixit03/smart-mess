@@ -7,8 +7,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.smartmess.backend.dto.response.DishFeedbackAnalyticsResponse;
+import com.smartmess.backend.dto.response.DishIntelligenceResponse;
 import com.smartmess.backend.dto.response.DishRatingAnalyticsResponse;
+import com.smartmess.backend.dto.response.ai.MenuIntelligenceOverviewResponse;
 import com.smartmess.backend.service.MenuIntelligenceService;
 
 @RestController
@@ -19,8 +22,7 @@ public class MenuIntelligenceController {
 
     public MenuIntelligenceController(
             MenuIntelligenceService menuIntelligenceService) {
-        this.menuIntelligenceService =
-                menuIntelligenceService;
+        this.menuIntelligenceService = menuIntelligenceService;
     }
 
     @GetMapping("/dish-ratings")
@@ -29,15 +31,33 @@ public class MenuIntelligenceController {
             getDishRatingAnalytics() {
 
         return ResponseEntity.ok(
-                menuIntelligenceService.getDishRatingAnalytics()
-        );
+                menuIntelligenceService.getDishRatingAnalytics());
     }
 
     @GetMapping("/dish-feedback")
     @PreAuthorize("hasRole('OWNER')")
-    public ResponseEntity<List<DishFeedbackAnalyticsResponse>> getDishFeedbackAnalytics() {
-        return ResponseEntity.ok(menuIntelligenceService.getDishFeedbackAnalytics());
+    public ResponseEntity<List<DishFeedbackAnalyticsResponse>>
+            getDishFeedbackAnalytics() {
+
+        return ResponseEntity.ok(
+                menuIntelligenceService.getDishFeedbackAnalytics());
     }
 
+    @GetMapping("/dishes")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<List<DishIntelligenceResponse>>
+            getDishIntelligence() {
 
+        return ResponseEntity.ok(
+                menuIntelligenceService.getDishIntelligence());
+    }
+
+    @GetMapping("/overview")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<MenuIntelligenceOverviewResponse>
+            getIntelligenceOverview() {
+
+        return ResponseEntity.ok(
+                menuIntelligenceService.getIntelligenceOverview());
+    }
 }

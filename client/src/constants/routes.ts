@@ -15,6 +15,7 @@ export const ROUTES = {
   PAYMENTS: "payments",
 
   INSIGHTS: "insights",
+  MENU_INTELLIGENCE: "menu-intelligence",
   SETTINGS: "settings",
 
   // Customer Portal

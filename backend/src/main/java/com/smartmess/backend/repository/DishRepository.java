@@ -22,11 +22,15 @@ public interface DishRepository extends JpaRepository<Dish, Long> {
             String normalizedName
     );
 
+    List<Dish> findByMess_MessIdOrderByNameAsc(
+            Long messId
+    );
+
     List<Dish> findByMess_MessIdAndCategoryAndActiveTrueOrderByNameAsc(
             Long messId,
             DishCategory category
     );
-    
+
     List<Dish> findTop10ByMess_MessIdAndCategoryAndActiveTrueAndNormalizedNameContainingOrderByNameAsc(
             Long messId,
             DishCategory category,
