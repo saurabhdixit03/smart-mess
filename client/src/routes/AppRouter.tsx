@@ -17,6 +17,7 @@ import { MealRecordPage } from "@/features/owner/meal-records/pages";
 import { BillingPage } from "@/features/owner/billing/pages";
 import { SettingsPage } from "@/features/owner/settings/pages";
 import { InsightsPage } from "@/features/owner/insights/pages";
+import { MenuIntelligencePage } from "@/features/owner/menu-intelligence/pages";
 
 import {
   OwnerLoginPage,
@@ -148,6 +149,11 @@ export default function AppRouter() {
             <Route
               path="insights"
               element={<InsightsPage />}
+            />
+
+            <Route
+              path="menu-intelligence"
+              element={<MenuIntelligencePage />}
             />
           </Route>
         </Route>

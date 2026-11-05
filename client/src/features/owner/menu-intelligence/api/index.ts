@@ -1,0 +1,1 @@
+export { menuIntelligenceApi } from "./menuIntelligence.api";

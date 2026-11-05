@@ -6,6 +6,7 @@ import {
   HandPlatter,
   Receipt,
   BarChart3,
+  BrainCircuit,
   Settings,
   Building2,
 } from "lucide-react";
@@ -57,6 +58,12 @@ export const ownerNavigation: NavigationItem[] = [
     title: "Business Insights",
     path: ROUTES.INSIGHTS,
     icon: BarChart3,
+  },
+  {
+    label: "Menu Intelligence",
+    title: "Menu Intelligence",
+    path: ROUTES.MENU_INTELLIGENCE,
+    icon: BrainCircuit,
   },
   {
     label: "Settings",
