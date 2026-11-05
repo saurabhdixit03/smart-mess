@@ -1,4 +1,3 @@
-
 import {
   useCallback,
   useEffect,
@@ -32,6 +31,8 @@ export function useMenuIntelligence() {
 
   const [state, setState] =
     useState<MenuIntelligenceState>(initialState);
+
+  const [analyzing, setAnalyzing] = useState(false);
 
   const loadMenuIntelligence = useCallback(
     (): Promise<void> => {
@@ -81,6 +82,31 @@ export function useMenuIntelligence() {
     return loadMenuIntelligence();
   }, [loadMenuIntelligence]);
 
+  const analyze = useCallback(async (): Promise<void> => {
+    setAnalyzing(true);
+    setState((previous) => ({
+      ...previous,
+      error: null,
+    }));
+
+    try {
+      await menuIntelligenceApi.analyzeMenuIntelligence();
+      await refresh();
+    } catch (error: unknown) {
+      setState((previous) => ({
+        ...previous,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to generate AI menu intelligence. Please try again.",
+      }));
+
+      throw error;
+    } finally {
+      setAnalyzing(false);
+    }
+  }, [refresh]);
+
   useEffect(() => {
     void loadMenuIntelligence();
 
@@ -94,6 +120,8 @@ export function useMenuIntelligence() {
     overview: state.overview,
     loading: state.loading,
     error: state.error,
+    analyzing,
+    analyze,
     refresh,
   };
 }

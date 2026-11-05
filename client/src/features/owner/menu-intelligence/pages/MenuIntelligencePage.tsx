@@ -1,9 +1,9 @@
-﻿
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 
 import {
   ChartPie,
   LayoutGrid,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -28,10 +28,11 @@ export default function MenuIntelligencePage() {
     dishes,
     loading,
     error,
+    analyzing,
+    analyze,
     refresh,
   } = useMenuIntelligence();
 
-  // Only include dishes that have an AI suggestion.
   const suggestedDishes = useMemo(
     () =>
       dishes.filter(
@@ -40,7 +41,6 @@ export default function MenuIntelligencePage() {
     [dishes]
   );
 
-  // Keep the selected dish within the eligible dish list.
   useEffect(() => {
     if (suggestedDishes.length === 0) {
       setSelectedDishId(null);
@@ -65,12 +65,69 @@ export default function MenuIntelligencePage() {
 
   const hasSuggestedDishes = suggestedDishes.length > 0;
 
+  const handleAnalyze = async () => {
+    try {
+      await analyze();
+    } catch {
+      // The hook already stores the API error in its state.
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <section className="space-y-4">
       <PageHeader
         title="Menu Intelligence"
         description="Explore customer ratings, dish performance, and AI-powered recommendations."
+        action={
+          <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+            <Button
+              type="button"
+              variant="primary"
+              className="shrink-0"
+              disabled={analyzing || loading}
+              onClick={() => void handleAnalyze()}
+            >
+              <Sparkles size={16} aria-hidden="true" />
+              {analyzing ? "Analyzing..." : "Generate AI Insights"}
+            </Button>
+
+            {hasSuggestedDishes && (
+              <Button
+                type="button"
+                variant="outline"
+                className="shrink-0"
+                title={
+                  view === "cards"
+                    ? "Switch to chart view"
+                    : "Switch to card view"
+                }
+                onClick={() =>
+                  setView((previous) =>
+                    previous === "cards" ? "charts" : "cards"
+                  )
+                }
+              >
+                {view === "cards" ? (
+                  <ChartPie size={16} aria-hidden="true" />
+                ) : (
+                  <LayoutGrid size={16} aria-hidden="true" />
+                )}
+
+                {view === "cards" ? "Chart View" : "Card View"}
+              </Button>
+            )}
+          </div>
+        }
       />
+
+      {analyzing && (
+        <p
+          className="text-sm text-[var(--color-text-secondary)]"
+          role="status"
+        >
+          AI is analyzing your menu and customer feedback. Please wait...
+        </p>
+      )}
 
       {loading ? (
         <div
@@ -120,8 +177,8 @@ export default function MenuIntelligencePage() {
             </h2>
 
             <p className="mx-auto mt-2 max-w-md text-sm text-[var(--color-text-secondary)]">
-              Dish Intelligence will display dishes here once AI suggestions
-              are available based on customer feedback.
+              Generate AI insights to see dish observations and recommendations
+              based on customer feedback.
             </p>
 
             <Button
@@ -136,77 +193,51 @@ export default function MenuIntelligencePage() {
         </Card>
       ) : (
         <section className="space-y-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-[var(--color-text)]">
+          <div className="flex flex-col gap-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div className="min-w-0">
+              <h2 className="text-base font-semibold leading-6 text-[var(--color-text)]">
                 Dish Intelligence
               </h2>
 
-              <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                Explore dishes with AI-generated observations and recommendations.
+              <p className="mt-1 max-w-xl text-sm leading-5 text-[var(--color-text-secondary)]">
+                Explore AI-generated observations and recommendations for each dish.
               </p>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              className="shrink-0"
-              title={
-                view === "cards"
-                  ? "Switch to chart view"
-                  : "Switch to card view"
-              }
-              onClick={() =>
-                setView((previous) =>
-                  previous === "cards" ? "charts" : "cards"
-                )
-              }
-            >
-              {view === "cards" ? (
-                <ChartPie size={16} aria-hidden="true" />
-              ) : (
-                <LayoutGrid size={16} aria-hidden="true" />
-              )}
+            <div className="flex w-full flex-col gap-1.5 sm:w-[35rem] sm:shrink-0">
+              <label
+                htmlFor="dish-intelligence-selector"
+                className="text-xs font-semibold tracking-wide text-[var(--color-text-secondary)]"
+              >
+                 Select Dish
+              </label>
 
-              {view === "cards" ? "Chart View" : "Card View"}
-            </Button>
+              <select
+                id="dish-intelligence-selector"
+                value={selectedDish?.dishId ?? ""}
+                onChange={(event) =>
+                  setSelectedDishId(Number(event.target.value))
+                }
+                className="h-11 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm font-medium text-[var(--color-text)] outline-none transition-colors focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20"
+              >
+                {suggestedDishes.map((dish) => (
+                  <option
+                    key={dish.dishId}
+                    value={dish.dishId}
+                  >
+                    {dish.dishName}
+                    {dish.active ? "" : " (Inactive)"}
+                  </option>
+                ))}
+              </select>
+
+              <p className="text-xs text-[var(--color-text-secondary)]">
+                {suggestedDishes.length} dish
+                {suggestedDishes.length === 1 ? "" : "es"} with AI suggestions
+              </p>
+            </div>
           </div>
 
-          {/* AI-Suggested Dish Selector */}
-          <div className="flex flex-col gap-2 sm:max-w-md">
-            <label
-              htmlFor="dish-intelligence-selector"
-              className="text-sm font-medium text-[var(--color-text)]"
-            >
-              Select dish
-            </label>
-
-            <select
-              id="dish-intelligence-selector"
-              value={selectedDish?.dishId ?? ""}
-              onChange={(event) =>
-                setSelectedDishId(Number(event.target.value))
-              }
-              className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2.5 text-sm text-[var(--color-text)] outline-none transition-colors focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20"
-            >
-              {suggestedDishes.map((dish) => (
-                <option
-                  key={dish.dishId}
-                  value={dish.dishId}
-                >
-                  {dish.dishName}
-                  {dish.active ? "" : " (Inactive)"}
-                </option>
-              ))}
-            </select>
-
-            <p className="text-xs text-[var(--color-text-secondary)]">
-              Showing {suggestedDishes.length} dish
-              {suggestedDishes.length === 1 ? "" : "es"} with AI suggestions.
-            </p>
-          </div>
-
-          {/* Selected Dish Content */}
           {view === "cards" ? (
             <DishIntelligenceCard dish={selectedDish} />
           ) : (
@@ -214,6 +245,6 @@ export default function MenuIntelligencePage() {
           )}
         </section>
       )}
-    </div>
+    </section>
   );
 }

@@ -1,5 +1,6 @@
 
 import api from "@/lib/api";
+import type { ApiResponse } from "@/features/auth/types/auth.types";
 import { MENU_INTELLIGENCE_API_ENDPOINT } from "../constants";
 
 import type {
@@ -31,6 +32,12 @@ export const menuIntelligenceApi = {
   getOverview() {
     return api.get<MenuIntelligenceOverview>(
       `${MENU_INTELLIGENCE_API_ENDPOINT}/overview`
+    );
+  },
+
+  analyzeMenuIntelligence() {
+    return api.post<ApiResponse<null>>(
+      `${MENU_INTELLIGENCE_API_ENDPOINT}/analyze`
     );
   },
 };
